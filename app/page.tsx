@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -34,28 +34,158 @@ function downloadText(filename: string, content: string) {
 function ScoreRing({ score, size = 128 }: { score: number; size?: number }) {
   const radius = size * 0.4;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
+  const targetOffset = circumference - (score / 100) * circumference;
   const color = score >= 75 ? 'var(--good)' : score >= 50 ? 'var(--warn)' : 'var(--bad)';
+  const shadow = score >= 75 ? 'rgba(22,121,79,0.28)' : score >= 50 ? 'rgba(146,96,10,0.28)' : 'rgba(180,35,46,0.28)';
   const label = score >= 75 ? 'Strong fit' : score >= 50 ? 'Getting there' : 'Needs work';
   const c = size / 2;
 
   return (
     <div className="relative flex flex-col items-center shrink-0">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-        <circle cx={c} cy={c} r={radius} fill="none" stroke="var(--line)" strokeWidth="2.5" />
+      <div
+        className="absolute rounded-full blur-xl opacity-[0.18] pointer-events-none"
+        style={{ background: color, inset: -size * 0.08 }}
+      />
+      <svg
+        width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+        className="-rotate-90 relative"
+        style={{ filter: `drop-shadow(0 4px 10px ${shadow})` }}
+      >
+        <circle cx={c} cy={c} r={radius} fill="none" stroke="var(--line)" strokeWidth={size * 0.028} />
         <circle
+          key={score}
           cx={c} cy={c} r={radius} fill="none"
-          stroke={color} strokeWidth="2.5" strokeLinecap="round"
-          strokeDasharray={circumference} strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)' }}
+          stroke={color} strokeWidth={size * 0.028} strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={targetOffset}
+          style={{
+            animation: 'ringFill 1.15s cubic-bezier(0.16,1,0.3,1) both',
+            ['--ring-circ' as string]: circumference,
+          } as React.CSSProperties}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-semibold tracking-tight" style={{ color, fontSize: size * 0.26 }}>{score}</span>
-        <span className="font-mono text-[9px] tracking-widest text-[var(--muted-soft)]">/100</span>
+      <div className="absolute inset-0 flex items-center justify-center gap-[3px]">
+        <span className="font-bold tracking-tight tabular-nums" style={{ color, fontSize: size * 0.24 }}>{score}</span>
+        <span className="text-[10px] font-semibold text-[var(--muted-soft)] mt-1.5">/100</span>
       </div>
-      <span className="text-[11px] font-medium mt-2" style={{ color }}>{label}</span>
+      <span
+        className="inline-flex items-center gap-1.5 text-[11px] font-semibold mt-3 px-2.5 py-1 rounded-full"
+        style={{ color, background: score >= 75 ? 'var(--good-bg)' : score >= 50 ? 'var(--warn-bg)' : 'var(--bad-bg)' }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+        {label}
+      </span>
     </div>
+  );
+}
+
+function Reveal({ children, className = '', delayMs = 0 }: { children: React.ReactNode; className?: string; delayMs?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`${className} transition-all duration-700`}
+      style={{
+        transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+        transitionDelay: `${delayMs}ms`,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(22px)',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function useCountUp(target: number, active: boolean, duration = 900) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let start: number | null = null;
+    let raf: number;
+    const step = (ts: number) => {
+      if (start === null) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      setValue(Math.floor(progress * target));
+      if (progress < 1) raf = requestAnimationFrame(step);
+      else setValue(target);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active, target, duration]);
+  return value;
+}
+
+function StatsStrip() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const four = useCountUp(4, visible, 600);
+  const hundred = useCountUp(100, visible, 1100);
+
+  return (
+    <section ref={ref} className="border-y border-[var(--line)] bg-[var(--surface)] relative overflow-hidden">
+      <div className="float-slow absolute top-2 left-[8%] w-24 h-24 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-60 pointer-events-none" />
+      <div className="float-slower absolute -bottom-6 right-[10%] w-28 h-28 rounded-full bg-[var(--good-bg)] blur-3xl opacity-50 pointer-events-none" />
+      <div
+        className="max-w-6xl mx-auto px-6 py-12 relative transition-all duration-700"
+        style={{
+          transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0)' : 'translateY(18px)',
+        }}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {[
+            { n: four, suffix: '', d: 'tools from one paste' },
+            { n: null, suffix: '<10s', d: 'to your first result' },
+            { n: hundred, suffix: '', d: 'interview questions per role' },
+            { n: null, suffix: '₹0', d: 'to start' },
+          ].map((s, i) => (
+            <div
+              key={s.d}
+              className={`text-center px-4 py-2 ${i > 0 ? 'md:border-l border-[var(--line)]' : ''} ${i % 2 === 1 ? 'border-l md:border-l-0 border-[var(--line)]' : ''}`}
+            >
+              <p className="text-4xl font-bold tracking-tight text-[var(--ink)] tabular-nums">{s.n !== null ? s.n : s.suffix}</p>
+              <p className="text-[13px] text-[var(--muted)] mt-2 leading-snug">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -389,49 +519,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick facts strip */}
-      <section className="border-y border-[var(--line)] bg-[var(--surface)]">
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4">
-            {[
-              { n: '4', d: 'tools from one paste' },
-              { n: '<10s', d: 'to your first result' },
-              { n: '100', d: 'interview questions per role' },
-              { n: '₹0', d: 'to start' },
-            ].map((s, i) => (
-              <div
-                key={s.d}
-                className={`text-center px-4 py-2 ${i > 0 ? 'md:border-l border-[var(--line)]' : ''} ${i % 2 === 1 ? 'border-l md:border-l-0 border-[var(--line)]' : ''}`}
-              >
-                <p className="text-4xl font-bold tracking-tight text-[var(--ink)]">{s.n}</p>
-                <p className="text-[13px] text-[var(--muted)] mt-2 leading-snug">{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <StatsStrip />
 
       {/* Features */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
-        <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Everything between you and the offer.</h2>
-        <p className="text-center text-[var(--muted)] mb-16">One paste covers all of it.</p>
+      <section className="max-w-6xl mx-auto px-6 py-24 relative">
+        <div className="float-slower absolute top-10 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-40 pointer-events-none" />
+        <Reveal>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Everything between you and the offer.</h2>
+          <p className="text-center text-[var(--muted)] mb-16">One paste covers all of it.</p>
+        </Reveal>
         <div className="grid md:grid-cols-3 gap-5">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="card rounded-2xl p-6">
-              <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center mb-4">
-                <f.icon size={17} className="text-[var(--accent-ink)]" />
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delayMs={i * 80}>
+              <div className="card card-hover-lift rounded-2xl p-6 h-full">
+                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center mb-4">
+                  <f.icon size={17} className="text-[var(--accent-ink)]" />
+                </div>
+                <h3 className="font-semibold mb-2 text-[15px]">{f.title}</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed">{f.desc}</p>
               </div>
-              <h3 className="font-semibold mb-2 text-[15px]">{f.title}</h3>
-              <p className="text-sm text-[var(--muted)] leading-relaxed">{f.desc}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* Comparison */}
       <section id="compare" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-16">
-        <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Where Cvly fits</h2>
-        <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
+        <Reveal>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Where Cvly fits</h2>
+          <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
+        </Reveal>
+        <Reveal delayMs={100}>
         <div className="card rounded-2xl overflow-x-auto">
           <table className="w-full text-sm min-w-[640px] border-separate border-spacing-0">
             <thead>
@@ -489,12 +607,16 @@ export default function Home() {
             </tbody>
           </table>
         </div>
+        </Reveal>
       </section>
 
       {/* Tool */}
-      <section id="tool" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-16">
-        <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">See where you stand</h2>
-        <p className="text-center text-[var(--muted)] text-sm mb-14">No signup. No card. Paste and see.</p>
+      <section id="tool" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-16 relative">
+        <div className="float-slow absolute top-0 left-[3%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
+        <Reveal>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">See where you stand</h2>
+          <p className="text-center text-[var(--muted)] text-sm mb-14">No signup. No card. Paste and see.</p>
+        </Reveal>
 
         <div className="grid md:grid-cols-2 gap-5 mb-6">
           <div className="card rounded-2xl p-6">
@@ -665,11 +787,11 @@ export default function Home() {
 
       {/* FAQ */}
       <section id="faq" className="max-w-3xl mx-auto px-6 py-24 scroll-mt-16">
-        <h2 className="text-3xl font-semibold tracking-tight text-center mb-14">Questions</h2>
+        <Reveal><h2 className="text-3xl font-semibold tracking-tight text-center mb-14">Questions</h2></Reveal>
         <div className="space-y-3">
           {FAQS.map((f, i) => (
+            <Reveal key={i} delayMs={i * 60}>
             <details
-              key={i}
               open={openFaq === i}
               onToggle={(e) => setOpenFaq((e.target as HTMLDetailsElement).open ? i : null)}
               className="card rounded-xl px-5 py-4"
@@ -680,6 +802,7 @@ export default function Home() {
               </summary>
               <p className="text-sm text-[var(--muted)] mt-3 leading-relaxed">{f.a}</p>
             </details>
+            </Reveal>
           ))}
         </div>
       </section>
