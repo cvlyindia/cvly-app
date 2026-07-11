@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
-  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart, Sparkles,
+  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart, Sparkles, Lock, Trash2,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
@@ -98,7 +98,7 @@ function StatsStrip() {
     return () => obs.disconnect();
   }, []);
 
-  const four = useCountUp(4, visible, 350);
+  const five = useCountUp(5, visible, 350);
   const hundred = useCountUp(100, visible, 450);
 
   return (
@@ -115,7 +115,7 @@ function StatsStrip() {
       >
         <div className="grid grid-cols-2 md:grid-cols-4">
           {[
-            { n: four, suffix: '', d: 'tools from one paste' },
+            { n: five, suffix: '', d: 'steps, one paste' },
             { n: null, suffix: '<10s', d: 'to your first result' },
             { n: hundred, suffix: '', d: 'interview questions per role' },
             { n: null, suffix: '₹0', d: 'to start' },
@@ -148,18 +148,20 @@ const EXAMPLES = [
 ];
 
 const STEPS = [
-  { n: '01', icon: Upload, title: 'Paste your resume', desc: 'Upload a PDF or DOCX, or just paste the text. Takes a few seconds.' },
-  { n: '02', icon: Target, title: 'We compare it to the role', desc: 'Your resume against the actual job description, the way a real recruiter\'s software reads it.' },
-  { n: '03', icon: KeyRound, title: 'See exactly what\'s missing', desc: 'A score, and the specific terms this role wants that your resume doesn\'t say yet.' },
-  { n: '04', icon: PenLine, title: 'Fix it in one click', desc: 'A sharper resume and a cover letter, built from what you actually wrote — nothing invented.' },
-  { n: '05', icon: MessagesSquare, title: 'Practice 100 interview questions', desc: 'Built for this exact role, each with a hint for structuring your answer.' },
+  { n: '01', icon: Upload, title: 'Paste your resume', desc: 'PDF, DOCX, or just text. A few seconds.' },
+  { n: '02', icon: Target, title: 'We compare it to the role', desc: 'The way a real recruiter\'s software reads it.' },
+  { n: '03', icon: KeyRound, title: 'See what\'s missing', desc: 'A score, and the terms this role wants.' },
+  { n: '04', icon: PenLine, title: 'Fix it in one click', desc: 'Sharper resume, real cover letter. Nothing invented.' },
+  { n: '05', icon: MessagesSquare, title: 'Practice 100 questions', desc: 'Built for this exact role.' },
 ];
 
 const TRUST_POINTS = [
   { icon: ShieldCheck, text: 'Your resume is used only to generate your results' },
   { icon: KeyRound, text: 'Nothing is stored unless you choose to sign in' },
-  { icon: Target, text: 'Delete any saved check from your history, anytime' },
-  { icon: Sparkles, text: 'Built on Google Gemini — no fake numbers, ever' },
+  { icon: Trash2, text: 'Delete any saved check from your history, anytime' },
+  { icon: Lock, text: 'You own what you paste in — we claim no rights to it' },
+  { icon: Sparkles, text: 'Built on Google Gemini, plainly, no hidden layer' },
+  { icon: Check, text: 'No fabricated experience, no invented achievements — ever' },
 ];
 
 const FAQS = [
@@ -232,6 +234,81 @@ function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy }: { block
         <Copy size={13} /> {copied ? 'Copied' : 'Copy'}
       </button>
     </div>
+  );
+}
+
+const SAMPLE_REPORT = {
+  score: 78,
+  role: 'Marketing Manager — D2C skincare brand',
+  matched: ['Campaign Strategy', 'SEO', 'Content Calendar', 'Analytics'],
+  missing: ['Marketo', 'Lifecycle Marketing'],
+  improvements: [
+    'Add specific campaign metrics — reach, CTR, or conversion lift — to your bullet points.',
+    'Mention any marketing automation tools you\'ve used, even briefly.',
+  ],
+  rewrite: 'Led a full-funnel content strategy across Instagram and email that grew organic reach 3x over two quarters. Owned the campaign calendar for 4 concurrent product launches, coordinating with design and paid media...',
+  cover: 'Skincare marketing lives or dies on trust — and that\'s exactly what I\'ve spent the last three years building for D2C brands. When I saw this role, the campaign calendar work you\'re describing is almost identical to what I ran at...',
+  interview: 'Tell me about a campaign that didn\'t perform the way you expected. Hint: pick one, be specific about what you changed mid-flight, and end on the actual lesson — not just "it worked out."',
+};
+
+function SampleReport() {
+  const [tab, setTab] = useState<'score' | 'rewrite' | 'cover' | 'interview'>('score');
+  const tabs: { key: typeof tab; label: string }[] = [
+    { key: 'score', label: 'Score' },
+    { key: 'rewrite', label: 'Rewrite' },
+    { key: 'cover', label: 'Cover letter' },
+    { key: 'interview', label: 'Interview prep' },
+  ];
+
+  return (
+    <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
+      <Reveal>
+        <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">See a sample report</h2>
+        <p className="text-center text-[var(--muted)] mb-10 text-sm">Illustrative example — not live data. Run your own for real results.</p>
+      </Reveal>
+      <Reveal delayMs={100}>
+        <div className="card rounded-2xl overflow-hidden">
+          <div className="flex border-b border-[var(--line)] overflow-x-auto">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`flex-1 min-w-[110px] py-3.5 text-sm font-medium transition ${
+                  tab === t.key ? 'text-[var(--ink)] bg-[var(--surface)] border-b-2 border-[var(--ink)]' : 'text-[var(--muted)] hover:text-[var(--ink)]'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="p-7">
+            {tab === 'score' && (
+              <div>
+                <div className="flex items-start gap-6 mb-6 flex-wrap">
+                  <ScoreRing score={SAMPLE_REPORT.score} size={88} />
+                  <div className="pt-2">
+                    <p className="text-sm font-medium text-[var(--ink)]">{SAMPLE_REPORT.role}</p>
+                    <p className="text-xs text-[var(--muted)] mt-1">{SAMPLE_REPORT.matched.length} of {SAMPLE_REPORT.matched.length + SAMPLE_REPORT.missing.length} things this role wants — found</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {SAMPLE_REPORT.matched.map((k) => (
+                    <span key={k} className="px-2.5 py-1 bg-[var(--good-bg)] text-[var(--good)] text-xs rounded-full font-medium">{k}</span>
+                  ))}
+                  {SAMPLE_REPORT.missing.map((k) => (
+                    <span key={k} className="px-2.5 py-1 bg-[var(--bad-bg)] text-[var(--bad)] text-xs rounded-full font-medium">{k}</span>
+                  ))}
+                </div>
+                <p className="text-xs text-[var(--muted-soft)] mt-4">{SAMPLE_REPORT.improvements[0]}</p>
+              </div>
+            )}
+            {tab === 'rewrite' && <p className="text-sm text-[var(--ink)]/80 leading-relaxed">{SAMPLE_REPORT.rewrite}</p>}
+            {tab === 'cover' && <p className="text-sm text-[var(--ink)]/80 leading-relaxed">{SAMPLE_REPORT.cover}</p>}
+            {tab === 'interview' && <p className="text-sm text-[var(--ink)]/80 leading-relaxed italic">&quot;{SAMPLE_REPORT.interview}&quot;</p>}
+          </div>
+        </div>
+      </Reveal>
+    </section>
   );
 }
 
@@ -450,24 +527,32 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur-md z-20">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="Cvly" width={36} height={33} className="rounded-md" />
             <span className="text-[20px] font-bold tracking-[-0.02em]">Cvly</span>
           </div>
-          <div className="flex items-center gap-6">
-            <a href="#how" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">How it works</a>
-            <a href="#compare" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
-            <a href="#faq" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
+          <div className="flex items-center gap-7">
+            <a href="#how" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">How it works</a>
+            <a href="#compare" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
+            <a href="#faq" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
             {user ? (
               <>
-                <Link href="/dashboard" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Dashboard</Link>
-                <Link href="/history" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">History</Link>
-                <button onClick={handleLogout} className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Sign out</button>
+                <Link href="/dashboard" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Dashboard</Link>
+                <Link href="/history" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">History</Link>
+                <button onClick={handleLogout} className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Sign out</button>
+                <button onClick={() => setToolOpen(true)} className="btn-accent px-4 py-2 rounded-full text-sm font-semibold">
+                  New check
+                </button>
               </>
             ) : (
-              <Link href="/login" className="text-sm font-medium text-[var(--ink)] hover:text-[var(--muted)] transition">
-                Sign in
-              </Link>
+              <>
+                <Link href="/login" className="hidden sm:block text-sm font-medium text-[var(--ink)] hover:text-[var(--muted)] transition">
+                  Sign in
+                </Link>
+                <button onClick={() => setToolOpen(true)} className="btn-accent px-4 py-2 rounded-full text-sm font-semibold">
+                  Check my resume
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -480,10 +565,10 @@ export default function Home() {
             The interview isn&apos;t<br />the hard part.<br /><span className="text-[var(--accent-ink)]">Getting one is.</span>
           </h1>
           <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-3 max-w-md">
-            Cvly shows you exactly what&apos;s standing between your resume and a callback — then helps you fix it. Free.
+            You&apos;ve applied. You&apos;ve waited. Nothing. It&apos;s rarely your experience — it&apos;s that your resume never made it past the first read.
           </p>
           <p className="fade-up fade-up-1 text-[var(--muted-soft)] text-sm mb-9 max-w-md">
-            Most people send the same resume to every job. Yours doesn&apos;t have to.
+            Cvly shows you exactly why, then fixes it with you. Free, no card.
           </p>
           <button
             onClick={() => setToolOpen(true)}
@@ -525,16 +610,28 @@ export default function Home() {
               <div className="space-y-3 min-h-[132px]">
                 <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What you have</p>
                 <div className="flex flex-wrap gap-2 mb-5">
-                  {EXAMPLES[exampleIndex].have.map((k) => (
-                    <span key={k} className="px-3 py-1.5 bg-[var(--good-bg)] border border-[var(--good)]/15 text-[var(--good)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
+                  {EXAMPLES[exampleIndex].have.map((k, ki) => (
+                    <span
+                      key={k}
+                      className="card-swap px-3 py-1.5 bg-[var(--good-bg)] border border-[var(--good)]/15 text-[var(--good)] text-xs rounded-full font-medium whitespace-nowrap"
+                      style={{ animationDelay: `${150 + ki * 90}ms` }}
+                    >
+                      {k}
+                    </span>
                   ))}
                 </div>
                 {EXAMPLES[exampleIndex].missing.length > 0 && (
                   <>
                     <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What&apos;s missing</p>
                     <div className="flex flex-wrap gap-2">
-                      {EXAMPLES[exampleIndex].missing.map((k) => (
-                        <span key={k} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
+                      {EXAMPLES[exampleIndex].missing.map((k, ki) => (
+                        <span
+                          key={k}
+                          className="card-swap px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium whitespace-nowrap"
+                          style={{ animationDelay: `${150 + (EXAMPLES[exampleIndex].have.length + ki) * 90}ms` }}
+                        >
+                          {k}
+                        </span>
                       ))}
                     </div>
                   </>
@@ -562,13 +659,34 @@ export default function Home() {
       <StatsStrip />
 
       {/* Story */}
-      <section id="how" className="max-w-3xl mx-auto px-6 py-20 relative scroll-mt-16">
+      <section id="how" className="max-w-6xl mx-auto px-6 py-20 relative scroll-mt-16">
         <div className="float-slower absolute top-10 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">From resume to ready, in five steps.</h2>
           <p className="text-center text-[var(--muted)] mb-16">No signup needed to see it work.</p>
         </Reveal>
-        <div className="relative">
+
+        {/* Desktop: horizontal timeline */}
+        <div className="hidden lg:block relative mb-2">
+          <div className="absolute left-[10%] right-[10%] top-7 h-px bg-[var(--line)]" />
+          <div className="grid grid-cols-5 gap-4">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.n} delayMs={i * 80}>
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-[var(--line)] flex items-center justify-center shrink-0 relative z-10 mb-4">
+                    <s.icon size={20} className="text-[var(--accent-ink)]" />
+                  </div>
+                  <p className="font-mono text-[11px] text-[var(--accent-ink)] tracking-wide mb-1.5">STEP {s.n}</p>
+                  <h3 className="font-semibold text-[15px] mb-1.5">{s.title}</h3>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed max-w-[160px]">{s.desc}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile: vertical timeline */}
+        <div className="lg:hidden max-w-md mx-auto relative">
           <div className="absolute left-[27px] top-3 bottom-3 w-px bg-[var(--line)]" />
           <div className="space-y-9">
             {STEPS.map((s, i) => (
@@ -598,15 +716,15 @@ export default function Home() {
       </section>
 
       {/* Trust */}
-      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
+      <section className="max-w-5xl mx-auto px-6 py-16 border-t border-[var(--line)]">
         <Reveal>
           <p className="text-center text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-8">What actually happens to your data</p>
         </Reveal>
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {TRUST_POINTS.map((t, i) => (
             <Reveal key={t.text} delayMs={i * 60}>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--surface)]">
-                <t.icon size={16} className="text-[var(--accent-ink)] shrink-0" />
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-[var(--surface)] h-full">
+                <t.icon size={16} className="text-[var(--accent-ink)] shrink-0 mt-0.5" />
                 <p className="text-sm text-[var(--ink)]/80">{t.text}</p>
               </div>
             </Reveal>
@@ -614,10 +732,47 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Why not ChatGPT */}
+      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
+        <Reveal>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Why not just use ChatGPT?</h2>
+          <p className="text-center text-[var(--muted)] mb-14 text-sm max-w-md mx-auto">You can. It&apos;s a good general-purpose assistant. Cvly is built for one specific job.</p>
+        </Reveal>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Reveal>
+            <div className="rounded-2xl p-6 border border-[var(--line)] h-full">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-3">A general assistant</p>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
+                Great at almost anything, if you know what to ask. You&apos;re writing the prompts, holding the context, and starting from a blank page each time.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delayMs={80}>
+            <div className="rounded-2xl p-6 bg-[var(--ink)] text-white h-full">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">Cvly, built for this</p>
+              <div className="space-y-2.5">
+                {['Resume vs. role scoring', 'ATS-style keyword comparison', 'Tailored rewrite', 'Cover letter in your voice', '100-question interview prep', 'Your history, saved and searchable'].map((item) => (
+                  <div key={item} className="flex items-center gap-2.5">
+                    <Check size={14} className="text-[var(--accent)] shrink-0" />
+                    <p className="text-sm text-white/90">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Sample report */}
+      <SampleReport />
+
       {/* Comparison */}
       <section id="compare" className="max-w-5xl mx-auto px-6 py-20 scroll-mt-16">
         <Reveal>
-          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Where Cvly fits</h2>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Why Cvly exists</h2>
+          <p className="text-center text-[var(--ink)]/70 max-w-lg mx-auto mb-3 leading-relaxed">
+            Most tools give you a piece of the process — a scanner, or a builder, or a tracker. Job hunting isn&apos;t a piece, it&apos;s one continuous workflow. So that&apos;s what we built.
+          </p>
           <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
         </Reveal>
         <Reveal delayMs={100}>
@@ -912,6 +1067,36 @@ export default function Home() {
             </Reveal>
           ))}
         </div>
+      </section>
+
+      {/* Building in public + founder note */}
+      <section className="max-w-3xl mx-auto px-6 py-16 border-t border-[var(--line)]">
+        <Reveal>
+          <div className="card rounded-2xl p-7">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-4">Why I built this</p>
+            <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-4">
+              I run a small performance marketing agency, and over the years I&apos;ve looked at a lot of resumes — for clients, for candidates, for NGOs I&apos;ve worked with. The same thing kept happening: good people, resumes that never got past the first filter. Cvly is what I wished existed for them.
+            </p>
+            <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-4">
+              It&apos;s still early. I&apos;m building it in public, adding what people actually ask for, and keeping it free while that&apos;s true. If something&apos;s missing or broken, I want to hear about it.
+            </p>
+            <p className="text-sm font-semibold">— Anurag, Faridabad</p>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Final CTA */}
+      <section className="max-w-3xl mx-auto px-6 py-20 text-center border-t border-[var(--line)]">
+        <Reveal>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Your resume already tells your story.</h2>
+          <p className="text-[var(--muted)] mb-9 max-w-md mx-auto">Let&apos;s make sure it actually gets read. Free, no card, results in seconds.</p>
+          <button
+            onClick={() => setToolOpen(true)}
+            className="btn-accent inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-sm"
+          >
+            Check my resume, free <ArrowRight size={16} />
+          </button>
+        </Reveal>
       </section>
 
       {/* Footer */}
