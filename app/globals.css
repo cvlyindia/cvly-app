@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --ink: #12182B;
-  --navy: #1B2440;
-  --paper: #F7F7F4;
-  --paper-line: #E7E5DD;
-  --blue: #3D5AF1;
-  --blue-deep: #2A3FC7;
-  --blue-mist: #EEF1FE;
+  --ink: #1E1E22;
+  --charcoal: #2B2B2E;
+  --paper: #FBFAF8;
+  --paper-line: #E9E6DE;
+  --orange: #F5821F;
+  --orange-deep: #D66C0F;
+  --orange-mist: #FEF0E2;
   --good: #1F9D55;
   --good-bg: #EAF7EF;
   --warn: #C97A28;
@@ -33,17 +33,26 @@ body {
   font-family: var(--font-mono), monospace;
 }
 
-/* Subtle ruled-paper texture, like faint document lines */
 .paper-texture {
   background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 35px,
-    var(--paper-line) 35px,
-    var(--paper-line) 36px
+    to bottom, transparent, transparent 35px, var(--paper-line) 35px, var(--paper-line) 36px
   );
 }
 
-.stamp-ring {
-  filter: drop-shadow(0 1px 2px rgba(18, 24, 43, 0.08));
+.stamp-ring { filter: drop-shadow(0 1px 2px rgba(30,30,34,0.08)); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+.fade-up { animation: fadeUp 0.6s ease-out both; }
+.fade-up-1 { animation-delay: 0.05s; }
+.fade-up-2 { animation-delay: 0.15s; }
+.fade-up-3 { animation-delay: 0.25s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up { animation: none; }
+}
+
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
