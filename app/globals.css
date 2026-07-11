@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #16203D;
+  --blue: #3D5AF1;
+  --blue-light: #7C9CFF;
+  --bg: #FAFAFA;
+  --ink: #16203D;
+  --muted: #6B7280;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
