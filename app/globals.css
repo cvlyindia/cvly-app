@@ -44,8 +44,32 @@ body {
 .fade-up-2 { animation-delay: 0.12s; }
 .fade-up-3 { animation-delay: 0.18s; }
 
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-9px) rotate(0.3deg); }
+}
+.float-card { animation: floatCard 6s ease-in-out infinite; }
+
+@keyframes floatSlow {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-8px, 10px); }
+}
+.float-slow { animation: floatSlow 8s ease-in-out infinite; }
+
+@keyframes floatSlower {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10px, -8px); }
+}
+.float-slower { animation: floatSlower 11s ease-in-out infinite; }
+
+@keyframes cardSwap {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-swap { animation: cardSwap 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .fade-up { animation: none; }
+  .float-card, .float-slow, .float-slower, .card-swap { animation: none; }
 }
 
 details > summary { list-style: none; }

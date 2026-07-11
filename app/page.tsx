@@ -59,6 +59,19 @@ function ScoreRing({ score, size = 128 }: { score: number; size?: number }) {
   );
 }
 
+const EXAMPLES = [
+  { role: 'Senior Product Manager', score: 82, have: ['Product Strategy', 'Roadmapping', 'SQL', 'A/B Testing'], missing: ['Stakeholder mgmt', 'OKRs'] },
+  { role: 'Software Engineer', score: 88, have: ['React', 'TypeScript', 'System Design', 'CI/CD'], missing: ['Kubernetes'] },
+  { role: 'Data Analyst', score: 76, have: ['Python', 'Tableau', 'A/B Testing'], missing: ['dbt', 'Snowflake', 'Airflow'] },
+  { role: 'Marketing Manager', score: 91, have: ['Campaign Strategy', 'SEO', 'Analytics', 'Brand'], missing: ['Marketo'] },
+  { role: 'UX Designer', score: 79, have: ['Figma', 'User Research', 'Prototyping'], missing: ['Design Systems', 'Accessibility'] },
+  { role: 'Sales Executive', score: 85, have: ['B2B Sales', 'CRM', 'Negotiation', 'Pipeline'], missing: ['Salesforce'] },
+  { role: 'HR Manager', score: 73, have: ['Recruitment', 'Onboarding'], missing: ['HRIS', 'Compliance', 'L&D'] },
+  { role: 'Financial Analyst', score: 89, have: ['Excel', 'Forecasting', 'Financial Modeling'], missing: ['SAP'] },
+  { role: 'Content Strategist', score: 94, have: ['Content Planning', 'SEO', 'Editorial', 'Analytics'], missing: [] },
+  { role: 'DevOps Engineer', score: 81, have: ['AWS', 'Docker', 'Terraform', 'CI/CD'], missing: ['Kubernetes', 'Prometheus'] },
+];
+
 const FEATURES = [
   { icon: Target, title: 'Know where you stand', desc: 'A clear score showing how closely your resume matches this role — before you hit submit.' },
   { icon: KeyRound, title: 'See exactly what\'s missing', desc: 'The specific terms this role is looking for that your resume doesn\'t say yet.' },
@@ -120,6 +133,14 @@ export default function Home() {
   const [openCategory, setOpenCategory] = useState<number>(0);
   const [user, setUser] = useState<User | null>(null);
   const [copied, setCopied] = useState(false);
+  const [exampleIndex, setExampleIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setExampleIndex((i) => (i + 1) % EXAMPLES.length);
+    }, 3400);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -315,25 +336,53 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="fade-up fade-up-1 card rounded-2xl p-7">
-          <div className="flex items-center gap-5 mb-6 pb-6 border-b border-[var(--line)]">
-            <ScoreRing score={82} size={96} />
-            <div>
-              <p className="font-semibold text-[15px]">Senior Product Manager</p>
-              <p className="text-sm text-[var(--muted)] mt-1">14 of 17 things this role wants — found</p>
+        <div className="relative">
+          {/* Ambient floating accents — subtle, restrained, not neon */}
+          <div className="float-slow absolute -top-8 -right-6 w-24 h-24 rounded-full bg-[var(--accent-soft)] blur-2xl opacity-70 pointer-events-none" />
+          <div className="float-slower absolute -bottom-10 -left-8 w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-60 pointer-events-none" />
+
+          <div className="fade-up fade-up-1 float-card card rounded-2xl p-7 relative">
+            <div key={exampleIndex} className="card-swap">
+              <div className="flex items-center gap-5 mb-6 pb-6 border-b border-[var(--line)]">
+                <ScoreRing score={EXAMPLES[exampleIndex].score} size={96} />
+                <div>
+                  <p className="font-semibold text-[15px]">{EXAMPLES[exampleIndex].role}</p>
+                  <p className="text-sm text-[var(--muted)] mt-1">
+                    {EXAMPLES[exampleIndex].have.length} of {EXAMPLES[exampleIndex].have.length + EXAMPLES[exampleIndex].missing.length} things this role wants — found
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-3 min-h-[132px]">
+                <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What you have</p>
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {EXAMPLES[exampleIndex].have.map((k) => (
+                    <span key={k} className="px-3 py-1.5 bg-[var(--good-bg)] border border-[var(--good)]/15 text-[var(--good)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
+                  ))}
+                </div>
+                {EXAMPLES[exampleIndex].missing.length > 0 && (
+                  <>
+                    <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What&apos;s missing</p>
+                    <div className="flex flex-wrap gap-2">
+                      {EXAMPLES[exampleIndex].missing.map((k) => (
+                        <span key={k} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What you have</p>
-            <div className="flex flex-wrap gap-2 mb-5">
-              {['Product Strategy', 'Roadmapping', 'SQL', 'A/B Testing'].map((k) => (
-                <span key={k} className="px-3 py-1.5 bg-[var(--good-bg)] border border-[var(--good)]/15 text-[var(--good)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
-              ))}
-            </div>
-            <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What&apos;s missing</p>
-            <div className="flex flex-wrap gap-2">
-              {['Stakeholder mgmt', 'OKRs'].map((k) => (
-                <span key={k} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
+
+            {/* Progress dots */}
+            <div className="flex items-center gap-1.5 mt-6 pt-5 border-t border-[var(--line)]">
+              {EXAMPLES.map((_, i) => (
+                <span
+                  key={i}
+                  className="h-1 rounded-full transition-all duration-500"
+                  style={{
+                    width: i === exampleIndex ? '18px' : '5px',
+                    background: i === exampleIndex ? 'var(--accent)' : 'var(--line-strong)',
+                  }}
+                />
               ))}
             </div>
           </div>
