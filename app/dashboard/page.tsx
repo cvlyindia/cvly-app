@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2, History, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target, Zap } from 'lucide-react';
+import { DashboardShell } from '@/components/DashboardShell';
+import { ArrowRight, Plus, Loader2, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target, Zap } from 'lucide-react';
 import { PLAN_LIMITS } from '@/lib/credits';
 
 type Scan = {
@@ -187,23 +187,18 @@ export default function DashboardPage() {
     });
   }
 
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace('/');
+  }
+
   return (
-    <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
+    <DashboardShell activePage="dashboard" pageTitle="Dashboard" userEmail={email} credits={credits} onSignOut={handleSignOut}>
+      <div className="relative">
       <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
 
-      <header className="border-b border-[var(--line)] relative">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Cvly" width={30} height={28} className="rounded-md" />
-            <span className="text-[18px] font-bold tracking-[-0.02em]">Cvly</span>
-          </Link>
-          <Link href="/history" className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition flex items-center gap-1.5">
-            <History size={14} /> Full history
-          </Link>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-6 py-14 relative">
+      <div className="relative">
         {scans === null ? (
           <div className="flex justify-center py-20">
             <Loader2 size={20} className="animate-spin text-[var(--muted)]" />
@@ -511,6 +506,7 @@ export default function DashboardPage() {
           </>
         )}
       </div>
-    </main>
+      </div>
+    </DashboardShell>
   );
 }
