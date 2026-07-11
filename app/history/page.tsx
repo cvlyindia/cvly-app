@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Trash2 } from 'lucide-react';
 
 type Scan = {
   id: string;
@@ -15,6 +16,7 @@ type Scan = {
 export default function HistoryPage() {
   const [scans, setScans] = useState<Scan[] | null>(null);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/history')
@@ -24,6 +26,19 @@ export default function HistoryPage() {
         else setScans(data.scans);
       });
   }, []);
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/scans/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.deleted) {
+        setScans((prev) => prev?.filter((s) => s.id !== id) ?? null);
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">
@@ -38,7 +53,8 @@ export default function HistoryPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-14">
-        <h1 className="text-2xl font-semibold tracking-tight mb-8">Your history</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Your history</h1>
+        <p className="text-sm text-[var(--muted)] mb-8">Delete any check you don&apos;t want to keep — it&apos;s removed immediately, for good.</p>
 
         {error === 'Not logged in' && (
           <div className="card rounded-2xl p-7 text-center">
@@ -71,6 +87,14 @@ export default function HistoryPage() {
                       {new Date(s.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    disabled={deletingId === s.id}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--muted)] hover:text-[var(--bad)] hover:bg-[var(--bad-bg)] transition disabled:opacity-40 shrink-0"
+                    aria-label="Delete"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               );
             })}

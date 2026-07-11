@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
-  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart,
+  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart, Sparkles,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
@@ -147,13 +147,19 @@ const EXAMPLES = [
   { role: 'DevOps Engineer', score: 81, have: ['AWS', 'Docker', 'Terraform', 'CI/CD'], missing: ['Kubernetes', 'Prometheus'] },
 ];
 
-const FEATURES = [
-  { icon: Target, title: 'Know where you stand', desc: 'A clear score showing how closely your resume matches this role — before you hit submit.' },
-  { icon: KeyRound, title: 'See exactly what\'s missing', desc: 'The specific terms this role is looking for that your resume doesn\'t say yet.' },
-  { icon: PenLine, title: 'Fix it in one click', desc: 'A sharper version of your resume for this role. Your real experience, better framed — nothing invented.' },
-  { icon: Mail, title: 'Write in your voice', desc: 'A cover letter that reads like you wrote it, because it\'s built from your actual background.' },
-  { icon: MessagesSquare, title: 'Walk in prepared', desc: '100 likely interview questions for this exact role, each with a hint for structuring your answer.' },
-  { icon: ShieldCheck, title: 'Nothing to lose', desc: 'Every tool here is free while we\'re building. No card, no catch.' },
+const STEPS = [
+  { n: '01', icon: Upload, title: 'Paste your resume', desc: 'Upload a PDF or DOCX, or just paste the text. Takes a few seconds.' },
+  { n: '02', icon: Target, title: 'We compare it to the role', desc: 'Your resume against the actual job description, the way a real recruiter\'s software reads it.' },
+  { n: '03', icon: KeyRound, title: 'See exactly what\'s missing', desc: 'A score, and the specific terms this role wants that your resume doesn\'t say yet.' },
+  { n: '04', icon: PenLine, title: 'Fix it in one click', desc: 'A sharper resume and a cover letter, built from what you actually wrote — nothing invented.' },
+  { n: '05', icon: MessagesSquare, title: 'Practice 100 interview questions', desc: 'Built for this exact role, each with a hint for structuring your answer.' },
+];
+
+const TRUST_POINTS = [
+  { icon: ShieldCheck, text: 'Your resume is used only to generate your results' },
+  { icon: KeyRound, text: 'Nothing is stored unless you choose to sign in' },
+  { icon: Target, text: 'Delete any saved check from your history, anytime' },
+  { icon: Sparkles, text: 'Built on Google Gemini — no fake numbers, ever' },
 ];
 
 const FAQS = [
@@ -449,6 +455,7 @@ export default function Home() {
             <span className="text-[20px] font-bold tracking-[-0.02em]">Cvly</span>
           </div>
           <div className="flex items-center gap-6">
+            <a href="#how" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">How it works</a>
             <a href="#compare" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
             <a href="#faq" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
             {user ? (
@@ -467,19 +474,22 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
+      <section className="max-w-6xl mx-auto px-6 pt-24 pb-16 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
         <div>
           <h1 className="fade-up text-[2.75rem] md:text-6xl font-semibold tracking-[-0.03em] leading-[1.05] mb-7">
-            Walk into every interview<br />already prepared.
+            The interview isn&apos;t<br />the hard part.<br /><span className="text-[var(--accent-ink)]">Getting one is.</span>
           </h1>
-          <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-10 max-w-md">
-            See exactly what&apos;s standing between you and a shortlist — then fix it, write your cover letter, and prepare for the interview. One paste. Ten seconds.
+          <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-3 max-w-md">
+            Cvly shows you exactly what&apos;s standing between your resume and a callback — then helps you fix it. Free.
+          </p>
+          <p className="fade-up fade-up-1 text-[var(--muted-soft)] text-sm mb-9 max-w-md">
+            Most people send the same resume to every job. Yours doesn&apos;t have to.
           </p>
           <button
             onClick={() => setToolOpen(true)}
             className="fade-up fade-up-2 btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm"
           >
-            See where you stand <ArrowRight size={16} />
+            See my interview chances <ArrowRight size={16} />
           </button>
           <div className="fade-up fade-up-2 flex items-center gap-5 mt-8 text-sm text-[var(--muted)]">
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No card</span>
@@ -551,22 +561,53 @@ export default function Home() {
 
       <StatsStrip />
 
-      {/* Features */}
-      <section className="max-w-6xl mx-auto px-6 py-24 relative">
-        <div className="float-slower absolute top-10 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-40 pointer-events-none" />
+      {/* Story */}
+      <section id="how" className="max-w-3xl mx-auto px-6 py-20 relative scroll-mt-16">
+        <div className="float-slower absolute top-10 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
         <Reveal>
-          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Everything between you and the offer.</h2>
-          <p className="text-center text-[var(--muted)] mb-16">One paste covers all of it.</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">From resume to ready, in five steps.</h2>
+          <p className="text-center text-[var(--muted)] mb-16">No signup needed to see it work.</p>
         </Reveal>
-        <div className="grid md:grid-cols-3 gap-5">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.title} delayMs={i * 80}>
-              <div className="card card-hover-lift rounded-2xl p-6 h-full">
-                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center mb-4">
-                  <f.icon size={17} className="text-[var(--accent-ink)]" />
+        <div className="relative">
+          <div className="absolute left-[27px] top-3 bottom-3 w-px bg-[var(--line)]" />
+          <div className="space-y-9">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.n} delayMs={i * 70}>
+                <div className="flex gap-6">
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-[var(--line)] flex items-center justify-center shrink-0 relative z-10">
+                    <s.icon size={20} className="text-[var(--accent-ink)]" />
+                  </div>
+                  <div className="pt-1.5">
+                    <p className="font-mono text-[11px] text-[var(--accent-ink)] tracking-wide mb-1">STEP {s.n}</p>
+                    <h3 className="font-semibold text-lg mb-1.5">{s.title}</h3>
+                    <p className="text-sm text-[var(--muted)] leading-relaxed max-w-md">{s.desc}</p>
+                  </div>
                 </div>
-                <h3 className="font-semibold mb-2 text-[15px]">{f.title}</h3>
-                <p className="text-sm text-[var(--muted)] leading-relaxed">{f.desc}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+        <div className="text-center mt-14">
+          <button
+            onClick={() => setToolOpen(true)}
+            className="btn-accent inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-medium text-sm"
+          >
+            Try it now, no signup <ArrowRight size={16} />
+          </button>
+        </div>
+      </section>
+
+      {/* Trust */}
+      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
+        <Reveal>
+          <p className="text-center text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-8">What actually happens to your data</p>
+        </Reveal>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {TRUST_POINTS.map((t, i) => (
+            <Reveal key={t.text} delayMs={i * 60}>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--surface)]">
+                <t.icon size={16} className="text-[var(--accent-ink)] shrink-0" />
+                <p className="text-sm text-[var(--ink)]/80">{t.text}</p>
               </div>
             </Reveal>
           ))}
@@ -574,7 +615,7 @@ export default function Home() {
       </section>
 
       {/* Comparison */}
-      <section id="compare" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-16">
+      <section id="compare" className="max-w-5xl mx-auto px-6 py-20 scroll-mt-16">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Where Cvly fits</h2>
           <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
@@ -653,7 +694,7 @@ export default function Home() {
           />
           <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
             <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
-              <span className="text-sm font-semibold">{result ? 'Your results' : 'See where you stand'}</span>
+              <span className="text-sm font-semibold">{result ? 'Your results' : 'Check your resume'}</span>
               <div className="flex items-center gap-3">
                 {result && (
                   <button
@@ -718,7 +759,7 @@ export default function Home() {
                     disabled={loading}
                     className="btn-accent inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm disabled:opacity-40"
                   >
-                    {loading ? <><Loader2 size={16} className="animate-spin" /> Checking…</> : <>See where you stand <ArrowRight size={16} /></>}
+                    {loading ? <><Loader2 size={16} className="animate-spin" /> Checking…</> : <>Check my resume <ArrowRight size={16} /></>}
                   </button>
                 </div>
               </div>
@@ -852,8 +893,8 @@ export default function Home() {
 
 
       {/* FAQ */}
-      <section id="faq" className="max-w-3xl mx-auto px-6 py-24 scroll-mt-16">
-        <Reveal><h2 className="text-3xl font-semibold tracking-tight text-center mb-14">Questions</h2></Reveal>
+      <section id="faq" className="max-w-3xl mx-auto px-6 py-20 scroll-mt-16">
+        <Reveal><h2 className="text-3xl font-semibold tracking-tight text-center mb-14">Before you paste your resume</h2></Reveal>
         <div className="space-y-3">
           {FAQS.map((f, i) => (
             <Reveal key={i} delayMs={i * 60}>
@@ -874,13 +915,38 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--line)] py-10">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Cvly" width={26} height={24} className="rounded-md" />
-            <span className="font-bold text-[15px]">Cvly</span>
+      <footer className="border-t border-[var(--line)] pt-14 pb-8">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid sm:grid-cols-[1.4fr_1fr_1fr] gap-10 mb-10">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Image src="/logo.png" alt="Cvly" width={28} height={26} className="rounded-md" />
+                <span className="font-bold text-[17px]">Cvly</span>
+              </div>
+              <p className="text-sm text-[var(--muted)] max-w-xs leading-relaxed">
+                The interview isn&apos;t the hard part. Getting one is. Free while we&apos;re building.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-3">Product</p>
+              <div className="flex flex-col gap-2 text-sm text-[var(--muted)]">
+                <a href="#how" className="hover:text-[var(--ink)] transition">How it works</a>
+                <a href="#compare" className="hover:text-[var(--ink)] transition">Compare</a>
+                <a href="#faq" className="hover:text-[var(--ink)] transition">FAQ</a>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-3">Legal</p>
+              <div className="flex flex-col gap-2 text-sm text-[var(--muted)]">
+                <Link href="/privacy" className="hover:text-[var(--ink)] transition">Privacy</Link>
+                <Link href="/terms" className="hover:text-[var(--ink)] transition">Terms</Link>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-[var(--muted)] flex items-center gap-1">Made with <Heart size={11} className="fill-[var(--accent)] text-[var(--accent)]" /> in India · cvly.in</p>
+          <div className="pt-6 border-t border-[var(--line)] flex items-center justify-between flex-wrap gap-3">
+            <p className="text-xs text-[var(--muted)] flex items-center gap-1">Made with <Heart size={11} className="fill-[var(--accent)] text-[var(--accent)]" /> in India · cvly.in</p>
+            <p className="text-xs text-[var(--muted-soft)]">© 2026 Cvly</p>
+          </div>
         </div>
       </footer>
     </main>
