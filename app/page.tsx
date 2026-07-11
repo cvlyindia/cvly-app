@@ -569,6 +569,7 @@ export default function Home() {
             <a href="#how" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">How it works</a>
             <a href="#compare" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
             <a href="#faq" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
+            <Link href="/pricing" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Pricing</Link>
             {user ? (
               <>
                 <Link href="/dashboard" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Dashboard</Link>
@@ -1278,6 +1279,7 @@ export default function Home() {
                 <a href="#how" className="hover:text-[var(--ink)] transition">How it works</a>
                 <a href="#compare" className="hover:text-[var(--ink)] transition">Compare</a>
                 <a href="#faq" className="hover:text-[var(--ink)] transition">FAQ</a>
+                <Link href="/pricing" className="hover:text-[var(--ink)] transition">Pricing</Link>
               </div>
             </div>
             <div>
