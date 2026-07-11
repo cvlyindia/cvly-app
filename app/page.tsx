@@ -12,6 +12,34 @@ type ScoreResult = {
 
 type InterviewQuestion = { question: string; starHint: string };
 
+function StampRing({ score }: { score: number }) {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = score >= 75 ? 'var(--good)' : score >= 50 ? 'var(--warn)' : 'var(--bad)';
+  const label = score >= 75 ? 'Strong match' : score >= 50 ? 'Needs work' : 'Weak match';
+
+  return (
+    <div className="relative flex flex-col items-center shrink-0">
+      <svg width="140" height="140" viewBox="0 0 140 140" className="stamp-ring -rotate-90">
+        <circle cx="70" cy="70" r={radius} fill="none" stroke="var(--paper-line)" strokeWidth="3" />
+        <circle
+          cx="70" cy="70" r={radius} fill="none"
+          stroke={color} strokeWidth="3" strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+        />
+        <circle cx="70" cy="70" r={radius - 10} fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.35" strokeDasharray="2 4" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-display text-4xl font-semibold" style={{ color }}>{score}</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] mt-0.5">/ 100</span>
+      </div>
+      <span className="font-mono text-[11px] uppercase tracking-wider mt-3" style={{ color }}>{label}</span>
+    </div>
+  );
+}
+
 export default function Home() {
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
@@ -95,92 +123,97 @@ export default function Home() {
     }
   }
 
-  const scoreColor = result ? (result.score >= 75 ? '#16A34A' : result.score >= 50 ? '#D97706' : '#DC2626') : '#3D5AF1';
+  const tabs: { key: 'score' | 'rewrite' | 'cover' | 'interview'; label: string; num: string }[] = [
+    { key: 'score', label: 'Score', num: '01' },
+    { key: 'rewrite', label: 'Rewrite', num: '02' },
+    { key: 'cover', label: 'Cover letter', num: '03' },
+    { key: 'interview', label: 'Interview prep', num: '04' },
+  ];
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA]">
+    <main className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-2xl font-bold tracking-tight text-[#16203D]">cvly</span>
-          <span className="text-sm text-gray-500">Free while in beta</span>
+      <header className="border-b border-[var(--paper-line)]">
+        <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
+          <span className="font-display text-2xl font-semibold tracking-tight text-[var(--ink)]">cvly</span>
+          <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] border border-[var(--paper-line)] rounded-full px-3 py-1">
+            Free while in beta
+          </span>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-6 py-14">
         {!result && (
-          <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-[#16203D] mb-3">
-              Know if your resume passes the bots — in 10 seconds.
+          <div className="text-center mb-12">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--blue)] mb-4">ATS resume review</p>
+            <h1 className="font-display text-4xl md:text-5xl font-semibold text-[var(--ink)] mb-4 leading-tight">
+              Know if your resume<br /><span className="italic text-[var(--blue)]">passes the bots.</span>
             </h1>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              Paste your resume and the job description. Get your ATS match score, missing keywords, and exactly what to fix.
+            <p className="text-[var(--muted)] max-w-md mx-auto text-[15px]">
+              Paste your resume and the job description. Get your match score, missing keywords, and exactly what to fix — in under 10 seconds.
             </p>
           </div>
         )}
 
         {/* Input section */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <label className="block text-sm font-semibold text-[#16203D] mb-3">Your resume</label>
-            <div className="mb-3">
-              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-200 transition">
-                Upload PDF / DOCX
-                <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
-              </label>
-              {fileName && <span className="ml-3 text-sm text-gray-500">{fileName}</span>}
+        <div className="grid md:grid-cols-2 gap-5 mb-6">
+          <div className="bg-white rounded-xl border border-[var(--paper-line)] p-6 shadow-[0_1px_3px_rgba(18,24,43,0.04)]">
+            <div className="flex items-center justify-between mb-4">
+              <label className="font-mono text-[11px] uppercase tracking-wider text-[var(--muted)]">01 — Your resume</label>
             </div>
+            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--blue-mist)] text-sm font-medium text-[var(--blue-deep)] cursor-pointer hover:bg-[#E2E7FD] transition mb-3">
+              Upload PDF / DOCX
+              <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+            </label>
+            {fileName && <span className="block text-xs text-[var(--muted)] mb-2 font-mono">{fileName}</span>}
             <textarea
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="...or paste your resume text here"
-              className="w-full h-48 p-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3D5AF1] resize-none"
+              className="w-full h-44 p-3 rounded-lg border border-[var(--paper-line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent resize-none placeholder:text-[var(--muted)]"
             />
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <label className="block text-sm font-semibold text-[#16203D] mb-3">Job description</label>
+          <div className="bg-white rounded-xl border border-[var(--paper-line)] p-6 shadow-[0_1px_3px_rgba(18,24,43,0.04)]">
+            <label className="font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] block mb-4">02 — Job description</label>
             <textarea
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
               placeholder="Paste the full job description here"
-              className="w-full h-48 mt-9 p-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#3D5AF1] resize-none"
+              className="w-full h-[172px] mt-[42px] p-3 rounded-lg border border-[var(--paper-line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent resize-none placeholder:text-[var(--muted)]"
             />
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+          <div className="mb-6 p-3 rounded-lg bg-[var(--bad-bg)] border border-[var(--bad)]/20 text-[var(--bad)] text-sm font-mono">{error}</div>
         )}
 
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-12">
           <button
             onClick={handleScore}
             disabled={loading}
-            className="px-8 py-3 rounded-xl bg-[#3D5AF1] text-white font-semibold hover:bg-[#2E47D9] transition disabled:opacity-50"
+            className="px-8 py-3 rounded-full bg-[var(--ink)] text-white font-medium text-sm hover:bg-[var(--navy)] transition disabled:opacity-40 shadow-[0_2px_8px_rgba(18,24,43,0.15)]"
           >
-            {loading ? 'Scoring...' : 'Score my resume'}
+            {loading ? 'Scoring…' : 'Score my resume →'}
           </button>
         </div>
 
         {/* Results */}
         {result && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-[var(--paper-line)] overflow-hidden shadow-[0_1px_3px_rgba(18,24,43,0.04)]">
             {/* Tabs */}
-            <div className="flex border-b border-gray-200">
-              {[
-                { key: 'score', label: 'Score' },
-                { key: 'rewrite', label: 'Rewrite' },
-                { key: 'cover', label: 'Cover letter' },
-                { key: 'interview', label: 'Interview prep' },
-              ].map((tab) => (
+            <div className="flex border-b border-[var(--paper-line)] paper-texture">
+              {tabs.map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => handleTabAction(tab.key as 'rewrite' | 'cover' | 'interview') || setActiveTab(tab.key as 'score')}
-                  className={`flex-1 py-3 text-sm font-medium transition ${
-                    activeTab === tab.key ? 'text-[#3D5AF1] border-b-2 border-[#3D5AF1]' : 'text-gray-500 hover:text-gray-700'
+                  onClick={() => (tab.key === 'score' ? setActiveTab('score') : handleTabAction(tab.key as 'rewrite' | 'cover' | 'interview'))}
+                  className={`flex-1 py-4 text-sm font-medium transition flex flex-col items-center gap-1 ${
+                    activeTab === tab.key ? 'text-[var(--blue)]' : 'text-[var(--muted)] hover:text-[var(--ink)]'
                   }`}
+                  style={activeTab === tab.key ? { boxShadow: 'inset 0 -2px 0 var(--blue)' } : undefined}
                 >
+                  <span className="font-mono text-[10px] tracking-wider">{tab.num}</span>
                   {tab.label}
                 </button>
               ))}
@@ -189,32 +222,27 @@ export default function Home() {
             <div className="p-8">
               {activeTab === 'score' && (
                 <div>
-                  <div className="flex items-center gap-6 mb-6">
-                    <div
-                      className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shrink-0"
-                      style={{ background: scoreColor }}
-                    >
-                      {result.score}
-                    </div>
-                    <p className="text-gray-600">{result.summary}</p>
+                  <div className="flex items-start gap-8 mb-8 flex-wrap">
+                    <StampRing score={result.score} />
+                    <p className="text-[var(--ink)] flex-1 min-w-[220px] pt-2 leading-relaxed">{result.summary}</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
                     <div>
-                      <h3 className="text-sm font-semibold text-green-700 mb-2">✓ Matched keywords</h3>
+                      <h3 className="font-mono text-[11px] uppercase tracking-wider text-[var(--good)] mb-3">✓ Matched keywords</h3>
                       <div className="flex flex-wrap gap-2">
                         {result.matchedKeywords.map((kw, i) => (
-                          <span key={i} className="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-200">
+                          <span key={i} className="font-mono px-2.5 py-1 bg-[var(--good-bg)] text-[var(--good)] text-xs rounded-md">
                             {kw}
                           </span>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-red-700 mb-2">✗ Missing keywords</h3>
+                      <h3 className="font-mono text-[11px] uppercase tracking-wider text-[var(--bad)] mb-3">✗ Missing keywords</h3>
                       <div className="flex flex-wrap gap-2">
                         {result.missingKeywords.map((kw, i) => (
-                          <span key={i} className="px-2 py-1 bg-red-50 text-red-700 text-xs rounded-full border border-red-200">
+                          <span key={i} className="font-mono px-2.5 py-1 bg-[var(--bad-bg)] text-[var(--bad)] text-xs rounded-md">
                             {kw}
                           </span>
                         ))}
@@ -222,11 +250,11 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <h3 className="text-sm font-semibold text-[#16203D] mb-2">How to improve</h3>
-                  <ul className="space-y-2">
+                  <h3 className="font-mono text-[11px] uppercase tracking-wider text-[var(--ink)] mb-3">How to improve</h3>
+                  <ul className="space-y-2.5">
                     {result.improvements.map((imp, i) => (
-                      <li key={i} className="text-sm text-gray-600 flex gap-2">
-                        <span className="text-[#3D5AF1]">→</span> {imp}
+                      <li key={i} className="text-sm text-[var(--ink)]/80 flex gap-3 leading-relaxed">
+                        <span className="text-[var(--blue)] font-mono shrink-0">{String(i + 1).padStart(2, '0')}</span> {imp}
                       </li>
                     ))}
                   </ul>
@@ -236,9 +264,9 @@ export default function Home() {
               {activeTab === 'rewrite' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-gray-500 text-sm">Rewriting your resume...</p>
+                    <p className="text-[var(--muted)] text-sm font-mono">Rewriting your resume…</p>
                   ) : (
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">{rewritten}</pre>
+                    <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{rewritten}</pre>
                   )}
                 </div>
               )}
@@ -246,22 +274,25 @@ export default function Home() {
               {activeTab === 'cover' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-gray-500 text-sm">Writing your cover letter...</p>
+                    <p className="text-[var(--muted)] text-sm font-mono">Writing your cover letter…</p>
                   ) : (
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">{coverLetter}</pre>
+                    <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
                   )}
                 </div>
               )}
 
               {activeTab === 'interview' && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {tabLoading ? (
-                    <p className="text-gray-500 text-sm">Preparing interview questions...</p>
+                    <p className="text-[var(--muted)] text-sm font-mono">Preparing interview questions…</p>
                   ) : (
                     questions.map((q, i) => (
-                      <div key={i} className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-                        <p className="font-medium text-[#16203D] mb-1">{q.question}</p>
-                        <p className="text-sm text-gray-500">{q.starHint}</p>
+                      <div key={i} className="p-4 rounded-lg bg-[var(--paper)] border border-[var(--paper-line)]">
+                        <p className="font-medium text-[var(--ink)] mb-1.5 flex gap-2">
+                          <span className="font-mono text-[var(--blue)] text-xs shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
+                          {q.question}
+                        </p>
+                        <p className="text-sm text-[var(--muted)] pl-6">{q.starHint}</p>
                       </div>
                     ))
                   )}

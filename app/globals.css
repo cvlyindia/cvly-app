@@ -3,15 +3,47 @@
 @tailwind utilities;
 
 :root {
-  --navy: #16203D;
+  --ink: #12182B;
+  --navy: #1B2440;
+  --paper: #F7F7F4;
+  --paper-line: #E7E5DD;
   --blue: #3D5AF1;
-  --blue-light: #7C9CFF;
-  --bg: #FAFAFA;
-  --ink: #16203D;
-  --muted: #6B7280;
+  --blue-deep: #2A3FC7;
+  --blue-mist: #EEF1FE;
+  --good: #1F9D55;
+  --good-bg: #EAF7EF;
+  --warn: #C97A28;
+  --warn-bg: #FBF1E4;
+  --bad: #D14343;
+  --bad-bg: #FCEDED;
+  --muted: #6B6F7B;
 }
 
 body {
-  background: var(--bg);
+  background: var(--paper);
   color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
+
+/* Subtle ruled-paper texture, like faint document lines */
+.paper-texture {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 35px,
+    var(--paper-line) 35px,
+    var(--paper-line) 36px
+  );
+}
+
+.stamp-ring {
+  filter: drop-shadow(0 1px 2px rgba(18, 24, 43, 0.08));
 }
