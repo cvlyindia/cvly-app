@@ -10,6 +10,7 @@ import {
   Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
+import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
 
 type ScoreResult = {
   score: number;
@@ -21,16 +22,6 @@ type ScoreResult = {
 
 type InterviewQuestion = { question: string; starHint: string };
 type InterviewCategory = { category: string; questions: InterviewQuestion[] };
-
-function downloadText(filename: string, content: string) {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function Reveal({ children, className = '', delayMs = 0 }: { children: React.ReactNode; className?: string; delayMs?: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -181,17 +172,55 @@ const COMPARISON = [
   { name: 'Enhancv', price: '$17.99/mo', scoring: true, rewrite: true, cover: true, interview: false },
 ];
 
-function DownloadBar({ content, filename, copied, onCopy }: { content: string; filename: string; copied: boolean; onCopy: (text: string) => void }) {
+function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function handleFormat(format: 'txt' | 'pdf' | 'docx') {
+    setOpen(false);
+    setBusy(true);
+    try {
+      if (format === 'txt') downloadTxt(`${baseFilename}.txt`, blocks);
+      else if (format === 'pdf') downloadPdf(`${baseFilename}.pdf`, blocks);
+      else await downloadDocx(`${baseFilename}.docx`, blocks);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="flex items-center gap-2 mb-6">
+    <div className="flex items-center gap-2 mb-6 relative">
+      <div className="relative">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[var(--line)] text-xs font-medium text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--surface)] transition disabled:opacity-50"
+        >
+          <Download size={13} /> {busy ? 'Preparing…' : 'Download'} <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+            <div className="absolute left-0 top-full mt-1.5 w-36 card rounded-lg overflow-hidden z-20 shadow-lg">
+              {[
+                { key: 'pdf', label: 'PDF document' },
+                { key: 'docx', label: 'Word (.docx)' },
+                { key: 'txt', label: 'Plain text' },
+              ].map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => handleFormat(f.key as 'txt' | 'pdf' | 'docx')}
+                  className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--surface)] transition"
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
       <button
-        onClick={() => downloadText(filename, content)}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[var(--line)] text-xs font-medium text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--surface)] transition"
-      >
-        <Download size={13} /> Download
-      </button>
-      <button
-        onClick={() => onCopy(content)}
+        onClick={() => onCopy(copyText)}
         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[var(--line)] text-xs font-medium text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--surface)] transition"
       >
         <Copy size={13} /> {copied ? 'Copied' : 'Copy'}
@@ -326,42 +355,54 @@ export default function Home() {
     });
   }
 
-  function scoreReport(): string {
-    if (!result) return '';
+  function scoreBlocks(): ExportBlock[] {
+    if (!result) return [];
     return [
-      'CVLY — RESULTS',
-      '===============',
-      '',
-      `Score: ${result.score}/100`,
-      '',
-      result.summary,
-      '',
-      'WHAT YOU HAVE:',
-      ...result.matchedKeywords.map((k) => `  ${k}`),
-      '',
-      'WHAT\'S MISSING:',
-      ...result.missingKeywords.map((k) => `  ${k}`),
-      '',
-      'WHAT TO FIX:',
-      ...result.improvements.map((imp, i) => `  ${i + 1}. ${imp}`),
-      '',
-      'cvly.in',
-    ].join('\n');
+      { type: 'title', text: 'Cvly — Results' },
+      { type: 'body', text: `Score: ${result.score}/100` },
+      { type: 'body', text: result.summary },
+      { type: 'heading', text: 'What you have' },
+      ...result.matchedKeywords.map((k): ExportBlock => ({ type: 'body', text: `• ${k}` })),
+      { type: 'heading', text: 'What\'s missing' },
+      ...result.missingKeywords.map((k): ExportBlock => ({ type: 'body', text: `• ${k}` })),
+      { type: 'heading', text: 'What to fix' },
+      ...result.improvements.map((imp, i): ExportBlock => ({ type: 'body', text: `${i + 1}. ${imp}` })),
+      { type: 'space' },
+      { type: 'body', text: 'cvly.in' },
+    ];
   }
 
-  function interviewReport(): string {
+  function rewriteBlocks(): ExportBlock[] {
     return [
-      'CVLY — 100 INTERVIEW QUESTIONS',
-      '===============================',
-      '',
-      ...categories.flatMap((cat) => [
-        cat.category.toUpperCase(),
-        '',
-        ...cat.questions.flatMap((q, i) => [`${i + 1}. ${q.question}`, `   ${q.starHint}`, '']),
-        '',
+      { type: 'title', text: 'Cvly — Optimized Resume' },
+      ...rewritten.split('\n').filter((l) => l.trim()).map((line): ExportBlock => ({ type: 'body', text: line })),
+    ];
+  }
+
+  function coverBlocks(): ExportBlock[] {
+    return [
+      { type: 'title', text: 'Cvly — Cover Letter' },
+      ...coverLetter.split('\n').filter((l) => l.trim()).map((line): ExportBlock => ({ type: 'body', text: line })),
+    ];
+  }
+
+  function interviewBlocks(): ExportBlock[] {
+    return [
+      { type: 'title', text: 'Cvly — 100 Interview Questions' },
+      ...categories.flatMap((cat): ExportBlock[] => [
+        { type: 'heading', text: cat.category },
+        ...cat.questions.flatMap((q, i): ExportBlock[] => [
+          { type: 'body', text: `${i + 1}. ${q.question}` },
+          { type: 'body', text: `   ${q.starHint}` },
+        ]),
       ]),
-      'cvly.in',
-    ].join('\n');
+      { type: 'space' },
+      { type: 'body', text: 'cvly.in' },
+    ];
+  }
+
+  function plainText(blocks: ExportBlock[]): string {
+    return blocks.map((b) => (b.type === 'space' ? '' : b.text)).join('\n');
   }
 
   const totalQuestions = categories.reduce((sum, c) => sum + c.questions.length, 0);
@@ -637,7 +678,7 @@ export default function Home() {
             <div className="p-8">
               {activeTab === 'score' && (
                 <div>
-                  <DownloadBar content={scoreReport()} filename="cvly-results.txt" copied={copied} onCopy={copyContent} />
+                  <DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} />
                   <div className="flex items-start gap-8 mb-8 flex-wrap">
                     <ScoreRing score={result.score} />
                     <p className="flex-1 min-w-[220px] pt-3 leading-relaxed text-[var(--ink)]/90">{result.summary}</p>
@@ -679,7 +720,7 @@ export default function Home() {
                     <p className="text-[var(--muted)] text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Rewriting your resume…</p>
                   ) : rewritten ? (
                     <>
-                      <DownloadBar content={rewritten} filename="cvly-rewrite.txt" copied={copied} onCopy={copyContent} />
+                      <DownloadBar blocks={rewriteBlocks()} baseFilename="cvly-rewrite" copyText={rewritten} copied={copied} onCopy={copyContent} />
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{rewritten}</pre>
                     </>
                   ) : null}
@@ -692,7 +733,7 @@ export default function Home() {
                     <p className="text-[var(--muted)] text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Writing your cover letter…</p>
                   ) : coverLetter ? (
                     <>
-                      <DownloadBar content={coverLetter} filename="cvly-cover-letter.txt" copied={copied} onCopy={copyContent} />
+                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} />
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
                     </>
                   ) : null}
@@ -707,7 +748,7 @@ export default function Home() {
                     <>
                       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
                         <p className="text-xs text-[var(--muted)]">{totalQuestions} questions, 4 categories</p>
-                        <DownloadBar content={interviewReport()} filename="cvly-interview-prep.txt" copied={copied} onCopy={copyContent} />
+                        <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} />
                       </div>
                       <div className="space-y-3">
                         {categories.map((cat, ci) => (

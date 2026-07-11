@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2 } from 'lucide-react';
+import { ArrowRight, Plus, Loader2, TrendingUp, Target, Sparkles } from 'lucide-react';
+import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
 type Scan = {
   id: string;
@@ -37,6 +38,16 @@ export default function DashboardPage() {
     });
   }, [router]);
 
+  const stats = useMemo(() => {
+    if (!scans || scans.length === 0) return null;
+    const scores = scans.map((s) => s.score);
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const best = Math.max(...scores);
+    const trendData = [...scans].reverse().map((s, i) => ({ i, score: s.score }));
+    const delta = scans.length >= 2 ? scans[0].score - scans[1].score : 0;
+    return { total: scans.length, avg, best, trendData, delta };
+  }, [scans]);
+
   if (checkingAuth) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
@@ -50,8 +61,11 @@ export default function DashboardPage() {
   const firstName = email.split('@')[0];
 
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
-      <header className="border-b border-[var(--line)]">
+    <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
+      <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-40 pointer-events-none" />
+      <div className="float-slower absolute top-[420px] left-[2%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
+
+      <header className="border-b border-[var(--line)] relative">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Cvly" width={30} height={28} className="rounded-md" />
@@ -61,11 +75,14 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-14">
-        <h1 className="text-2xl font-semibold tracking-tight mb-1">
-          {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
-        </h1>
-        <p className="text-[var(--muted)] text-sm mb-10">
+      <div className="max-w-4xl mx-auto px-6 py-14 relative">
+        <div className="fade-up flex items-center gap-2 mb-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
+          </h1>
+          <Sparkles size={16} className="text-[var(--accent)]" />
+        </div>
+        <p className="fade-up fade-up-1 text-[var(--muted)] text-sm mb-10">
           {scans === null ? 'Loading your results…' : latest ? 'Here\'s where things stand.' : 'Run your first check to get started.'}
         </p>
 
@@ -73,7 +90,7 @@ export default function DashboardPage() {
           <div className="card rounded-2xl p-10 flex justify-center">
             <Loader2 size={18} className="animate-spin text-[var(--muted)]" />
           </div>
-        ) : !latest ? (
+        ) : !latest || !stats ? (
           <div className="card rounded-2xl p-10 text-center">
             <p className="font-semibold mb-2">No results yet</p>
             <p className="text-sm text-[var(--muted)] mb-6 max-w-sm mx-auto">
@@ -85,6 +102,55 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Stats overview */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {[
+                { label: 'Total checks', value: stats.total, icon: Target },
+                { label: 'Average score', value: stats.avg, icon: TrendingUp },
+                { label: 'Best score', value: stats.best, icon: Sparkles },
+              ].map((s, i) => (
+                <div key={s.label} className="card rounded-xl p-4 fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+                  <s.icon size={14} className="text-[var(--accent)] mb-2" />
+                  <p className="text-2xl font-bold tracking-tight tabular-nums">{s.value}</p>
+                  <p className="text-[11px] text-[var(--muted)] mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Trend chart */}
+            {stats.trendData.length >= 2 && (
+              <div className="card rounded-2xl p-6 mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Score trend</p>
+                  {stats.delta !== 0 && (
+                    <span className={`text-xs font-semibold ${stats.delta > 0 ? 'text-[var(--good)]' : 'text-[var(--bad)]'}`}>
+                      {stats.delta > 0 ? '+' : ''}{stats.delta} vs previous
+                    </span>
+                  )}
+                </div>
+                <div className="h-32 -ml-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={stats.trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
+                          <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <YAxis domain={[0, 100]} hide />
+                      <Tooltip
+                        contentStyle={{ background: 'white', border: '1px solid var(--line)', borderRadius: 8, fontSize: 12 }}
+                        labelFormatter={() => ''}
+                        formatter={(value) => [`${value}/100`, 'Score']}
+                      />
+                      <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2.5} fill="url(#scoreGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Most recent */}
             <div className="card rounded-2xl p-7 mb-8">
               <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Most recent</p>
               <div className="flex items-start gap-6 flex-wrap">
@@ -110,7 +176,7 @@ export default function DashboardPage() {
                 {rest.map((s) => {
                   const color = s.score >= 75 ? 'var(--good)' : s.score >= 50 ? 'var(--warn)' : 'var(--bad)';
                   return (
-                    <div key={s.id} className="card rounded-xl p-4 flex items-center gap-4">
+                    <div key={s.id} className="card card-hover-lift rounded-xl p-4 flex items-center gap-4">
                       <div
                         className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs"
                         style={{ background: color }}

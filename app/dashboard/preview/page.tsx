@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ScoreRing } from '@/components/ScoreRing';
-import { Plus, Info } from 'lucide-react';
+import { Plus, Info, Target, TrendingUp, Sparkles } from 'lucide-react';
+import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
 const SAMPLE_LATEST = {
   score: 82,
@@ -17,17 +18,25 @@ const SAMPLE_RECENT = [
   { score: 91, role: 'Marketing Manager — D2C brand, SEO and campaign strategy focus', date: '2 Jul' },
 ];
 
+const SAMPLE_TREND = [
+  { i: 0, score: 68 }, { i: 1, score: 74 }, { i: 2, score: 71 },
+  { i: 3, score: 79 }, { i: 4, score: 76 }, { i: 5, score: 88 }, { i: 6, score: 82 },
+];
+
 export default function DashboardPreviewPage() {
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
-      <div className="bg-[var(--accent-soft)] border-b border-[var(--accent)]/15">
+    <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
+      <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-40 pointer-events-none" />
+      <div className="float-slower absolute top-[420px] left-[2%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
+
+      <div className="bg-[var(--accent-soft)] border-b border-[var(--accent)]/15 relative">
         <div className="max-w-4xl mx-auto px-6 py-2.5 flex items-center gap-2 text-xs text-[var(--accent-ink)]">
           <Info size={13} />
           Preview mode — sample data, no login needed. This is what the real Dashboard looks like once you have scans saved.
         </div>
       </div>
 
-      <header className="border-b border-[var(--line)]">
+      <header className="border-b border-[var(--line)] relative">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Cvly" width={30} height={28} className="rounded-md" />
@@ -37,9 +46,52 @@ export default function DashboardPreviewPage() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-14">
-        <h1 className="text-2xl font-semibold tracking-tight mb-1">Welcome back, Anurag</h1>
+      <div className="max-w-4xl mx-auto px-6 py-14 relative">
+        <div className="flex items-center gap-2 mb-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, Anurag</h1>
+          <Sparkles size={16} className="text-[var(--accent)]" />
+        </div>
         <p className="text-[var(--muted)] text-sm mb-10">Here&apos;s where things stand.</p>
+
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {[
+            { label: 'Total checks', value: 7, icon: Target },
+            { label: 'Average score', value: 80, icon: TrendingUp },
+            { label: 'Best score', value: 91, icon: Sparkles },
+          ].map((s) => (
+            <div key={s.label} className="card rounded-xl p-4">
+              <s.icon size={14} className="text-[var(--accent)] mb-2" />
+              <p className="text-2xl font-bold tracking-tight tabular-nums">{s.value}</p>
+              <p className="text-[11px] text-[var(--muted)] mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="card rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Score trend</p>
+            <span className="text-xs font-semibold text-[var(--good)]">+6 vs previous</span>
+          </div>
+          <div className="h-32 -ml-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={SAMPLE_TREND} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="scoreGradPreview" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <YAxis domain={[0, 100]} hide />
+                <Tooltip
+                  contentStyle={{ background: 'white', border: '1px solid var(--line)', borderRadius: 8, fontSize: 12 }}
+                  labelFormatter={() => ''}
+                  formatter={(value) => [`${value}/100`, 'Score']}
+                />
+                <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2.5} fill="url(#scoreGradPreview)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
         <div className="card rounded-2xl p-7 mb-8">
           <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Most recent</p>
@@ -61,7 +113,7 @@ export default function DashboardPreviewPage() {
           {SAMPLE_RECENT.map((s, i) => {
             const color = s.score >= 75 ? 'var(--good)' : s.score >= 50 ? 'var(--warn)' : 'var(--bad)';
             return (
-              <div key={i} className="card rounded-xl p-4 flex items-center gap-4">
+              <div key={i} className="card card-hover-lift rounded-xl p-4 flex items-center gap-4">
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs"
                   style={{ background: color }}
