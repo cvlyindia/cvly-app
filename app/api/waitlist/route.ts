@@ -3,14 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const { email, plan, company } = await req.json();
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json({ error: 'Please enter a valid email' }, { status: 400 });
     }
 
     const supabase = await createClient();
-    const { error } = await supabase.from('waitlist').insert({ email: email.trim().toLowerCase() });
+    const { error } = await supabase.from('waitlist').insert({
+      email: email.trim().toLowerCase(),
+      plan: plan === 'enterprise' ? 'enterprise' : 'pro',
+      company: company?.trim() || null,
+    });
 
     if (error) {
       // Unique constraint violation just means they already joined — treat as success
