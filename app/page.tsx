@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
-  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2,
+  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart,
 } from 'lucide-react';
 
 type ScoreResult = {
@@ -273,9 +273,9 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur-md z-20">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Cvly" width={28} height={28} className="rounded-lg" />
-            <span className="text-[19px] font-bold tracking-[-0.01em] leading-none pt-0.5">Cvly</span>
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Cvly" width={36} height={33} className="rounded-md" />
+            <span className="text-[20px] font-bold tracking-[-0.02em]">Cvly</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="#compare" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
@@ -323,17 +323,17 @@ export default function Home() {
               <p className="text-sm text-[var(--muted)] mt-1">14 of 17 things this role wants — found</p>
             </div>
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-[var(--muted)] mb-2">What you have</p>
-            <div className="flex flex-wrap gap-1.5 mb-4">
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What you have</p>
+            <div className="flex flex-wrap gap-2 mb-5">
               {['Product Strategy', 'Roadmapping', 'SQL', 'A/B Testing'].map((k) => (
-                <span key={k} className="px-2.5 py-1 bg-[var(--good-bg)] text-[var(--good)] text-xs rounded-md font-medium">{k}</span>
+                <span key={k} className="px-3 py-1.5 bg-[var(--good-bg)] border border-[var(--good)]/15 text-[var(--good)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
               ))}
             </div>
-            <p className="text-xs font-medium text-[var(--muted)] mb-2">What&apos;s missing</p>
-            <div className="flex flex-wrap gap-1.5">
+            <p className="text-xs font-medium text-[var(--muted)] mb-2.5">What&apos;s missing</p>
+            <div className="flex flex-wrap gap-2">
               {['Stakeholder mgmt', 'OKRs'].map((k) => (
-                <span key={k} className="px-2.5 py-1 bg-[var(--bad-bg)] text-[var(--bad)] text-xs rounded-md font-medium">{k}</span>
+                <span key={k} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium whitespace-nowrap">{k}</span>
               ))}
             </div>
           </div>
@@ -342,18 +342,23 @@ export default function Home() {
 
       {/* Quick facts strip */}
       <section className="border-y border-[var(--line)] bg-[var(--surface)]">
-        <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { n: '4', d: 'tools from one paste' },
-            { n: '<10s', d: 'to your first result' },
-            { n: '100', d: 'interview questions per role' },
-            { n: '₹0', d: 'while we\'re in beta' },
-          ].map((s) => (
-            <div key={s.d}>
-              <p className="text-3xl font-semibold tracking-tight">{s.n}</p>
-              <p className="text-xs text-[var(--muted)] mt-1.5">{s.d}</p>
-            </div>
-          ))}
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4">
+            {[
+              { n: '4', d: 'tools from one paste' },
+              { n: '<10s', d: 'to your first result' },
+              { n: '100', d: 'interview questions per role' },
+              { n: '₹0', d: 'to start' },
+            ].map((s, i) => (
+              <div
+                key={s.d}
+                className={`text-center px-4 py-2 ${i > 0 ? 'md:border-l border-[var(--line)]' : ''} ${i % 2 === 1 ? 'border-l md:border-l-0 border-[var(--line)]' : ''}`}
+              >
+                <p className="text-4xl font-bold tracking-tight text-[var(--ink)]">{s.n}</p>
+                <p className="text-[13px] text-[var(--muted)] mt-2 leading-snug">{s.d}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -634,10 +639,10 @@ export default function Home() {
       <footer className="border-t border-[var(--line)] py-10">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Cvly" width={20} height={20} className="rounded-md" />
-            <span className="font-bold text-[15px] leading-none pt-0.5">Cvly</span>
+            <Image src="/logo.png" alt="Cvly" width={26} height={24} className="rounded-md" />
+            <span className="font-bold text-[15px]">Cvly</span>
           </div>
-          <p className="text-xs text-[var(--muted)]">Built in Faridabad, India · cvly.in</p>
+          <p className="text-xs text-[var(--muted)] flex items-center gap-1">Made with <Heart size={11} className="fill-[var(--accent)] text-[var(--accent)]" /> in India · cvly.in</p>
         </div>
       </footer>
     </main>
