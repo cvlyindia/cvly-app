@@ -1,56 +1,112 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #1E1E22;
-  --charcoal: #2B2B2E;
-  --paper: #FBFAF8;
-  --paper-line: #E9E6DE;
-  --orange: #F5821F;
-  --orange-deep: #D66C0F;
-  --orange-mist: #FEF0E2;
-  --good: #1F9D55;
-  --good-bg: #EAF7EF;
-  --warn: #C97A28;
-  --warn-bg: #FBF1E4;
-  --bad: #D14343;
-  --bad-bg: #FCEDED;
-  --muted: #6B6F7B;
+  --bg: #070B14;
+  --surface: #0D1322;
+  --surface-2: #131B2E;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-bright: rgba(255, 255, 255, 0.14);
+  --ink: #EDF0F7;
+  --muted: #8B93A8;
+  --orange: #FF7A1A;
+  --orange-bright: #FF9142;
+  --orange-soft: rgba(255, 122, 26, 0.12);
+  --orange-glow: rgba(255, 122, 26, 0.35);
+  --good: #2FD576;
+  --good-bg: rgba(47, 213, 118, 0.1);
+  --warn: #FFB020;
+  --bad: #FF5C5C;
+  --bad-bg: rgba(255, 92, 92, 0.1);
 }
 
 body {
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
-.font-display {
-  font-family: var(--font-display), Georgia, serif;
+.font-display { font-family: var(--font-display), system-ui, sans-serif; }
+.font-mono { font-family: var(--font-mono), monospace; }
+
+/* Blueprint grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 
-.font-mono {
-  font-family: var(--font-mono), monospace;
+/* Radial glow spots */
+.glow-spot {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(120px);
+  pointer-events: none;
 }
 
-.paper-texture {
-  background-image: repeating-linear-gradient(
-    to bottom, transparent, transparent 35px, var(--paper-line) 35px, var(--paper-line) 36px
-  );
+/* Glass card */
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
 }
 
-.stamp-ring { filter: drop-shadow(0 1px 2px rgba(30,30,34,0.08)); }
+.glass-hover:hover {
+  border-color: var(--line-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,122,26,0.1);
+}
+
+/* Scan line animation over preview */
+@keyframes scanline {
+  0% { top: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.scanline {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--orange), transparent);
+  box-shadow: 0 0 16px 2px var(--orange-glow);
+  animation: scanline 3.2s ease-in-out infinite;
+}
+
+/* Gradient headline text */
+.gradient-text {
+  background: linear-gradient(120deg, #FF7A1A 0%, #FFB020 55%, #FF9142 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.fade-up { animation: fadeUp 0.6s ease-out both; }
-.fade-up-1 { animation-delay: 0.05s; }
-.fade-up-2 { animation-delay: 0.15s; }
-.fade-up-3 { animation-delay: 0.25s; }
+.fade-up { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up-1 { animation-delay: 0.08s; }
+.fade-up-2 { animation-delay: 0.18s; }
+.fade-up-3 { animation-delay: 0.28s; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 24px var(--orange-glow); }
+  50% { box-shadow: 0 0 44px var(--orange-glow); }
+}
+.btn-glow { animation: pulse-glow 2.6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fade-up { animation: none; }
+  .fade-up, .scanline, .btn-glow { animation: none; }
 }
 
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
+
+::selection { background: var(--orange); color: #0A0A0A; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #1D2740; }

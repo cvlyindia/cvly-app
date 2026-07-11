@@ -73,27 +73,54 @@ export interface InterviewQuestion {
   starHint: string;
 }
 
-export async function generateInterviewPrep(resumeText: string, jobDescription: string): Promise<InterviewQuestion[]> {
-  const prompt = `Based on this resume and job description, generate 5 likely interview questions the candidate should prepare for. For each, give a short hint on how to structure a STAR-method answer (Situation, Task, Action, Result) using details from THEIR actual resume. Return ONLY valid JSON, no markdown:
+export interface InterviewCategory {
+  category: string;
+  questions: InterviewQuestion[];
+}
+
+export async function generateInterviewPrep(resumeText: string, jobDescription: string): Promise<InterviewCategory[]> {
+  const prompt = `Based on this resume and job description, generate exactly 100 interview questions the candidate should prepare for, split into exactly these 4 categories with 25 questions each:
+1. "Behavioral" — past behavior, teamwork, conflict, leadership
+2. "Technical & Role-Specific" — skills and tools from this exact JD
+3. "Situational & Problem-Solving" — hypothetical scenarios for this role
+4. "Culture, Motivation & Curveballs" — why this company, career goals, unexpected questions
+
+For each question give a very short hint (max 15 words) on how to answer using the STAR method with THEIR actual resume background.
+
+Return ONLY valid JSON, no markdown fences, in exactly this shape:
+[
+  { "category": "Behavioral", "questions": [ { "question": "...", "starHint": "..." } ] },
+  { "category": "Technical & Role-Specific", "questions": [...] },
+  { "category": "Situational & Problem-Solving", "questions": [...] },
+  { "category": "Culture, Motivation & Curveballs", "questions": [...] }
+]
 
 RESUME:
 ${resumeText}
 
 JOB DESCRIPTION:
-${jobDescription}
+${jobDescription}`;
 
-Return JSON in exactly this shape:
-[
-  { "question": "<interview question>", "starHint": "<1-2 sentence hint on how to structure their STAR answer using their real background>" }
-]`;
-
-  const result = await flashModel.generateContent(prompt);
+  const result = await flashModel.generateContent({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { maxOutputTokens: 32768 },
+  });
   const text = result.response.text();
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
     return JSON.parse(cleaned);
   } catch {
+    // Attempt to salvage truncated JSON by closing brackets
+    const lastComplete = cleaned.lastIndexOf('}');
+    if (lastComplete > 0) {
+      const salvaged = cleaned.slice(0, lastComplete + 1) + ']}]';
+      try {
+        return JSON.parse(salvaged);
+      } catch {
+        throw new Error('Failed to parse AI response as JSON');
+      }
+    }
     throw new Error('Failed to parse AI response as JSON');
   }
 }

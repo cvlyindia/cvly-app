@@ -27,7 +27,7 @@ export default function HistoryPage() {
 
   return (
     <main className="min-h-screen">
-      <header className="border-b border-[var(--paper-line)]">
+      <header className="border-b border-[var(--line)]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/logo.png" alt="cvly" width={28} height={28} className="rounded-md" />
@@ -41,9 +41,9 @@ export default function HistoryPage() {
         <h1 className="font-display text-2xl font-semibold mb-6">Your scan history</h1>
 
         {error === 'Not logged in' && (
-          <div className="bg-white rounded-xl border border-[var(--paper-line)] p-6 text-center">
+          <div className="glass rounded-xl p-6 text-center">
             <p className="text-[var(--muted)] mb-4">Sign in to see your saved scans.</p>
-            <Link href="/login" className="inline-block px-5 py-2.5 rounded-full bg-[var(--orange)] text-white text-sm font-semibold">
+            <Link href="/login" className="inline-block px-5 py-2.5 rounded-full bg-[var(--orange)] text-black text-sm font-semibold">
               Sign in
             </Link>
           </div>
@@ -58,7 +58,7 @@ export default function HistoryPage() {
             {scans.map((s) => {
               const color = s.score >= 75 ? 'var(--good)' : s.score >= 50 ? 'var(--warn)' : 'var(--bad)';
               return (
-                <div key={s.id} className="bg-white rounded-xl border border-[var(--paper-line)] p-5 flex items-center gap-4">
+                <div key={s.id} className="glass rounded-xl p-5 flex items-center gap-4">
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center font-display font-semibold text-white shrink-0"
                     style={{ background: color }}

@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
-  Upload, FileText, ArrowRight, Check, X as XIcon, Sparkles,
+  Upload, Check, X as XIcon, Download, Copy,
+  Radar, ScanLine, ChevronDown, Zap,
 } from 'lucide-react';
 
 type ScoreResult = {
@@ -19,51 +20,62 @@ type ScoreResult = {
 };
 
 type InterviewQuestion = { question: string; starHint: string };
+type InterviewCategory = { category: string; questions: InterviewQuestion[] };
 
-function StampRing({ score, size = 140 }: { score: number; size?: number }) {
+function downloadText(filename: string, content: string) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ScoreRing({ score, size = 150 }: { score: number; size?: number }) {
   const radius = size * 0.386;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
   const color = score >= 75 ? 'var(--good)' : score >= 50 ? 'var(--warn)' : 'var(--bad)';
-  const label = score >= 75 ? 'Strong match' : score >= 50 ? 'Needs work' : 'Weak match';
+  const label = score >= 75 ? 'STRONG MATCH' : score >= 50 ? 'NEEDS WORK' : 'WEAK MATCH';
   const c = size / 2;
 
   return (
     <div className="relative flex flex-col items-center shrink-0">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="stamp-ring -rotate-90">
-        <circle cx={c} cy={c} r={radius} fill="none" stroke="var(--paper-line)" strokeWidth="3" />
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle cx={c} cy={c} r={radius} fill="none" stroke="var(--line)" strokeWidth="3" />
         <circle
           cx={c} cy={c} r={radius} fill="none"
           stroke={color} strokeWidth="3" strokeLinecap="round"
           strokeDasharray={circumference} strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+          style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1)', filter: `drop-shadow(0 0 8px ${color})` }}
         />
-        <circle cx={c} cy={c} r={radius - 10} fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.35" strokeDasharray="2 4" />
+        <circle cx={c} cy={c} r={radius - 12} fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.3" strokeDasharray="2 5" />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display font-semibold" style={{ color, fontSize: size * 0.28 }}>{score}</span>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] mt-0.5">/ 100</span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: size * 0.12 }}>
+        <span className="font-display font-bold" style={{ color, fontSize: size * 0.27 }}>{score}</span>
+        <span className="font-mono text-[10px] tracking-widest text-[var(--muted)]">/100</span>
       </div>
-      <span className="font-mono text-[11px] uppercase tracking-wider mt-3" style={{ color }}>{label}</span>
+      <span className="font-mono text-[10px] tracking-[0.25em] mt-1" style={{ color }}>{label}</span>
     </div>
   );
 }
 
 const FEATURES = [
-  { icon: Target, title: 'ATS match score', desc: 'Instant 0-100 score showing exactly how well your resume matches a job description, the way applicant tracking software reads it.' },
-  { icon: KeyRound, title: 'Keyword gap analysis', desc: 'See precisely which keywords from the job description are missing from your resume — and which ones you already nailed.' },
-  { icon: PenLine, title: 'AI resume rewrite', desc: 'A tailored rewrite optimized for this specific job, keeping every fact truthful — no invented experience, just sharper framing.' },
-  { icon: Mail, title: 'Cover letter, in one click', desc: 'A specific, non-generic cover letter written from your real resume and the actual job post — not a fill-in-the-blank template.' },
-  { icon: MessagesSquare, title: 'STAR interview prep', desc: 'Likely interview questions for this exact role, each with a hint on how to structure your answer using your real experience.' },
-  { icon: ShieldCheck, title: 'Free while in beta', desc: 'No credit card, no signup wall. Try the full tool before we ever ask you to pay for anything.' },
+  { icon: Target, title: 'ATS match score', desc: 'A 0-100 score showing exactly how well your resume matches the job, the way tracking software reads it.' },
+  { icon: KeyRound, title: 'Keyword gap analysis', desc: 'Every keyword the scanner expects — split into what you have and what you\'re missing.' },
+  { icon: PenLine, title: 'AI resume rewrite', desc: 'Tailored to this exact job, keeping every fact truthful. No invented experience, ever.' },
+  { icon: Mail, title: 'One-click cover letter', desc: 'Written from your real resume and the actual post. Specific, human, never a template.' },
+  { icon: MessagesSquare, title: '100 interview questions', desc: 'Behavioral, technical, situational, and curveballs — each with a STAR-method answer hint.' },
+  { icon: ShieldCheck, title: 'Free while in beta', desc: 'No card, no signup wall, no scan limits. All of it, free, right now.' },
 ];
 
 const FAQS = [
-  { q: 'Is this really free?', a: 'Yes — during beta, every feature (scoring, rewrite, cover letter, interview prep) is free to use, no card required.' },
-  { q: 'Does cvly store my resume?', a: 'Your resume text is sent only to generate your results. If you sign in, your scan results are saved to your private history — otherwise, nothing is stored.' },
-  { q: 'What file types can I upload?', a: 'PDF, DOCX, and plain text. You can also just paste your resume text directly if you prefer.' },
-  { q: 'Will the rewrite invent fake experience?', a: 'No. The AI is instructed to only rephrase and reframe your real experience for ATS keyword match — it will not fabricate companies, titles, or dates.' },
-  { q: 'How is this different from just using ChatGPT?', a: 'cvly is purpose-built for this one job: paste resume + JD, get a structured score, gap analysis, rewrite, cover letter, and interview prep in one flow — no prompt-writing needed.' },
+  { q: 'Is this really free?', a: 'Yes — during beta, every feature (scoring, rewrite, cover letter, 100 interview questions, downloads) is free. No card required.' },
+  { q: 'Does cvly store my resume?', a: 'Your resume text is sent only to generate your results. If you sign in, scan results save to your private history — otherwise nothing is stored.' },
+  { q: 'What file types can I upload?', a: 'PDF, DOCX, and plain text — or just paste your resume text directly.' },
+  { q: 'Will the rewrite invent fake experience?', a: 'No. The AI only rephrases and reframes your real experience for keyword match. It will not fabricate companies, titles, dates, or metrics.' },
+  { q: 'How is this different from ChatGPT?', a: 'Zero prompt-writing. Paste resume + JD once and get a structured score, gap analysis, rewrite, cover letter, and 100 prep questions — with downloads — in one flow.' },
 ];
 
 const COMPARISON = [
@@ -73,6 +85,25 @@ const COMPARISON = [
   { name: 'Rezi', price: '$29/mo', scoring: true, rewrite: true, cover: false, interview: false },
   { name: 'Enhancv', price: '$17.99/mo', scoring: true, rewrite: true, cover: true, interview: false },
 ];
+
+function DownloadBar({ content, filename, copied, onCopy }: { content: string; filename: string; copied: boolean; onCopy: (text: string) => void }) {
+  return (
+    <div className="flex items-center gap-2 mb-5">
+      <button
+        onClick={() => downloadText(filename, content)}
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg glass text-xs font-medium text-[var(--ink)] hover:border-[var(--orange)] transition"
+      >
+        <Download size={13} /> Download .txt
+      </button>
+      <button
+        onClick={() => onCopy(content)}
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg glass text-xs font-medium text-[var(--ink)] hover:border-[var(--orange)] transition"
+      >
+        <Copy size={13} /> {copied ? 'Copied!' : 'Copy'}
+      </button>
+    </div>
+  );
+}
 
 export default function Home() {
   const [resumeText, setResumeText] = useState('');
@@ -85,10 +116,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'score' | 'rewrite' | 'cover' | 'interview'>('score');
   const [rewritten, setRewritten] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
-  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [categories, setCategories] = useState<InterviewCategory[]>([]);
   const [tabLoading, setTabLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openCategory, setOpenCategory] = useState<number>(0);
   const [user, setUser] = useState<User | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -130,6 +163,9 @@ export default function Home() {
     setError('');
     setLoading(true);
     setResult(null);
+    setRewritten('');
+    setCoverLetter('');
+    setCategories([]);
     try {
       const res = await fetch('/api/score', {
         method: 'POST',
@@ -157,7 +193,7 @@ export default function Home() {
     setActiveTab(tab);
     if (tab === 'rewrite' && rewritten) return;
     if (tab === 'cover' && coverLetter) return;
-    if (tab === 'interview' && questions.length) return;
+    if (tab === 'interview' && categories.length) return;
 
     setTabLoading(true);
     setError('');
@@ -172,7 +208,7 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
       if (tab === 'rewrite') setRewritten(data.rewritten);
       if (tab === 'cover') setCoverLetter(data.letter);
-      if (tab === 'interview') setQuestions(data.questions);
+      if (tab === 'interview') setCategories(data.questions);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -180,23 +216,74 @@ export default function Home() {
     }
   }
 
-  const tabs: { key: 'score' | 'rewrite' | 'cover' | 'interview'; label: string; num: string }[] = [
-    { key: 'score', label: 'Score', num: '01' },
-    { key: 'rewrite', label: 'Rewrite', num: '02' },
-    { key: 'cover', label: 'Cover letter', num: '03' },
-    { key: 'interview', label: 'Interview prep', num: '04' },
+  function copyContent(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    });
+  }
+
+  function scoreReport(): string {
+    if (!result) return '';
+    return [
+      'CVLY — ATS SCAN REPORT',
+      '======================',
+      '',
+      `Score: ${result.score}/100`,
+      '',
+      `Summary: ${result.summary}`,
+      '',
+      'MATCHED KEYWORDS:',
+      ...result.matchedKeywords.map((k) => `  ✓ ${k}`),
+      '',
+      'MISSING KEYWORDS:',
+      ...result.missingKeywords.map((k) => `  ✗ ${k}`),
+      '',
+      'HOW TO IMPROVE:',
+      ...result.improvements.map((imp, i) => `  ${i + 1}. ${imp}`),
+      '',
+      'Generated by cvly.in',
+    ].join('\n');
+  }
+
+  function interviewReport(): string {
+    return [
+      'CVLY — INTERVIEW PREP (100 QUESTIONS)',
+      '=====================================',
+      '',
+      ...categories.flatMap((cat) => [
+        `## ${cat.category.toUpperCase()}`,
+        '',
+        ...cat.questions.flatMap((q, i) => [`${i + 1}. ${q.question}`, `   Hint: ${q.starHint}`, '']),
+        '',
+      ]),
+      'Generated by cvly.in',
+    ].join('\n');
+  }
+
+  const totalQuestions = categories.reduce((sum, c) => sum + c.questions.length, 0);
+
+  const tabs: { key: 'score' | 'rewrite' | 'cover' | 'interview'; label: string }[] = [
+    { key: 'score', label: 'Scan report' },
+    { key: 'rewrite', label: 'Rewrite' },
+    { key: 'cover', label: 'Cover letter' },
+    { key: 'interview', label: 'Interview prep' },
   ];
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen grid-bg relative overflow-hidden">
+      {/* Ambient glows */}
+      <div className="glow-spot w-[500px] h-[500px] bg-[var(--orange)]/10 -top-40 -right-40" />
+      <div className="glow-spot w-[400px] h-[400px] bg-[#3D5AF1]/8 top-[60%] -left-48" />
+
       {/* Header */}
-      <header className="border-b border-[var(--paper-line)] sticky top-0 bg-[var(--paper)]/90 backdrop-blur z-20">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="cvly" width={32} height={32} className="rounded-md" />
-            <span className="font-display text-xl font-semibold tracking-tight text-[var(--ink)]">cvly</span>
+      <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/80 backdrop-blur-xl z-20">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Image src="/logo.png" alt="cvly" width={34} height={34} className="rounded-lg" />
+            <span className="font-display text-xl font-bold tracking-tight">cvly</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <a href="#compare" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
             <a href="#faq" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
             {user ? (
@@ -205,7 +292,7 @@ export default function Home() {
                 <button onClick={handleLogout} className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Sign out</button>
               </>
             ) : (
-              <Link href="/login" className="px-4 py-2 rounded-full bg-[var(--charcoal)] text-white text-sm font-medium hover:bg-black transition">
+              <Link href="/login" className="px-4 py-2 rounded-full glass text-sm font-medium hover:border-[var(--orange)] transition">
                 Sign in
               </Link>
             )}
@@ -214,87 +301,90 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-8 grid md:grid-cols-2 gap-12 items-center">
+      <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 grid lg:grid-cols-2 gap-14 items-center relative">
         <div>
-          <p className="fade-up font-mono text-xs uppercase tracking-[0.2em] text-[var(--orange-deep)] mb-4 flex items-center gap-1.5">
-            <Sparkles size={13} /> Free while in beta
+          <p className="fade-up font-mono text-[11px] uppercase tracking-[0.3em] text-[var(--orange)] mb-5 flex items-center gap-2">
+            <Radar size={14} className="animate-pulse" /> ATS scanner · Free beta
           </p>
-          <h1 className="fade-up fade-up-1 font-display text-4xl md:text-5xl font-semibold text-[var(--ink)] mb-5 leading-[1.1]">
-            Know if your resume<br /><span className="italic text-[var(--orange)]">passes the bots.</span>
+          <h1 className="fade-up fade-up-1 font-display text-4xl md:text-6xl font-bold mb-6 leading-[1.05] tracking-tight">
+            75% of resumes<br />never reach a human.<br />
+            <span className="gradient-text">Beat the scanner.</span>
           </h1>
-          <p className="fade-up fade-up-2 text-[var(--muted)] text-base mb-8 max-w-md">
-            Paste your resume and a job description. Get your match score, missing keywords, a tailored rewrite, cover letter, and interview prep — in under 10 seconds.
+          <p className="fade-up fade-up-2 text-[var(--muted)] text-base md:text-lg mb-9 max-w-md leading-relaxed">
+            Paste your resume and a job description. Get your match score, missing keywords, a tailored rewrite, cover letter, and 100 interview questions — in seconds.
           </p>
           <a
             href="#tool"
-            className="fade-up fade-up-3 inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[var(--orange)] text-white font-semibold text-sm hover:bg-[var(--orange-deep)] transition shadow-[0_4px_14px_rgba(245,130,31,0.35)]"
+            className="fade-up fade-up-3 btn-glow inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[var(--orange)] text-black font-bold text-sm hover:bg-[var(--orange-bright)] transition"
           >
-            Score my resume, free <ArrowRight size={16} />
+            <ScanLine size={17} /> Scan my resume, free
           </a>
-          <div className="fade-up fade-up-3 flex items-center gap-5 mt-6 text-xs text-[var(--muted)] font-mono">
-            <span className="flex items-center gap-1"><Check size={13} className="text-[var(--good)]" /> No card needed</span>
-            <span className="flex items-center gap-1"><Check size={13} className="text-[var(--good)]" /> No signup wall</span>
+          <div className="fade-up fade-up-3 flex items-center gap-6 mt-7 text-xs text-[var(--muted)] font-mono">
+            <span className="flex items-center gap-1.5"><Check size={13} className="text-[var(--good)]" /> No card</span>
+            <span className="flex items-center gap-1.5"><Check size={13} className="text-[var(--good)]" /> No signup wall</span>
+            <span className="flex items-center gap-1.5"><Check size={13} className="text-[var(--good)]" /> No scan limits</span>
           </div>
         </div>
 
-        {/* Live preview mockup */}
-        <div className="fade-up fade-up-2 bg-white rounded-2xl border border-[var(--paper-line)] p-6 shadow-[0_8px_30px_rgba(30,30,34,0.08)]">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[var(--bad)]/40" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[var(--warn)]/40" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[var(--good)]/40" />
-            <span className="font-mono text-[10px] text-[var(--muted)] ml-2">preview</span>
-          </div>
-          <div className="flex items-center gap-5 mb-5">
-            <StampRing score={82} size={92} />
-            <div>
-              <p className="text-sm font-medium text-[var(--ink)]">Strong match for Senior PM role</p>
-              <p className="text-xs text-[var(--muted)] mt-1">14 of 17 key skills found</p>
+        {/* Scanner preview */}
+        <div className="fade-up fade-up-2 relative">
+          <div className="glass rounded-2xl p-7 relative overflow-hidden">
+            <div className="scanline" />
+            <div className="flex items-center justify-between mb-6">
+              <span className="font-mono text-[10px] tracking-[0.25em] text-[var(--muted)] uppercase">Live scan · resume_v3.pdf</span>
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--good)]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--good)] animate-pulse" /> ACTIVE</span>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {['Product Strategy', 'Roadmapping', 'SQL', 'A/B Testing'].map((k) => (
-              <span key={k} className="font-mono px-2 py-0.5 bg-[var(--good-bg)] text-[var(--good)] text-[10px] rounded">{k}</span>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {['Stakeholder mgmt'].map((k) => (
-              <span key={k} className="font-mono px-2 py-0.5 bg-[var(--bad-bg)] text-[var(--bad)] text-[10px] rounded">{k}</span>
-            ))}
+            <div className="flex items-center gap-6 mb-6">
+              <ScoreRing score={82} size={110} />
+              <div>
+                <p className="font-display font-semibold text-lg">Senior Product Manager</p>
+                <p className="text-sm text-[var(--muted)] mt-1">14 of 17 required signals detected</p>
+              </div>
+            </div>
+            <div className="space-y-2.5">
+              <div className="flex flex-wrap gap-1.5">
+                {['Product Strategy', 'Roadmapping', 'SQL', 'A/B Testing', 'Agile'].map((k) => (
+                  <span key={k} className="font-mono px-2.5 py-1 bg-[var(--good-bg)] text-[var(--good)] text-[10px] rounded border border-[var(--good)]/20">{k}</span>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {['Stakeholder mgmt', 'OKRs', 'Figma'].map((k) => (
+                  <span key={k} className="font-mono px-2.5 py-1 bg-[var(--bad-bg)] text-[var(--bad)] text-[10px] rounded border border-[var(--bad)]/20">{k}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-5xl mx-auto px-6 py-16 border-t border-[var(--paper-line)]">
-        <h2 className="font-display text-2xl font-semibold text-center mb-10">How it works</h2>
-        <div className="grid md:grid-cols-3 gap-8">
+      {/* Stats strip */}
+      <section className="border-y border-[var(--line)] bg-[var(--surface)]/50">
+        <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { icon: Upload, t: 'Paste both', d: 'Drop in your resume (upload or paste) and the job description you\'re applying to.' },
-            { icon: Target, t: 'Get your score', d: 'See your ATS match score, matched keywords, and exactly what\'s missing.' },
-            { icon: FileText, t: 'Fix it instantly', d: 'One click for a tailored rewrite, cover letter, and interview prep — all from the same input.' },
+            { n: '75%', d: 'of resumes rejected by ATS before a human sees them' },
+            { n: '<10s', d: 'from paste to full scan report' },
+            { n: '100', d: 'interview questions generated per role' },
+            { n: '₹0', d: 'cost during beta — every feature included' },
           ].map((s) => (
-            <div key={s.t} className="text-center">
-              <div className="w-11 h-11 rounded-xl bg-[var(--orange-mist)] flex items-center justify-center mx-auto mb-4">
-                <s.icon size={20} className="text-[var(--orange-deep)]" />
-              </div>
-              <h3 className="font-display text-lg font-semibold mb-2">{s.t}</h3>
-              <p className="text-sm text-[var(--muted)] leading-relaxed">{s.d}</p>
+            <div key={s.d}>
+              <p className="font-display text-3xl font-bold gradient-text">{s.n}</p>
+              <p className="text-xs text-[var(--muted)] mt-1.5 leading-relaxed max-w-[180px] mx-auto">{s.d}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Features */}
-      <section className="max-w-5xl mx-auto px-6 py-16 border-t border-[var(--paper-line)]">
-        <h2 className="font-display text-2xl font-semibold text-center mb-10">Everything you need to get shortlisted</h2>
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <h2 className="font-display text-3xl font-bold text-center mb-3">Everything the scanner checks.<br /><span className="gradient-text">Everything you need to pass it.</span></h2>
+        <p className="text-center text-sm text-[var(--muted)] mb-12">Six tools. One paste. Zero cost.</p>
         <div className="grid md:grid-cols-3 gap-5">
           {FEATURES.map((f) => (
-            <div key={f.title} className="bg-white rounded-xl border border-[var(--paper-line)] p-5 hover:shadow-[0_4px_16px_rgba(30,30,34,0.06)] hover:-translate-y-0.5 transition">
-              <div className="w-9 h-9 rounded-lg bg-[var(--orange-mist)] flex items-center justify-center mb-3">
-                <f.icon size={17} className="text-[var(--orange-deep)]" />
+            <div key={f.title} className="glass glass-hover rounded-2xl p-6 transition duration-300">
+              <div className="w-10 h-10 rounded-xl bg-[var(--orange-soft)] border border-[var(--orange)]/20 flex items-center justify-center mb-4">
+                <f.icon size={18} className="text-[var(--orange)]" />
               </div>
-              <h3 className="font-semibold text-[var(--ink)] mb-2 text-[15px]">{f.title}</h3>
+              <h3 className="font-display font-semibold mb-2">{f.title}</h3>
               <p className="text-sm text-[var(--muted)] leading-relaxed">{f.desc}</p>
             </div>
           ))}
@@ -302,30 +392,26 @@ export default function Home() {
       </section>
 
       {/* Comparison */}
-      <section id="compare" className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--paper-line)] scroll-mt-16">
-        <h2 className="font-display text-2xl font-semibold text-center mb-2">How cvly compares</h2>
-        <p className="text-center text-sm text-[var(--muted)] mb-10">Pricing shown is each provider&apos;s publicly listed rate as of 2026.</p>
-        <div className="bg-white rounded-xl border border-[var(--paper-line)] overflow-x-auto">
+      <section id="compare" className="max-w-5xl mx-auto px-6 py-20 scroll-mt-16">
+        <h2 className="font-display text-3xl font-bold text-center mb-3">How cvly compares</h2>
+        <p className="text-center text-sm text-[var(--muted)] mb-12">Publicly listed pricing, 2026.</p>
+        <div className="glass rounded-2xl overflow-x-auto">
           <table className="w-full text-sm min-w-[560px]">
             <thead>
-              <tr className="border-b border-[var(--paper-line)]">
-                <th className="text-left font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] p-4">Tool</th>
-                <th className="text-left font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] p-4">Price</th>
-                <th className="text-center font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] p-4">Scoring</th>
-                <th className="text-center font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] p-4">Rewrite</th>
-                <th className="text-center font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] p-4">Cover letter</th>
-                <th className="text-center font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] p-4">Interview prep</th>
+              <tr className="border-b border-[var(--line)]">
+                {['Tool', 'Price', 'Scoring', 'Rewrite', 'Cover letter', '100 Qs prep'].map((h, i) => (
+                  <th key={h} className={`font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--muted)] p-4 ${i < 2 ? 'text-left' : 'text-center'}`}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {COMPARISON.map((c) => (
-                <tr key={c.name} className={`border-b border-[var(--paper-line)] last:border-0 ${c.highlight ? 'bg-[var(--orange-mist)]/40' : ''}`}>
-                  <td className="p-4 font-medium text-[var(--ink)]">{c.name}{c.highlight && <span className="ml-2 text-[10px] font-mono text-[var(--orange-deep)] uppercase">you are here</span>}</td>
-                  <td className="p-4 text-[var(--muted)]">{c.price}</td>
-                  <td className="p-4 text-center">{c.scoring ? <Check size={16} className="text-[var(--good)] mx-auto" /> : <XIcon size={16} className="text-[var(--paper-line)] mx-auto" />}</td>
-                  <td className="p-4 text-center">{c.rewrite ? <Check size={16} className="text-[var(--good)] mx-auto" /> : <XIcon size={16} className="text-[var(--paper-line)] mx-auto" />}</td>
-                  <td className="p-4 text-center">{c.cover ? <Check size={16} className="text-[var(--good)] mx-auto" /> : <XIcon size={16} className="text-[var(--paper-line)] mx-auto" />}</td>
-                  <td className="p-4 text-center">{c.interview ? <Check size={16} className="text-[var(--good)] mx-auto" /> : <XIcon size={16} className="text-[var(--paper-line)] mx-auto" />}</td>
+                <tr key={c.name} className={`border-b border-[var(--line)] last:border-0 ${c.highlight ? 'bg-[var(--orange-soft)]' : ''}`}>
+                  <td className="p-4 font-display font-semibold">{c.name}{c.highlight && <span className="ml-2 text-[9px] font-mono text-[var(--orange)] uppercase tracking-widest">← you</span>}</td>
+                  <td className={`p-4 ${c.highlight ? 'text-[var(--orange)] font-bold' : 'text-[var(--muted)]'}`}>{c.price}</td>
+                  {[c.scoring, c.rewrite, c.cover, c.interview].map((v, i) => (
+                    <td key={i} className="p-4 text-center">{v ? <Check size={15} className="text-[var(--good)] mx-auto" /> : <XIcon size={15} className="text-[var(--muted)]/30 mx-auto" />}</td>
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -334,14 +420,14 @@ export default function Home() {
       </section>
 
       {/* Tool */}
-      <section id="tool" className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--paper-line)] scroll-mt-16">
-        <h2 className="font-display text-2xl md:text-3xl font-semibold text-center mb-2">Try it now</h2>
-        <p className="text-center text-[var(--muted)] text-sm mb-10">No signup. No card. Just paste and go.</p>
+      <section id="tool" className="max-w-5xl mx-auto px-6 py-20 scroll-mt-16">
+        <h2 className="font-display text-3xl font-bold text-center mb-3">Run your scan</h2>
+        <p className="text-center text-[var(--muted)] text-sm mb-12 font-mono tracking-wide">NO SIGNUP · NO CARD · PASTE AND GO</p>
 
         <div className="grid md:grid-cols-2 gap-5 mb-6">
-          <div className="bg-white rounded-xl border border-[var(--paper-line)] p-6 shadow-[0_1px_3px_rgba(30,30,34,0.04)]">
-            <label className="font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] block mb-4">01 — Your resume</label>
-            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--orange-mist)] text-sm font-medium text-[var(--orange-deep)] cursor-pointer hover:bg-[#FCE2C4] transition mb-3">
+          <div className="glass rounded-2xl p-6">
+            <label className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--orange)] block mb-4">01 / Your resume</label>
+            <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--orange-soft)] border border-[var(--orange)]/25 text-sm font-medium text-[var(--orange)] cursor-pointer hover:bg-[var(--orange)]/20 transition mb-3">
               <Upload size={14} /> Upload PDF / DOCX
               <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
             </label>
@@ -350,48 +436,47 @@ export default function Home() {
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="...or paste your resume text here"
-              className="w-full h-44 p-3 rounded-lg border border-[var(--paper-line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--orange)] focus:border-transparent resize-none placeholder:text-[var(--muted)]"
+              className="w-full h-44 p-3.5 rounded-xl bg-[var(--bg)]/60 border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--orange)] resize-none placeholder:text-[var(--muted)]/60 transition"
             />
           </div>
 
-          <div className="bg-white rounded-xl border border-[var(--paper-line)] p-6 shadow-[0_1px_3px_rgba(30,30,34,0.04)]">
-            <label className="font-mono text-[11px] uppercase tracking-wider text-[var(--muted)] block mb-4">02 — Job description</label>
+          <div className="glass rounded-2xl p-6">
+            <label className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--orange)] block mb-4">02 / Job description</label>
             <textarea
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
               placeholder="Paste the full job description here"
-              className="w-full h-[172px] mt-[42px] p-3 rounded-lg border border-[var(--paper-line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--orange)] focus:border-transparent resize-none placeholder:text-[var(--muted)]"
+              className="w-full h-[178px] mt-[46px] p-3.5 rounded-xl bg-[var(--bg)]/60 border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--orange)] resize-none placeholder:text-[var(--muted)]/60 transition"
             />
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-[var(--bad-bg)] border border-[var(--bad)]/20 text-[var(--bad)] text-sm font-mono">{error}</div>
+          <div className="mb-6 p-3.5 rounded-xl bg-[var(--bad-bg)] border border-[var(--bad)]/25 text-[var(--bad)] text-sm font-mono">{error}</div>
         )}
 
-        <div className="flex justify-center mb-12">
+        <div className="flex justify-center mb-14">
           <button
             onClick={handleScore}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[var(--orange)] text-white font-semibold text-sm hover:bg-[var(--orange-deep)] transition disabled:opacity-40 shadow-[0_4px_14px_rgba(245,130,31,0.3)]"
+            className="btn-glow inline-flex items-center gap-2 px-9 py-4 rounded-full bg-[var(--orange)] text-black font-bold text-sm hover:bg-[var(--orange-bright)] transition disabled:opacity-40"
           >
-            {loading ? 'Scoring…' : <>Score my resume <ArrowRight size={16} /></>}
+            {loading ? <><Radar size={17} className="animate-spin" /> Scanning…</> : <><Zap size={17} /> Run scan</>}
           </button>
         </div>
 
         {result && (
-          <div className="bg-white rounded-xl border border-[var(--paper-line)] overflow-hidden shadow-[0_1px_3px_rgba(30,30,34,0.04)]">
-            <div className="flex border-b border-[var(--paper-line)] paper-texture overflow-x-auto">
-              {tabs.map((tab) => (
+          <div className="glass rounded-2xl overflow-hidden">
+            <div className="flex border-b border-[var(--line)] overflow-x-auto">
+              {tabs.map((tab, idx) => (
                 <button
                   key={tab.key}
                   onClick={() => (tab.key === 'score' ? setActiveTab('score') : handleTabAction(tab.key as 'rewrite' | 'cover' | 'interview'))}
-                  className={`flex-1 min-w-[110px] py-4 text-sm font-medium transition flex flex-col items-center gap-1 ${
-                    activeTab === tab.key ? 'text-[var(--orange-deep)]' : 'text-[var(--muted)] hover:text-[var(--ink)]'
+                  className={`flex-1 min-w-[120px] py-4 text-sm font-medium transition flex flex-col items-center gap-1 ${
+                    activeTab === tab.key ? 'text-[var(--orange)] bg-[var(--orange-soft)]' : 'text-[var(--muted)] hover:text-[var(--ink)]'
                   }`}
-                  style={activeTab === tab.key ? { boxShadow: 'inset 0 -2px 0 var(--orange)' } : undefined}
                 >
-                  <span className="font-mono text-[10px] tracking-wider">{tab.num}</span>
+                  <span className="font-mono text-[9px] tracking-[0.2em]">{String(idx + 1).padStart(2, '0')}</span>
                   {tab.label}
                 </button>
               ))}
@@ -400,32 +485,33 @@ export default function Home() {
             <div className="p-8">
               {activeTab === 'score' && (
                 <div>
+                  <DownloadBar content={scoreReport()} filename="cvly-scan-report.txt" copied={copied} onCopy={copyContent} />
                   <div className="flex items-start gap-8 mb-8 flex-wrap">
-                    <StampRing score={result.score} />
-                    <p className="text-[var(--ink)] flex-1 min-w-[220px] pt-2 leading-relaxed">{result.summary}</p>
+                    <ScoreRing score={result.score} />
+                    <p className="flex-1 min-w-[220px] pt-3 leading-relaxed text-[var(--ink)]/90">{result.summary}</p>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-8 mb-8">
                     <div>
-                      <h3 className="font-mono text-[11px] uppercase tracking-wider text-[var(--good)] mb-3 flex items-center gap-1"><Check size={13}/> Matched keywords</h3>
+                      <h3 className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--good)] mb-3 flex items-center gap-1.5"><Check size={12}/> Detected</h3>
                       <div className="flex flex-wrap gap-2">
                         {result.matchedKeywords.map((kw, i) => (
-                          <span key={i} className="font-mono px-2.5 py-1 bg-[var(--good-bg)] text-[var(--good)] text-xs rounded-md">{kw}</span>
+                          <span key={i} className="font-mono px-2.5 py-1 bg-[var(--good-bg)] border border-[var(--good)]/20 text-[var(--good)] text-xs rounded-md">{kw}</span>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-mono text-[11px] uppercase tracking-wider text-[var(--bad)] mb-3 flex items-center gap-1"><XIcon size={13}/> Missing keywords</h3>
+                      <h3 className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--bad)] mb-3 flex items-center gap-1.5"><XIcon size={12}/> Missing</h3>
                       <div className="flex flex-wrap gap-2">
                         {result.missingKeywords.map((kw, i) => (
-                          <span key={i} className="font-mono px-2.5 py-1 bg-[var(--bad-bg)] text-[var(--bad)] text-xs rounded-md">{kw}</span>
+                          <span key={i} className="font-mono px-2.5 py-1 bg-[var(--bad-bg)] border border-[var(--bad)]/20 text-[var(--bad)] text-xs rounded-md">{kw}</span>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  <h3 className="font-mono text-[11px] uppercase tracking-wider text-[var(--ink)] mb-3">How to improve</h3>
-                  <ul className="space-y-2.5">
+                  <h3 className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--ink)] mb-4">Fix priority</h3>
+                  <ul className="space-y-3">
                     {result.improvements.map((imp, i) => (
                       <li key={i} className="text-sm text-[var(--ink)]/80 flex gap-3 leading-relaxed">
                         <span className="text-[var(--orange)] font-mono shrink-0">{String(i + 1).padStart(2, '0')}</span> {imp}
@@ -438,38 +524,67 @@ export default function Home() {
               {activeTab === 'rewrite' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-[var(--muted)] text-sm font-mono">Rewriting your resume…</p>
-                  ) : (
-                    <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{rewritten}</pre>
-                  )}
+                    <p className="text-[var(--muted)] text-sm font-mono flex items-center gap-2"><Radar size={14} className="animate-spin" /> Rewriting your resume…</p>
+                  ) : rewritten ? (
+                    <>
+                      <DownloadBar content={rewritten} filename="cvly-optimized-resume.txt" copied={copied} onCopy={copyContent} />
+                      <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{rewritten}</pre>
+                    </>
+                  ) : null}
                 </div>
               )}
 
               {activeTab === 'cover' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-[var(--muted)] text-sm font-mono">Writing your cover letter…</p>
-                  ) : (
-                    <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
-                  )}
+                    <p className="text-[var(--muted)] text-sm font-mono flex items-center gap-2"><Radar size={14} className="animate-spin" /> Writing your cover letter…</p>
+                  ) : coverLetter ? (
+                    <>
+                      <DownloadBar content={coverLetter} filename="cvly-cover-letter.txt" copied={copied} onCopy={copyContent} />
+                      <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
+                    </>
+                  ) : null}
                 </div>
               )}
 
               {activeTab === 'interview' && (
-                <div className="space-y-3">
+                <div>
                   {tabLoading ? (
-                    <p className="text-[var(--muted)] text-sm font-mono">Preparing interview questions…</p>
-                  ) : (
-                    questions.map((q, i) => (
-                      <div key={i} className="p-4 rounded-lg bg-[var(--paper)] border border-[var(--paper-line)]">
-                        <p className="font-medium text-[var(--ink)] mb-1.5 flex gap-2">
-                          <span className="font-mono text-[var(--orange)] text-xs shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
-                          {q.question}
-                        </p>
-                        <p className="text-sm text-[var(--muted)] pl-6">{q.starHint}</p>
+                    <p className="text-[var(--muted)] text-sm font-mono flex items-center gap-2"><Radar size={14} className="animate-spin" /> Generating 100 questions — this one takes ~20 seconds…</p>
+                  ) : categories.length ? (
+                    <>
+                      <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+                        <p className="font-mono text-xs text-[var(--muted)]">{totalQuestions} questions · 4 categories</p>
+                        <DownloadBar content={interviewReport()} filename="cvly-interview-prep-100.txt" copied={copied} onCopy={copyContent} />
                       </div>
-                    ))
-                  )}
+                      <div className="space-y-3">
+                        {categories.map((cat, ci) => (
+                          <div key={ci} className="rounded-xl border border-[var(--line)] overflow-hidden">
+                            <button
+                              onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)}
+                              className="w-full flex items-center justify-between px-5 py-4 bg-[var(--surface-2)]/50 hover:bg-[var(--surface-2)] transition"
+                            >
+                              <span className="font-display font-semibold text-sm">{cat.category} <span className="font-mono text-xs text-[var(--muted)] ml-2">{cat.questions.length} Qs</span></span>
+                              <ChevronDown size={16} className={`text-[var(--muted)] transition-transform ${openCategory === ci ? 'rotate-180' : ''}`} />
+                            </button>
+                            {openCategory === ci && (
+                              <div className="divide-y divide-[var(--line)]">
+                                {cat.questions.map((q, qi) => (
+                                  <div key={qi} className="px-5 py-4">
+                                    <p className="text-sm font-medium mb-1.5 flex gap-2.5">
+                                      <span className="font-mono text-[var(--orange)] text-xs shrink-0 pt-0.5">{String(qi + 1).padStart(2, '0')}</span>
+                                      {q.question}
+                                    </p>
+                                    <p className="text-xs text-[var(--muted)] pl-7 leading-relaxed">{q.starHint}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -478,19 +593,19 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="max-w-3xl mx-auto px-6 py-16 border-t border-[var(--paper-line)] scroll-mt-16">
-        <h2 className="font-display text-2xl font-semibold text-center mb-10">Frequently asked</h2>
+      <section id="faq" className="max-w-3xl mx-auto px-6 py-20 scroll-mt-16">
+        <h2 className="font-display text-3xl font-bold text-center mb-12">Frequently asked</h2>
         <div className="space-y-3">
           {FAQS.map((f, i) => (
             <details
               key={i}
               open={openFaq === i}
               onToggle={(e) => setOpenFaq((e.target as HTMLDetailsElement).open ? i : null)}
-              className="bg-white rounded-xl border border-[var(--paper-line)] px-5 py-4"
+              className="glass rounded-xl px-5 py-4"
             >
-              <summary className="flex items-center justify-between cursor-pointer font-medium text-[var(--ink)] text-[15px]">
+              <summary className="flex items-center justify-between cursor-pointer font-medium text-[15px]">
                 {f.q}
-                <span className="font-mono text-[var(--orange)] text-lg">{openFaq === i ? '−' : '+'}</span>
+                <span className="font-mono text-[var(--orange)] text-lg ml-4">{openFaq === i ? '−' : '+'}</span>
               </summary>
               <p className="text-sm text-[var(--muted)] mt-3 leading-relaxed">{f.a}</p>
             </details>
@@ -499,13 +614,13 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--paper-line)] py-8">
-        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="cvly" width={24} height={24} className="rounded" />
-            <span className="font-display font-semibold text-[var(--ink)]">cvly</span>
+      <footer className="border-t border-[var(--line)] py-10">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-2.5">
+            <Image src="/logo.png" alt="cvly" width={26} height={26} className="rounded-md" />
+            <span className="font-display font-bold">cvly</span>
           </div>
-          <p className="text-xs text-[var(--muted)] font-mono">Built in Faridabad, India · cvly.in</p>
+          <p className="text-xs text-[var(--muted)] font-mono">BUILT IN FARIDABAD, INDIA · CVLY.IN</p>
         </div>
       </footer>
     </main>
