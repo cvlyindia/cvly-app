@@ -550,7 +550,7 @@ export default function Home() {
                   Sign in
                 </Link>
                 <button onClick={() => setToolOpen(true)} className="btn-accent px-4 py-2 rounded-full text-sm font-semibold">
-                  Check my resume
+                  See what&apos;s missing
                 </button>
               </>
             )}
@@ -565,7 +565,7 @@ export default function Home() {
             The interview isn&apos;t<br />the hard part.<br /><span className="text-[var(--accent-ink)]">Getting one is.</span>
           </h1>
           <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-3 max-w-md">
-            You&apos;ve applied. You&apos;ve waited. Nothing. It&apos;s rarely your experience — it&apos;s that your resume never made it past the first read.
+            You&apos;ve applied. You&apos;ve waited. Nothing. It&apos;s rarely your experience. It&apos;s that your resume never made it past the first read.
           </p>
           <p className="fade-up fade-up-1 text-[var(--muted-soft)] text-sm mb-9 max-w-md">
             We&apos;ll show you exactly what&apos;s missing. Free, no card.
@@ -710,7 +710,7 @@ export default function Home() {
             onClick={() => setToolOpen(true)}
             className="btn-accent inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-medium text-sm"
           >
-            Try it now, no signup <ArrowRight size={16} />
+            Try it yourself, free <ArrowRight size={16} />
           </button>
         </div>
       </section>
@@ -771,7 +771,7 @@ export default function Home() {
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Why Cvly exists</h2>
           <p className="text-center text-[var(--ink)]/70 max-w-lg mx-auto mb-3 leading-relaxed">
-            Most tools give you a piece of the process — a scanner, or a builder, or a tracker. Job hunting isn&apos;t a piece, it&apos;s one continuous workflow. So that&apos;s what we built.
+            Most tools give you a piece of the process. A scanner. A builder. A tracker. Job hunting isn&apos;t a piece — it&apos;s one continuous workflow. So that&apos;s what we built.
           </p>
           <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
         </Reveal>
@@ -1075,12 +1075,18 @@ export default function Home() {
           <div className="card rounded-2xl p-7">
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-4">Why I built this</p>
             <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-4">
-              I run a small performance marketing agency, and over the years I&apos;ve looked at a lot of resumes — for clients, for candidates, for NGOs I&apos;ve worked with. The same thing kept happening: good people, resumes that never got past the first filter. So I built the tool I wished existed for them.
+              I run a small performance marketing agency. Over the years I&apos;ve looked at a lot of resumes — for clients, for candidates, for NGOs I&apos;ve worked with. The same thing kept happening. Good people. Resumes that never got past the first filter. So I built the tool I wished existed for them.
             </p>
-            <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-4">
-              It&apos;s still early. I&apos;m building it in public, adding what people actually ask for, and keeping it free while that&apos;s true. If something&apos;s missing or broken, I want to hear about it.
+            <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-6">
+              It&apos;s still early. I&apos;m building it in public, adding what people actually ask for, keeping it free while that&apos;s true. If something&apos;s missing or broken, I want to hear about it.
             </p>
-            <p className="text-sm font-semibold">— Anurag, Faridabad</p>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-[var(--accent-soft)] flex items-center justify-center font-semibold text-[var(--accent-ink)] shrink-0">A</div>
+              <div>
+                <p className="text-sm font-semibold">Anurag, Faridabad</p>
+                <a href="https://linkedin.com/in/anuxbiz" target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--accent-ink)] hover:underline">Connect on LinkedIn</a>
+              </div>
+            </div>
           </div>
         </Reveal>
       </section>
