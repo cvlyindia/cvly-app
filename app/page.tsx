@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 type ScoreResult = {
   score: number;
@@ -72,6 +75,22 @@ export default function Home() {
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [tabLoading, setTabLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+  }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -108,6 +127,13 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
       setResult(data);
       setActiveTab('score');
+
+      // Save to history if logged in (silently no-ops if not)
+      fetch('/api/save-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText, jobDescription, ...data }),
+      }).catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -160,12 +186,19 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <a href="#faq" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
-            <a
-              href="#tool"
-              className="px-4 py-2 rounded-full bg-[var(--charcoal)] text-white text-sm font-medium hover:bg-black transition"
-            >
-              Try it free
-            </a>
+            {user ? (
+              <>
+                <Link href="/history" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">History</Link>
+                <button onClick={handleLogout} className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Sign out</button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="px-4 py-2 rounded-full bg-[var(--charcoal)] text-white text-sm font-medium hover:bg-black transition"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       </header>
