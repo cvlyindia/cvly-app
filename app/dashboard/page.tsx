@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2, History, ScanLine, Flame, Pencil, Trophy, MessagesSquare } from 'lucide-react';
+import { ArrowRight, Plus, Loader2, History, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target } from 'lucide-react';
 
 type Scan = {
   id: string;
@@ -203,11 +203,29 @@ export default function DashboardPage() {
           </div>
         ) : !latest || !stats ? (
           <div>
-            <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
+            <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}. You&apos;re in.</p>
             <h1 className="text-4xl font-semibold tracking-tight mb-4 max-w-lg">Let&apos;s see where your resume stands.</h1>
-            <p className="text-[var(--muted)] mb-8 max-w-md">Paste a resume and a role — your first score, rewrite, and interview prep take about 10 seconds.</p>
+            <p className="text-[var(--muted)] mb-10 max-w-md">Paste a resume and a role you&apos;re going for. Here&apos;s what happens next:</p>
+
+            <div className="grid sm:grid-cols-3 gap-4 mb-10">
+              {[
+                { icon: Upload, step: '01', title: 'You paste it', desc: 'Your resume and the job description. A few seconds.' },
+                { icon: Target, step: '02', title: 'We show your score', desc: 'What matches, what\'s missing, out of 100.' },
+                { icon: MessagesSquare, step: '03', title: 'You get ready', desc: 'A sharper resume, a cover letter, 100 interview questions.' },
+              ].map((s) => (
+                <div key={s.step} className="card rounded-xl p-5">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center mb-3">
+                    <s.icon size={16} className="text-[var(--accent-ink)]" />
+                  </div>
+                  <p className="text-[10px] font-mono text-[var(--accent-ink)] mb-1">STEP {s.step}</p>
+                  <h3 className="text-sm font-semibold mb-1">{s.title}</h3>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+
             <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold">
-              Run your first check <ArrowRight size={16} />
+              Let&apos;s go <ArrowRight size={16} />
             </Link>
           </div>
         ) : (
