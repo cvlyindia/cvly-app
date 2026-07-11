@@ -147,14 +147,14 @@ function StatsStrip() {
           obs.disconnect();
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.05 }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  const four = useCountUp(4, visible, 600);
-  const hundred = useCountUp(100, visible, 1100);
+  const four = useCountUp(4, visible, 350);
+  const hundred = useCountUp(100, visible, 450);
 
   return (
     <section ref={ref} className="border-y border-[var(--line)] bg-[var(--surface)] relative overflow-hidden">
@@ -550,7 +550,8 @@ export default function Home() {
           <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
         </Reveal>
         <Reveal delayMs={100}>
-        <div className="card rounded-2xl overflow-x-auto">
+        <div className="relative">
+          <div className="card rounded-2xl overflow-x-auto">
           <table className="w-full text-sm min-w-[640px] border-separate border-spacing-0">
             <thead>
               <tr>
@@ -606,6 +607,9 @@ export default function Home() {
               ))}
             </tbody>
           </table>
+          </div>
+          <div className="md:hidden absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent pointer-events-none rounded-r-2xl" />
+          <p className="md:hidden text-center text-[11px] text-[var(--muted-soft)] mt-3">← Swipe to see all columns →</p>
         </div>
         </Reveal>
       </section>
