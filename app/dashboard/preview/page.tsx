@@ -93,6 +93,26 @@ export default function DashboardPreviewPage() {
           </div>
         </div>
 
+        <div className="card rounded-2xl p-6 mb-6 flex items-center gap-5 flex-wrap">
+          <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
+            <Sparkles size={16} className="text-[var(--accent-ink)]" />
+          </div>
+          <p className="text-sm text-[var(--ink)]/85 flex-1 min-w-[200px]">Strong fit on your last check. Prep for the interview next — you get 100 questions built for this exact role.</p>
+          <span className="btn-accent px-4 py-2 rounded-full text-xs font-semibold shrink-0">Go prep</span>
+        </div>
+
+        <div className="card rounded-2xl p-6 mb-6">
+          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Keeps coming up</p>
+          <p className="text-sm text-[var(--muted)] mb-4">These show up as missing across more than one check — worth adding to your resume.</p>
+          <div className="flex flex-wrap gap-2">
+            {[['Stakeholder mgmt', 3], ['OKRs', 2], ['Kubernetes', 2]].map(([kw, count]) => (
+              <span key={kw as string} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium">
+                {kw} <span className="text-[var(--bad)]/60">×{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
         <div className="card rounded-2xl p-7 mb-8">
           <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Most recent</p>
           <div className="flex items-start gap-6 flex-wrap">

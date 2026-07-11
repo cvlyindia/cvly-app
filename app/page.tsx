@@ -246,6 +246,7 @@ export default function Home() {
   const [openCategory, setOpenCategory] = useState<number>(0);
   const [user, setUser] = useState<User | null>(null);
   const [copied, setCopied] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
 
   useEffect(() => {
@@ -263,6 +264,19 @@ export default function Home() {
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModalOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [modalOpen]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -308,6 +322,7 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
       setResult(data);
       setActiveTab('score');
+      setModalOpen(true);
 
       fetch('/api/save-scan', {
         method: 'POST',
@@ -659,8 +674,43 @@ export default function Home() {
           </button>
         </div>
 
-        {result && (
-          <div className="card rounded-2xl overflow-hidden">
+        {result && !modalOpen && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="w-full card card-hover-lift rounded-2xl p-5 flex items-center justify-between gap-4 text-left"
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0"
+                style={{ background: result.score >= 75 ? 'var(--good)' : result.score >= 50 ? 'var(--warn)' : 'var(--bad)' }}
+              >
+                {result.score}
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Your results are ready</p>
+                <p className="text-xs text-[var(--muted)]">Score, rewrite, cover letter, interview prep</p>
+              </div>
+            </div>
+            <span className="text-sm font-medium text-[var(--accent-ink)] flex items-center gap-1 shrink-0">
+              View <ArrowRight size={14} />
+            </span>
+          </button>
+        )}
+
+        {result && modalOpen && (
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
+            <div
+              className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm"
+              onClick={() => setModalOpen(false)}
+            />
+            <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="sticky top-3 float-right mr-3 z-10 w-8 h-8 rounded-full bg-[var(--surface)] hover:bg-[var(--line)] flex items-center justify-center transition"
+                aria-label="Close"
+              >
+                <span className="text-lg leading-none text-[var(--muted)]">×</span>
+              </button>
             <div className="flex border-b border-[var(--line)] overflow-x-auto">
               {tabs.map((tab) => (
                 <button
@@ -780,6 +830,7 @@ export default function Home() {
                   ) : null}
                 </div>
               )}
+            </div>
             </div>
           </div>
         )}

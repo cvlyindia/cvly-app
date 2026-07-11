@@ -15,6 +15,7 @@ type Scan = {
   summary: string;
   job_description: string;
   created_at: string;
+  missing_keywords: string[] | null;
 };
 
 export default function DashboardPage() {
@@ -45,7 +46,19 @@ export default function DashboardPage() {
     const best = Math.max(...scores);
     const trendData = [...scans].reverse().map((s, i) => ({ i, score: s.score }));
     const delta = scans.length >= 2 ? scans[0].score - scans[1].score : 0;
-    return { total: scans.length, avg, best, trendData, delta };
+
+    const keywordCounts = new Map<string, number>();
+    for (const s of scans) {
+      for (const kw of s.missing_keywords ?? []) {
+        keywordCounts.set(kw, (keywordCounts.get(kw) ?? 0) + 1);
+      }
+    }
+    const topMissing = [...keywordCounts.entries()]
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    return { total: scans.length, avg, best, trendData, delta, topMissing };
   }, [scans]);
 
   if (checkingAuth) {
@@ -59,6 +72,14 @@ export default function DashboardPage() {
   const latest = scans && scans.length > 0 ? scans[0] : null;
   const rest = scans && scans.length > 1 ? scans.slice(1, 6) : [];
   const firstName = email.split('@')[0];
+
+  const suggestion = latest
+    ? latest.score >= 75
+      ? { text: 'Strong fit on your last check. Prep for the interview next — you get 100 questions built for this exact role.', cta: 'Go prep', href: '/#tool' }
+      : latest.score >= 50
+      ? { text: 'You\'re close. A quick rewrite could close the gap on your missing keywords.', cta: 'Try rewrite', href: '/#tool' }
+      : { text: 'This one needs work. Start with a rewrite tailored to the role before you apply.', cta: 'Try rewrite', href: '/#tool' }
+    : null;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
@@ -146,6 +167,34 @@ export default function DashboardPage() {
                       <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2.5} fill="url(#scoreGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Suggested next step */}
+            {suggestion && (
+              <div className="card rounded-2xl p-6 mb-6 flex items-center gap-5 flex-wrap">
+                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
+                  <Sparkles size={16} className="text-[var(--accent-ink)]" />
+                </div>
+                <p className="text-sm text-[var(--ink)]/85 flex-1 min-w-[200px]">{suggestion.text}</p>
+                <Link href={suggestion.href} className="btn-accent px-4 py-2 rounded-full text-xs font-semibold shrink-0">
+                  {suggestion.cta}
+                </Link>
+              </div>
+            )}
+
+            {/* Insights: recurring missing keywords */}
+            {stats.topMissing.length > 0 && (
+              <div className="card rounded-2xl p-6 mb-6">
+                <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Keeps coming up</p>
+                <p className="text-sm text-[var(--muted)] mb-4">These show up as missing across more than one check — worth adding to your resume.</p>
+                <div className="flex flex-wrap gap-2">
+                  {stats.topMissing.map(([kw, count]) => (
+                    <span key={kw} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium">
+                      {kw} <span className="text-[var(--bad)]/60">×{count}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
