@@ -485,6 +485,15 @@ export default function Home() {
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No card</span>
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No signup wall</span>
           </div>
+
+          {result && (
+            <button
+              onClick={() => setToolOpen(true)}
+              className="fade-up fade-up-2 mt-5 inline-flex items-center gap-2 text-sm font-medium text-[var(--accent-ink)] hover:underline"
+            >
+              Your last result: {result.score}/100 — View <ArrowRight size={13} />
+            </button>
+          )}
         </div>
 
         <div className="relative">
@@ -636,43 +645,6 @@ export default function Home() {
       </section>
 
       {/* Tool */}
-      <section id="tool" className="max-w-2xl mx-auto px-6 py-24 scroll-mt-16 text-center relative">
-        <div className="float-slow absolute top-0 left-[10%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
-        <Reveal>
-          <h2 className="text-3xl font-semibold tracking-tight mb-3">See where you stand</h2>
-          <p className="text-[var(--muted)] text-sm mb-8">No signup. No card. Paste and see in seconds.</p>
-          <button
-            onClick={() => setToolOpen(true)}
-            className="btn-accent inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm"
-          >
-            Start free check <ArrowRight size={16} />
-          </button>
-        </Reveal>
-
-        {result && (
-          <button
-            onClick={() => setToolOpen(true)}
-            className="w-full card card-hover-lift rounded-2xl p-5 mt-8 flex items-center justify-between gap-4 text-left"
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0"
-                style={{ background: result.score >= 75 ? 'var(--good)' : result.score >= 50 ? 'var(--warn)' : 'var(--bad)' }}
-              >
-                {result.score}
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Your results are ready</p>
-                <p className="text-xs text-[var(--muted)]">Score, rewrite, cover letter, interview prep</p>
-              </div>
-            </div>
-            <span className="text-sm font-medium text-[var(--accent-ink)] flex items-center gap-1 shrink-0">
-              View <ArrowRight size={14} />
-            </span>
-          </button>
-        )}
-      </section>
-
       {toolOpen && (
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
           <div
