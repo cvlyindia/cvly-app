@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2, History, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target } from 'lucide-react';
+import { ArrowRight, Plus, Loader2, History, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target, Zap } from 'lucide-react';
+import { PLAN_LIMITS } from '@/lib/credits';
 
 type Scan = {
   id: string;
@@ -54,6 +55,7 @@ export default function DashboardPage() {
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState({ role: '', score: '90' });
   const [doneTasks, setDoneTasks] = useState<Set<string>>(new Set());
+  const [credits, setCredits] = useState<{ remaining: number; plan: string; resetAt: string } | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -67,6 +69,11 @@ export default function DashboardPage() {
       fetch('/api/history')
         .then((res) => res.json())
         .then((d) => setScans(d.scans ?? []));
+      fetch('/api/credits')
+        .then((res) => res.json())
+        .then((d) => {
+          if (d.loggedIn) setCredits({ remaining: d.remaining, plan: d.plan, resetAt: d.resetAt });
+        });
     });
 
     const savedRole = localStorage.getItem('cvly_target_role');
@@ -300,6 +307,35 @@ export default function DashboardPage() {
                   <p className="text-xs text-[var(--muted)]">Track your progress toward a specific role</p>
                 </div>
               </button>
+            )}
+
+            {/* Credits & plan */}
+            {credits && (
+              <div className="card rounded-2xl p-5 mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Zap size={14} className="text-[var(--accent-ink)]" />
+                    <p className="text-sm font-semibold capitalize">{credits.plan} plan</p>
+                  </div>
+                  {credits.plan === 'free' && (
+                    <Link href="/pricing" className="text-xs font-semibold text-[var(--accent-ink)] hover:underline">Upgrade</Link>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 mb-1.5">
+                  <span className="text-sm font-semibold tabular-nums">{credits.remaining}</span>
+                  <div className="flex-1 h-2 rounded-full bg-[var(--line)] overflow-hidden">
+                    <div
+                      key={credits.remaining}
+                      className="h-full rounded-full bg-[var(--accent)] bar-grow"
+                      style={{ width: `${Math.min(100, (credits.remaining / (PLAN_LIMITS[credits.plan] ?? 5)) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-[var(--muted)] tabular-nums">{PLAN_LIMITS[credits.plan] ?? 5}</span>
+                </div>
+                <p className="text-xs text-[var(--muted)]">
+                  Credits left this month · resets {new Date(credits.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                </p>
+              </div>
             )}
 
             {/* Next actions */}

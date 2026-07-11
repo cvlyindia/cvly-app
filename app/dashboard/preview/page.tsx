@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ScoreRing } from '@/components/ScoreRing';
-import { Plus, Info, History, ScanLine, Flame, MessagesSquare, Trophy } from 'lucide-react';
+import { Plus, Info, History, ScanLine, Flame, MessagesSquare, Trophy, Zap } from 'lucide-react';
 
 const SAMPLE = {
   score: 82,
@@ -69,6 +69,24 @@ export default function DashboardPreviewPage() {
             <span className="text-sm text-[var(--muted)]">{SAMPLE.target}</span>
           </div>
           <p className="text-xs text-[var(--muted)]">{SAMPLE.target - SAMPLE.score} points to go</p>
+        </div>
+
+        <div className="card rounded-2xl p-5 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Zap size={14} className="text-[var(--accent-ink)]" />
+              <p className="text-sm font-semibold">Free plan</p>
+            </div>
+            <span className="text-xs font-semibold text-[var(--accent-ink)]">Upgrade</span>
+          </div>
+          <div className="flex items-center gap-3 mb-1.5">
+            <span className="text-sm font-semibold tabular-nums">3</span>
+            <div className="flex-1 h-2 rounded-full bg-[var(--line)] overflow-hidden">
+              <div className="h-full rounded-full bg-[var(--accent)] bar-grow" style={{ width: '60%' }} />
+            </div>
+            <span className="text-sm text-[var(--muted)] tabular-nums">5</span>
+          </div>
+          <p className="text-xs text-[var(--muted)]">Credits left this month · resets 24 Jul</p>
         </div>
 
         <div className="flex items-center gap-3 mb-10 flex-wrap">
