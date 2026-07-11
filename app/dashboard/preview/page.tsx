@@ -64,7 +64,7 @@ export default function DashboardPreviewPage() {
           <div className="flex items-center gap-3 mb-2">
             <span className="text-sm font-semibold">{SAMPLE.score}</span>
             <div className="flex-1 h-2 rounded-full bg-[var(--line)] overflow-hidden">
-              <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${(SAMPLE.score / SAMPLE.target) * 100}%` }} />
+              <div className="h-full rounded-full bg-[var(--accent)] bar-grow" style={{ width: `${(SAMPLE.score / SAMPLE.target) * 100}%` }} />
             </div>
             <span className="text-sm text-[var(--muted)]">{SAMPLE.target}</span>
           </div>
@@ -88,7 +88,8 @@ export default function DashboardPreviewPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Let&apos;s strengthen this first</p>
             <span className="text-[11px] text-white/50">~2 min</span>
           </div>
-          <p className="text-sm text-white/90 mb-5">Add these to your resume — they&apos;re what this role is looking for.</p>
+          <p className="text-sm text-white/90 mb-1">This role listed these directly — they&apos;re what gets you past the first filter.</p>
+          <p className="text-xs text-white/50 mb-5">Add them, then run a new check to see where you stand.</p>
           <div className="space-y-2.5 mb-5">
             {SAMPLE.missing.map((kw) => (
               <div key={kw} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5">
@@ -101,21 +102,22 @@ export default function DashboardPreviewPage() {
         </div>
 
         <div className="card rounded-2xl p-6 mb-6">
-          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">Career signals</p>
-          <div className="grid grid-cols-3 gap-4">
+          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">What we&apos;re tracking for you</p>
+          <div className="grid grid-cols-3 gap-4 mb-3">
             <div>
               <p className="text-2xl font-bold tabular-nums">{SAMPLE.score}</p>
               <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
             </div>
-            <div className="opacity-40">
-              <p className="text-sm font-medium">Soon</p>
+            <div className="opacity-50">
+              <p className="text-sm font-medium">Coming soon</p>
               <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
             </div>
-            <div className="opacity-40">
-              <p className="text-sm font-medium">Soon</p>
+            <div className="opacity-50">
+              <p className="text-sm font-medium">Coming soon</p>
               <p className="text-xs text-[var(--muted)] mt-1">Portfolio</p>
             </div>
           </div>
+          <p className="text-xs text-[var(--muted-soft)] leading-relaxed">We&apos;re building LinkedIn and portfolio review next, so you can see your whole application, not just your resume.</p>
         </div>
 
         <div className="card rounded-2xl p-6 mb-6">
@@ -153,7 +155,7 @@ export default function DashboardPreviewPage() {
         </div>
 
         <div className="card rounded-2xl p-7 mb-8">
-          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Your latest check</p>
+          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Where you stand right now</p>
           <div className="flex items-start gap-6 flex-wrap mb-5">
             <ScoreRing score={SAMPLE.score} size={92} />
             <div className="flex-1 min-w-[200px] space-y-3">

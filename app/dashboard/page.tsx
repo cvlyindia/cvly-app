@@ -260,7 +260,8 @@ export default function DashboardPage() {
                   <span className="text-sm font-semibold">{latest.score}</span>
                   <div className="flex-1 h-2 rounded-full bg-[var(--line)] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-[var(--accent)] transition-all duration-700"
+                      key={latest.score}
+                      className="h-full rounded-full bg-[var(--accent)] bar-grow"
                       style={{ width: `${Math.min(100, (latest.score / targetScore) * 100)}%` }}
                     />
                   </div>
@@ -305,7 +306,8 @@ export default function DashboardPage() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Let&apos;s strengthen this first</p>
                   <span className="text-[11px] text-white/50">~2 min</span>
                 </div>
-                <p className="text-sm text-white/90 mb-5">Add these to your resume — they&apos;re what this role is looking for.</p>
+                <p className="text-sm text-white/90 mb-1">This role listed these directly — they&apos;re what gets you past the first filter.</p>
+                <p className="text-xs text-white/50 mb-5">Add them, then run a new check to see where you stand.</p>
                 <div className="space-y-2.5 mb-5">
                   {missionKeywords.map((kw) => (
                     <button
@@ -313,15 +315,15 @@ export default function DashboardPage() {
                       onClick={() => toggleTask(kw)}
                       className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition text-left"
                     >
-                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition ${doneTasks.has(kw) ? 'bg-[var(--accent)] border-[var(--accent)]' : 'border-white/30'}`}>
-                        {doneTasks.has(kw) && <span className="text-[10px]">✓</span>}
+                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${doneTasks.has(kw) ? 'bg-[var(--accent)] border-[var(--accent)] scale-110' : 'border-white/30'}`}>
+                        {doneTasks.has(kw) && <span className="text-[10px] task-check-pop">✓</span>}
                       </span>
-                      <span className={`text-sm ${doneTasks.has(kw) ? 'text-white/50 line-through' : 'text-white/90'}`}>{kw}</span>
+                      <span className={`text-sm transition-colors ${doneTasks.has(kw) ? 'text-white/50 line-through' : 'text-white/90'}`}>{kw}</span>
                     </button>
                   ))}
                 </div>
                 {allTasksDone ? (
-                  <p className="text-sm font-semibold text-[var(--accent)]">Nice. Run a new check to see it reflected.</p>
+                  <p className="text-sm font-semibold text-[var(--accent)] fade-up">That&apos;s the mission done. Run a new check to see it move.</p>
                 ) : (
                   <Link href="/#tool" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
                     Fix it now <ArrowRight size={14} />
@@ -330,23 +332,24 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Career signals — honest: real resume score, others clearly labeled not-yet-built */}
+            {/* Career signals — honest: real resume score, others clearly labeled with explanation */}
             <div className="card rounded-2xl p-6 mb-6">
-              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">Career signals</p>
-              <div className="grid grid-cols-3 gap-4">
+              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">What we&apos;re tracking for you</p>
+              <div className="grid grid-cols-3 gap-4 mb-3">
                 <div>
                   <p className="text-2xl font-bold tabular-nums">{latest.score}</p>
                   <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
                 </div>
-                <div className="opacity-40">
-                  <p className="text-sm font-medium">Soon</p>
+                <div className="opacity-50">
+                  <p className="text-sm font-medium">Coming soon</p>
                   <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
                 </div>
-                <div className="opacity-40">
-                  <p className="text-sm font-medium">Soon</p>
+                <div className="opacity-50">
+                  <p className="text-sm font-medium">Coming soon</p>
                   <p className="text-xs text-[var(--muted)] mt-1">Portfolio</p>
                 </div>
               </div>
+              <p className="text-xs text-[var(--muted-soft)] leading-relaxed">We&apos;re building LinkedIn and portfolio review next, so you can see your whole application, not just your resume.</p>
             </div>
 
             {/* Consistency — coaching framing */}
@@ -391,7 +394,7 @@ export default function DashboardPage() {
 
             {/* Latest check — scannable, not prose */}
             <div className="card rounded-2xl p-7 mb-8">
-              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Your latest check</p>
+              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Where you stand right now</p>
               <div className="flex items-start gap-6 flex-wrap mb-5">
                 <ScoreRing score={latest.score} size={92} />
                 <div className="flex-1 min-w-[200px] space-y-3">
