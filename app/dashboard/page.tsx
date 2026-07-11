@@ -6,8 +6,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2, TrendingUp, Target, Sparkles, History, ScanLine } from 'lucide-react';
-import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
+import { ArrowRight, Plus, Loader2, History, ScanLine, Flame } from 'lucide-react';
+import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
 
 type Scan = {
   id: string;
@@ -17,6 +17,13 @@ type Scan = {
   created_at: string;
   missing_keywords: string[] | null;
 };
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -72,7 +79,17 @@ export default function DashboardPage() {
       heatmap.push({ date: key, count: dayCounts.get(key) ?? 0 });
     }
 
-    return { total: scans.length, avg, best, trendData, delta, topMissing, heatmap };
+    // Real consecutive-day streak (today or yesterday must be included to count as active)
+    let streak = 0;
+    const cursor = new Date(today);
+    const hasToday = dayCounts.has(today.toISOString().slice(0, 10));
+    if (!hasToday) cursor.setDate(cursor.getDate() - 1);
+    while (dayCounts.has(cursor.toISOString().slice(0, 10))) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return { total: scans.length, avg, best, trendData, delta, topMissing, heatmap, streak };
   }, [scans]);
 
   if (checkingAuth) {
@@ -87,18 +104,23 @@ export default function DashboardPage() {
   const rest = scans && scans.length > 1 ? scans.slice(1, 6) : [];
   const firstName = email.split('@')[0];
 
-  const suggestion = latest
-    ? latest.score >= 75
-      ? { text: 'Strong fit on your last check. Prep for the interview next — you get 100 questions built for this exact role.', cta: 'Go prep', href: '/#tool' }
-      : latest.score >= 50
-      ? { text: 'You\'re close. A quick rewrite could close the gap on your missing keywords.', cta: 'Try rewrite', href: '/#tool' }
-      : { text: 'This one needs work. Start with a rewrite tailored to the role before you apply.', cta: 'Try rewrite', href: '/#tool' }
-    : null;
+  const line = !latest
+    ? null
+    : stats && stats.delta > 0
+    ? `Up ${stats.delta} points since your last check. Keep going.`
+    : stats && stats.delta < 0
+    ? `Down ${Math.abs(stats.delta)} points from your last check — worth a rewrite before you apply.`
+    : latest.score >= 75
+    ? 'Strong shape on your latest check.'
+    : latest.score >= 50
+    ? 'Getting there — a few gaps to close.'
+    : 'Room to grow — start with a rewrite.';
+
+  const missionKeywords = latest?.missing_keywords?.slice(0, 4) ?? [];
 
   return (
     <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
-      <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-40 pointer-events-none" />
-      <div className="float-slower absolute top-[420px] left-[2%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
+      <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
 
       <header className="border-b border-[var(--line)] relative">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -106,113 +128,99 @@ export default function DashboardPage() {
             <Image src="/logo.png" alt="Cvly" width={30} height={28} className="rounded-md" />
             <span className="text-[18px] font-bold tracking-[-0.02em]">Cvly</span>
           </Link>
-          <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">New scan</Link>
+          <Link href="/history" className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition flex items-center gap-1.5">
+            <History size={14} /> Full history
+          </Link>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-14 relative">
-        <div className="fade-up flex items-center gap-2 mb-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
-          </h1>
-          <Sparkles size={16} className="text-[var(--accent)]" />
-        </div>
-        <p className="fade-up fade-up-1 text-[var(--muted)] text-sm mb-10">
-          {scans === null ? 'Loading your results…' : latest ? 'Here\'s where things stand.' : 'Run your first check to get started.'}
-        </p>
-
         {scans === null ? (
-          <div className="card rounded-2xl p-10 flex justify-center">
-            <Loader2 size={18} className="animate-spin text-[var(--muted)]" />
+          <div className="flex justify-center py-20">
+            <Loader2 size={20} className="animate-spin text-[var(--muted)]" />
           </div>
         ) : !latest || !stats ? (
-          <div className="card rounded-2xl p-10 text-center">
-            <p className="font-semibold mb-2">No results yet</p>
-            <p className="text-sm text-[var(--muted)] mb-6 max-w-sm mx-auto">
-              Paste a resume and a role on the homepage to get your first score, rewrite, and interview prep.
-            </p>
-            <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
-              Run your first check <ArrowRight size={15} />
+          <div>
+            <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
+            <h1 className="text-4xl font-semibold tracking-tight mb-4 max-w-lg">Let&apos;s see where your resume stands.</h1>
+            <p className="text-[var(--muted)] mb-8 max-w-md">Paste a resume and a role — your first score, rewrite, and interview prep take about 10 seconds.</p>
+            <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold">
+              Run your first check <ArrowRight size={16} />
             </Link>
           </div>
         ) : (
           <>
-            {/* Quick actions */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <Link href="/#tool" className="card card-hover-lift rounded-xl p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
-                  <ScanLine size={16} className="text-[var(--accent-ink)]" />
-                </div>
-                <span className="text-sm font-medium">New check</span>
-              </Link>
-              <Link href="/history" className="card card-hover-lift rounded-xl p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[var(--surface)] flex items-center justify-center shrink-0">
-                  <History size={16} className="text-[var(--muted)]" />
-                </div>
-                <span className="text-sm font-medium">Full history</span>
-              </Link>
-            </div>
-
-            {/* Stats overview */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[
-                { label: 'Total checks', value: stats.total, icon: Target },
-                { label: 'Average score', value: stats.avg, icon: TrendingUp },
-                { label: 'Best score', value: stats.best, icon: Sparkles },
-              ].map((s, i) => (
-                <div key={s.label} className="card rounded-xl p-4 fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-                  <s.icon size={14} className="text-[var(--accent)] mb-2" />
-                  <p className="text-2xl font-bold tracking-tight tabular-nums">{s.value}</p>
-                  <p className="text-[11px] text-[var(--muted)] mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Trend chart */}
-            {stats.trendData.length >= 2 && (
-              <div className="card rounded-2xl p-6 mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Score trend</p>
-                  {stats.delta !== 0 && (
-                    <span className={`text-xs font-semibold ${stats.delta > 0 ? 'text-[var(--good)]' : 'text-[var(--bad)]'}`}>
-                      {stats.delta > 0 ? '+' : ''}{stats.delta} vs previous
-                    </span>
-                  )}
-                </div>
-                <div className="h-32 -ml-2">
+            {/* Hero moment */}
+            <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
+            <div className="flex items-end justify-between flex-wrap gap-6 mb-3">
+              <div className="flex items-end gap-4">
+                <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">{latest.score}</span>
+                {stats.delta !== 0 && (
+                  <span className={`text-sm font-semibold mb-2 ${stats.delta > 0 ? 'text-[var(--good)]' : 'text-[var(--bad)]'}`}>
+                    {stats.delta > 0 ? '↑' : '↓'} {Math.abs(stats.delta)}
+                  </span>
+                )}
+              </div>
+              {stats.trendData.length >= 2 && (
+                <div className="w-32 h-14">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats.trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <AreaChart data={stats.trendData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
+                        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
                           <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <YAxis domain={[0, 100]} hide />
-                      <Tooltip
-                        contentStyle={{ background: 'white', border: '1px solid var(--line)', borderRadius: 8, fontSize: 12 }}
-                        labelFormatter={() => ''}
-                        formatter={(value) => [`${value}/100`, 'Score']}
-                      />
-                      <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2.5} fill="url(#scoreGrad)" />
+                      <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2} fill="url(#sparkGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
+              )}
+            </div>
+            <p className="text-lg text-[var(--ink)]/80 mb-1">{line}</p>
+            <p className="text-sm text-[var(--muted)] mb-8">Your resume match, out of 100.</p>
+
+            <div className="flex items-center gap-3 mb-10 flex-wrap">
+              <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
+                <ScanLine size={15} /> Continue improving
+              </Link>
+              {stats.streak >= 2 && (
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[var(--warn-bg)] text-[var(--warn)] text-xs font-semibold">
+                  <Flame size={13} /> {stats.streak}-day streak
+                </span>
+              )}
+            </div>
+
+            {/* Today's mission — built from real missing keywords, no fabricated numbers */}
+            {missionKeywords.length > 0 && (
+              <div className="rounded-2xl p-6 mb-6 bg-[var(--ink)] text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/60 mb-3">Worth fixing next</p>
+                <p className="text-sm text-white/90 mb-4">Your latest check is missing these — adding them could strengthen your match.</p>
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {missionKeywords.map((kw) => (
+                    <span key={kw} className="px-3 py-1.5 bg-white/10 border border-white/15 text-white text-xs rounded-full font-medium">{kw}</span>
+                  ))}
+                </div>
+                <Link href="/#tool" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
+                  Fix this now <ArrowRight size={14} />
+                </Link>
               </div>
             )}
 
-            {/* Activity heatmap */}
+            {/* Consistency */}
             <div className="card rounded-2xl p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Last 8 weeks</p>
+                <div>
+                  <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Consistency</p>
+                  <p className="text-sm text-[var(--ink)]/80">
+                    {stats.streak > 0 ? `${stats.streak} day${stats.streak === 1 ? '' : 's'} in a row` : 'Last 8 weeks of activity'}
+                  </p>
+                </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted-soft)]">
                   <span>Less</span>
                   {[0, 1, 2, 3].map((lvl) => (
-                    <span
-                      key={lvl}
-                      className="w-2.5 h-2.5 rounded-[2px]"
-                      style={{ background: lvl === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + lvl * 0.25})` }}
-                    />
+                    <span key={lvl} className="w-2.5 h-2.5 rounded-[2px]" style={{ background: lvl === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + lvl * 0.25})` }} />
                   ))}
                   <span>More</span>
                 </div>
@@ -220,36 +228,16 @@ export default function DashboardPage() {
               <div className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto pb-1" style={{ width: 'fit-content' }}>
                 {stats.heatmap.map((d) => {
                   const bg = d.count === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + Math.min(d.count, 3) * 0.25})`;
-                  return (
-                    <div
-                      key={d.date}
-                      title={`${d.date}: ${d.count} check${d.count === 1 ? '' : 's'}`}
-                      className="w-3 h-3 rounded-[2px]"
-                      style={{ background: bg }}
-                    />
-                  );
+                  return <div key={d.date} title={`${d.date}: ${d.count} check${d.count === 1 ? '' : 's'}`} className="w-3 h-3 rounded-[2px]" style={{ background: bg }} />;
                 })}
               </div>
             </div>
 
-            {/* Suggested next step */}
-            {suggestion && (
-              <div className="card rounded-2xl p-6 mb-6 flex items-center gap-5 flex-wrap">
-                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
-                  <Sparkles size={16} className="text-[var(--accent-ink)]" />
-                </div>
-                <p className="text-sm text-[var(--ink)]/85 flex-1 min-w-[200px]">{suggestion.text}</p>
-                <Link href={suggestion.href} className="btn-accent px-4 py-2 rounded-full text-xs font-semibold shrink-0">
-                  {suggestion.cta}
-                </Link>
-              </div>
-            )}
-
-            {/* Insights: recurring missing keywords */}
+            {/* Insights */}
             {stats.topMissing.length > 0 && (
               <div className="card rounded-2xl p-6 mb-6">
                 <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Keeps coming up</p>
-                <p className="text-sm text-[var(--muted)] mb-4">These show up as missing across more than one check — worth adding to your resume.</p>
+                <p className="text-sm text-[var(--muted)] mb-4">Shows up as missing across more than one check.</p>
                 <div className="flex flex-wrap gap-2">
                   {stats.topMissing.map(([kw, count]) => (
                     <span key={kw} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium">
@@ -260,9 +248,9 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Most recent */}
+            {/* Your latest check, full detail */}
             <div className="card rounded-2xl p-7 mb-8">
-              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Most recent</p>
+              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Your latest check</p>
               <div className="flex items-start gap-6 flex-wrap">
                 <ScoreRing score={latest.score} size={104} />
                 <div className="flex-1 min-w-[220px]">
@@ -275,7 +263,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold">Recent activity</h2>
+              <h2 className="text-sm font-semibold">Your recent checks</h2>
               <Link href="/history" className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition">View all</Link>
             </div>
 
@@ -287,10 +275,7 @@ export default function DashboardPage() {
                   const color = s.score >= 75 ? 'var(--good)' : s.score >= 50 ? 'var(--warn)' : 'var(--bad)';
                   return (
                     <div key={s.id} className="card card-hover-lift rounded-xl p-4 flex items-center gap-4">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs"
-                        style={{ background: color }}
-                      >
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs" style={{ background: color }}>
                         {s.score}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -305,10 +290,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <Link
-              href="/#tool"
-              className="card card-hover-lift rounded-2xl p-5 flex items-center justify-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition"
-            >
+            <Link href="/#tool" className="card card-hover-lift rounded-2xl p-5 flex items-center justify-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition">
               <Plus size={16} /> Run another check
             </Link>
           </>
