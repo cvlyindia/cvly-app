@@ -148,20 +148,20 @@ const EXAMPLES = [
 ];
 
 const STEPS = [
-  { n: '01', icon: Upload, title: 'Paste your resume', desc: 'PDF, DOCX, or just text. A few seconds.' },
-  { n: '02', icon: Target, title: 'We compare it to the role', desc: 'The way a real recruiter\'s software reads it.' },
-  { n: '03', icon: KeyRound, title: 'See what\'s missing', desc: 'A score, and the terms this role wants.' },
-  { n: '04', icon: PenLine, title: 'Fix it in one click', desc: 'Sharper resume, real cover letter. Nothing invented.' },
-  { n: '05', icon: MessagesSquare, title: 'Practice 100 questions', desc: 'Built for this exact role.' },
+  { n: '01', icon: Upload, title: 'Upload', desc: 'Your resume, however it looks right now.' },
+  { n: '02', icon: Target, title: 'Compare', desc: 'Against the role, the way a recruiter\'s software actually reads it.' },
+  { n: '03', icon: KeyRound, title: 'Understand', desc: 'Exactly what\'s missing, and why it matters here.' },
+  { n: '04', icon: PenLine, title: 'Improve', desc: 'Nothing invented. Nothing exaggerated. Just your experience, presented better.' },
+  { n: '05', icon: MessagesSquare, title: 'Practice', desc: '100 questions for this exact role, so nothing catches you off guard.' },
 ];
 
 const TRUST_POINTS = [
-  { icon: ShieldCheck, text: 'Your resume is used only to generate your results' },
-  { icon: KeyRound, text: 'Nothing is stored unless you choose to sign in' },
-  { icon: Trash2, text: 'Delete any saved check from your history, anytime' },
-  { icon: Lock, text: 'You own what you paste in — we claim no rights to it' },
-  { icon: Sparkles, text: 'Built on Google Gemini, plainly, no hidden layer' },
-  { icon: Check, text: 'No fabricated experience, no invented achievements — ever' },
+  { icon: ShieldCheck, text: 'Your resume is used only to generate your results — nothing else' },
+  { icon: KeyRound, text: 'You decide what gets saved. Nothing stored unless you sign in.' },
+  { icon: Trash2, text: 'Delete your data whenever you want. Really, anytime.' },
+  { icon: Lock, text: 'Your resume belongs to you. We claim no rights to it.' },
+  { icon: Sparkles, text: 'Built on Google Gemini, plainly — no hidden layer' },
+  { icon: Check, text: 'We don\'t invent experience. We don\'t claim your achievements.' },
 ];
 
 const FAQS = [
@@ -264,7 +264,7 @@ function SampleReport() {
     <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
       <Reveal>
         <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">See a sample report</h2>
-        <p className="text-center text-[var(--muted)] mb-10 text-sm">Illustrative example — not live data. Run your own for real results.</p>
+        <p className="text-center text-[var(--muted)] mb-10 text-sm">This is what you actually get — not a teaser. On a sample resume, not yours.</p>
       </Reveal>
       <Reveal delayMs={100}>
         <div className="card rounded-2xl overflow-hidden">
@@ -568,13 +568,13 @@ export default function Home() {
             You&apos;ve applied. You&apos;ve waited. Nothing. It&apos;s rarely your experience — it&apos;s that your resume never made it past the first read.
           </p>
           <p className="fade-up fade-up-1 text-[var(--muted-soft)] text-sm mb-9 max-w-md">
-            Cvly shows you exactly why, then fixes it with you. Free, no card.
+            We&apos;ll show you exactly what&apos;s missing. Free, no card.
           </p>
           <button
             onClick={() => setToolOpen(true)}
             className="fade-up fade-up-2 btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm"
           >
-            See my interview chances <ArrowRight size={16} />
+            Let&apos;s see what&apos;s missing <ArrowRight size={16} />
           </button>
           <div className="fade-up fade-up-2 flex items-center gap-5 mt-8 text-sm text-[var(--muted)]">
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No card</span>
@@ -736,7 +736,7 @@ export default function Home() {
       <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Why not just use ChatGPT?</h2>
-          <p className="text-center text-[var(--muted)] mb-14 text-sm max-w-md mx-auto">You can. It&apos;s a good general-purpose assistant. Cvly is built for one specific job.</p>
+          <p className="text-center text-[var(--muted)] mb-14 text-sm max-w-md mx-auto">You can. ChatGPT is a conversation. Cvly is a complete workflow.</p>
         </Reveal>
         <div className="grid sm:grid-cols-2 gap-5">
           <Reveal>
@@ -1075,7 +1075,7 @@ export default function Home() {
           <div className="card rounded-2xl p-7">
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-4">Why I built this</p>
             <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-4">
-              I run a small performance marketing agency, and over the years I&apos;ve looked at a lot of resumes — for clients, for candidates, for NGOs I&apos;ve worked with. The same thing kept happening: good people, resumes that never got past the first filter. Cvly is what I wished existed for them.
+              I run a small performance marketing agency, and over the years I&apos;ve looked at a lot of resumes — for clients, for candidates, for NGOs I&apos;ve worked with. The same thing kept happening: good people, resumes that never got past the first filter. So I built the tool I wished existed for them.
             </p>
             <p className="text-sm text-[var(--ink)]/80 leading-relaxed mb-4">
               It&apos;s still early. I&apos;m building it in public, adding what people actually ask for, and keeping it free while that&apos;s true. If something&apos;s missing or broken, I want to hear about it.
@@ -1088,13 +1088,13 @@ export default function Home() {
       {/* Final CTA */}
       <section className="max-w-3xl mx-auto px-6 py-20 text-center border-t border-[var(--line)]">
         <Reveal>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Your resume already tells your story.</h2>
-          <p className="text-[var(--muted)] mb-9 max-w-md mx-auto">Let&apos;s make sure it actually gets read. Free, no card, results in seconds.</p>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Your next interview could start here.</h2>
+          <p className="text-[var(--muted)] mb-9 max-w-md mx-auto">You&apos;ve already earned the experience. Let&apos;s help recruiters see it. Free, no card.</p>
           <button
             onClick={() => setToolOpen(true)}
             className="btn-accent inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-sm"
           >
-            Check my resume, free <ArrowRight size={16} />
+            Show me what&apos;s missing <ArrowRight size={16} />
           </button>
         </Reveal>
       </section>
