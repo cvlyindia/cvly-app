@@ -6,8 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2, History, ScanLine, Flame } from 'lucide-react';
-import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
+import { ArrowRight, Plus, Loader2, History, ScanLine, Flame, Pencil, Trophy, MessagesSquare } from 'lucide-react';
 
 type Scan = {
   id: string;
@@ -16,6 +15,7 @@ type Scan = {
   job_description: string;
   created_at: string;
   missing_keywords: string[] | null;
+  matched_keywords: string[] | null;
 };
 
 function greeting(): string {
@@ -25,11 +25,35 @@ function greeting(): string {
   return 'Good evening';
 }
 
+function useCountUp(target: number, active: boolean, duration = 800) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let start: number | null = null;
+    let raf: number;
+    const step = (ts: number) => {
+      if (start === null) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      setValue(Math.round(progress * target));
+      if (progress < 1) raf = requestAnimationFrame(step);
+      else setValue(target);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active, target, duration]);
+  return value;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [email, setEmail] = useState('');
   const [scans, setScans] = useState<Scan[] | null>(null);
+  const [targetScore, setTargetScore] = useState<number | null>(null);
+  const [targetRole, setTargetRole] = useState('');
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState({ role: '', score: '90' });
+  const [doneTasks, setDoneTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const supabase = createClient();
@@ -44,14 +68,28 @@ export default function DashboardPage() {
         .then((res) => res.json())
         .then((d) => setScans(d.scans ?? []));
     });
+
+    const savedRole = localStorage.getItem('cvly_target_role');
+    const savedScore = localStorage.getItem('cvly_target_score');
+    const id = setTimeout(() => {
+      if (savedRole) setTargetRole(savedRole);
+      if (savedScore) setTargetScore(parseInt(savedScore, 10));
+    }, 0);
+    return () => clearTimeout(id);
   }, [router]);
+
+  function saveGoal() {
+    localStorage.setItem('cvly_target_role', goalInput.role);
+    localStorage.setItem('cvly_target_score', goalInput.score);
+    setTargetRole(goalInput.role);
+    setTargetScore(parseInt(goalInput.score, 10));
+    setEditingGoal(false);
+  }
 
   const stats = useMemo(() => {
     if (!scans || scans.length === 0) return null;
     const scores = scans.map((s) => s.score);
-    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
     const best = Math.max(...scores);
-    const trendData = [...scans].reverse().map((s, i) => ({ i, score: s.score }));
     const delta = scans.length >= 2 ? scans[0].score - scans[1].score : 0;
 
     const keywordCounts = new Map<string, number>();
@@ -79,7 +117,6 @@ export default function DashboardPage() {
       heatmap.push({ date: key, count: dayCounts.get(key) ?? 0 });
     }
 
-    // Real consecutive-day streak (today or yesterday must be included to count as active)
     let streak = 0;
     const cursor = new Date(today);
     const hasToday = dayCounts.has(today.toISOString().slice(0, 10));
@@ -89,8 +126,22 @@ export default function DashboardPage() {
       cursor.setDate(cursor.getDate() - 1);
     }
 
-    return { total: scans.length, avg, best, trendData, delta, topMissing, heatmap, streak };
+    // Real personal-best detection: chronological order, is each scan the highest seen so far?
+    const chronological = [...scans].reverse();
+    let runningBest = -1;
+    const personalBestIds = new Set<string>();
+    for (const s of chronological) {
+      if (s.score > runningBest) {
+        personalBestIds.add(s.id);
+        runningBest = s.score;
+      }
+    }
+
+    return { best, delta, topMissing, heatmap, streak, personalBestIds };
   }, [scans]);
+
+  const latest = scans && scans.length > 0 ? scans[0] : null;
+  const animatedScore = useCountUp(latest?.score ?? 0, !!latest, 900);
 
   if (checkingAuth) {
     return (
@@ -100,23 +151,34 @@ export default function DashboardPage() {
     );
   }
 
-  const latest = scans && scans.length > 0 ? scans[0] : null;
   const rest = scans && scans.length > 1 ? scans.slice(1, 6) : [];
   const firstName = email.split('@')[0];
 
+  const missionKeywords = latest?.missing_keywords?.slice(0, 4) ?? [];
+  const allTasksDone = missionKeywords.length > 0 && missionKeywords.every((k) => doneTasks.has(k));
+
   const line = !latest
     ? null
+    : targetScore && latest.score >= targetScore
+    ? `You've hit your target of ${targetScore}. Time to set a new one.`
+    : targetScore
+    ? `${targetScore - latest.score} points from your target${targetRole ? ` for ${targetRole}` : ''}.`
     : stats && stats.delta > 0
-    ? `Up ${stats.delta} points since your last check. Keep going.`
+    ? `Up ${stats.delta} points since your last check. You're building momentum.`
     : stats && stats.delta < 0
-    ? `Down ${Math.abs(stats.delta)} points from your last check — worth a rewrite before you apply.`
+    ? `Down ${Math.abs(stats.delta)} — worth a rewrite before you send this one out.`
     : latest.score >= 75
     ? 'Strong shape on your latest check.'
-    : latest.score >= 50
-    ? 'Getting there — a few gaps to close.'
-    : 'Room to grow — start with a rewrite.';
+    : 'A few gaps to close, and you\'ll be there.';
 
-  const missionKeywords = latest?.missing_keywords?.slice(0, 4) ?? [];
+  function toggleTask(kw: string) {
+    setDoneTasks((prev) => {
+      const next = new Set(prev);
+      if (next.has(kw)) next.delete(kw);
+      else next.add(kw);
+      return next;
+    });
+  }
 
   return (
     <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
@@ -150,40 +212,84 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* Hero moment */}
+            {/* Hero: coach framing, real goal progress instead of decorative sparkline */}
             <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
-            <div className="flex items-end justify-between flex-wrap gap-6 mb-3">
-              <div className="flex items-end gap-4">
-                <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">{latest.score}</span>
-                {stats.delta !== 0 && (
-                  <span className={`text-sm font-semibold mb-2 ${stats.delta > 0 ? 'text-[var(--good)]' : 'text-[var(--bad)]'}`}>
-                    {stats.delta > 0 ? '↑' : '↓'} {Math.abs(stats.delta)}
-                  </span>
-                )}
-              </div>
-              {stats.trendData.length >= 2 && (
-                <div className="w-32 h-14">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats.trendData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <YAxis domain={[0, 100]} hide />
-                      <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2} fill="url(#sparkGrad)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+            <div className="flex items-end gap-4 mb-3">
+              <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">{animatedScore}</span>
+              {stats.delta !== 0 && (
+                <span className={`text-sm font-semibold mb-2 ${stats.delta > 0 ? 'text-[var(--good)]' : 'text-[var(--bad)]'}`}>
+                  {stats.delta > 0 ? '↑' : '↓'} {Math.abs(stats.delta)}
+                </span>
               )}
             </div>
             <p className="text-lg text-[var(--ink)]/80 mb-1">{line}</p>
-            <p className="text-sm text-[var(--muted)] mb-8">Your resume match, out of 100.</p>
+            <p className="text-sm text-[var(--muted)] mb-6">Your resume match, out of 100.</p>
 
+            {/* Career goal — real, user-set, not fabricated */}
+            {editingGoal ? (
+              <div className="card rounded-2xl p-5 mb-8">
+                <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-3">Set your target</p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <input
+                    value={goalInput.role}
+                    onChange={(e) => setGoalInput((g) => ({ ...g, role: e.target.value }))}
+                    placeholder="Target role, e.g. Senior PM"
+                    className="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)]"
+                  />
+                  <input
+                    value={goalInput.score}
+                    onChange={(e) => setGoalInput((g) => ({ ...g, score: e.target.value.replace(/\D/g, '') }))}
+                    placeholder="Target score"
+                    className="w-28 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)]"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={saveGoal} className="btn-accent px-4 py-2 rounded-full text-xs font-semibold">Save</button>
+                  <button onClick={() => setEditingGoal(false)} className="px-4 py-2 rounded-full text-xs font-medium text-[var(--muted)]">Cancel</button>
+                </div>
+              </div>
+            ) : targetScore ? (
+              <div className="card rounded-2xl p-5 mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">{targetRole || 'Your target'}</p>
+                  <button onClick={() => { setGoalInput({ role: targetRole, score: String(targetScore) }); setEditingGoal(true); }} className="text-[var(--muted-soft)] hover:text-[var(--ink)]">
+                    <Pencil size={12} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-sm font-semibold">{latest.score}</span>
+                  <div className="flex-1 h-2 rounded-full bg-[var(--line)] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[var(--accent)] transition-all duration-700"
+                      style={{ width: `${Math.min(100, (latest.score / targetScore) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-[var(--muted)]">{targetScore}</span>
+                </div>
+                <p className="text-xs text-[var(--muted)]">{Math.max(0, targetScore - latest.score)} points to go</p>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setGoalInput({ role: '', score: '90' }); setEditingGoal(true); }}
+                className="card card-hover-lift rounded-2xl p-5 mb-8 flex items-center gap-3 text-left w-full"
+              >
+                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
+                  <Trophy size={16} className="text-[var(--accent-ink)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Set a target score</p>
+                  <p className="text-xs text-[var(--muted)]">Track your progress toward a specific role</p>
+                </div>
+              </button>
+            )}
+
+            {/* Next actions */}
             <div className="flex items-center gap-3 mb-10 flex-wrap">
               <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
-                <ScanLine size={15} /> Continue improving
+                <ScanLine size={15} /> Tailor resume
+              </Link>
+              <Link href="/#tool" className="card card-hover-lift inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
+                <MessagesSquare size={15} /> Practice interview
               </Link>
               {stats.streak >= 2 && (
                 <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[var(--warn-bg)] text-[var(--warn)] text-xs font-semibold">
@@ -192,29 +298,64 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Today's mission — built from real missing keywords, no fabricated numbers */}
+            {/* Today's Mission — biggest card, real data, no fabricated point-estimate */}
             {missionKeywords.length > 0 && (
-              <div className="rounded-2xl p-6 mb-6 bg-[var(--ink)] text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/60 mb-3">Worth fixing next</p>
-                <p className="text-sm text-white/90 mb-4">Your latest check is missing these — adding them could strengthen your match.</p>
-                <div className="flex flex-wrap gap-2 mb-5">
+              <div className="rounded-2xl p-7 mb-6 bg-[var(--ink)] text-white">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Let&apos;s strengthen this first</p>
+                  <span className="text-[11px] text-white/50">~2 min</span>
+                </div>
+                <p className="text-sm text-white/90 mb-5">Add these to your resume — they&apos;re what this role is looking for.</p>
+                <div className="space-y-2.5 mb-5">
                   {missionKeywords.map((kw) => (
-                    <span key={kw} className="px-3 py-1.5 bg-white/10 border border-white/15 text-white text-xs rounded-full font-medium">{kw}</span>
+                    <button
+                      key={kw}
+                      onClick={() => toggleTask(kw)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition text-left"
+                    >
+                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition ${doneTasks.has(kw) ? 'bg-[var(--accent)] border-[var(--accent)]' : 'border-white/30'}`}>
+                        {doneTasks.has(kw) && <span className="text-[10px]">✓</span>}
+                      </span>
+                      <span className={`text-sm ${doneTasks.has(kw) ? 'text-white/50 line-through' : 'text-white/90'}`}>{kw}</span>
+                    </button>
                   ))}
                 </div>
-                <Link href="/#tool" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
-                  Fix this now <ArrowRight size={14} />
-                </Link>
+                {allTasksDone ? (
+                  <p className="text-sm font-semibold text-[var(--accent)]">Nice. Run a new check to see it reflected.</p>
+                ) : (
+                  <Link href="/#tool" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
+                    Fix it now <ArrowRight size={14} />
+                  </Link>
+                )}
               </div>
             )}
 
-            {/* Consistency */}
+            {/* Career signals — honest: real resume score, others clearly labeled not-yet-built */}
+            <div className="card rounded-2xl p-6 mb-6">
+              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">Career signals</p>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-2xl font-bold tabular-nums">{latest.score}</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
+                </div>
+                <div className="opacity-40">
+                  <p className="text-sm font-medium">Soon</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
+                </div>
+                <div className="opacity-40">
+                  <p className="text-sm font-medium">Soon</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Portfolio</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Consistency — coaching framing */}
             <div className="card rounded-2xl p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Consistency</p>
+                  <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">You&apos;re building momentum</p>
                   <p className="text-sm text-[var(--ink)]/80">
-                    {stats.streak > 0 ? `${stats.streak} day${stats.streak === 1 ? '' : 's'} in a row` : 'Last 8 weeks of activity'}
+                    {stats.streak > 0 ? `${stats.streak} day${stats.streak === 1 ? '' : 's'} in a row. Keep it going tomorrow.` : 'Check in regularly to build a streak.'}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted-soft)]">
@@ -233,11 +374,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Insights */}
+            {/* Skills recruiters keep expecting */}
             {stats.topMissing.length > 0 && (
               <div className="card rounded-2xl p-6 mb-6">
-                <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Keeps coming up</p>
-                <p className="text-sm text-[var(--muted)] mb-4">Shows up as missing across more than one check.</p>
+                <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Skills recruiters consistently expect</p>
+                <p className="text-sm text-[var(--muted)] mb-4">Missing across more than one check.</p>
                 <div className="flex flex-wrap gap-2">
                   {stats.topMissing.map(([kw, count]) => (
                     <span key={kw} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium">
@@ -248,22 +389,31 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Your latest check, full detail */}
+            {/* Latest check — scannable, not prose */}
             <div className="card rounded-2xl p-7 mb-8">
               <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Your latest check</p>
-              <div className="flex items-start gap-6 flex-wrap">
-                <ScoreRing score={latest.score} size={104} />
-                <div className="flex-1 min-w-[220px]">
-                  <p className="text-sm text-[var(--ink)]/85 leading-relaxed mb-3">{latest.summary}</p>
-                  <p className="text-xs text-[var(--muted)]">
-                    {new Date(latest.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </p>
+              <div className="flex items-start gap-6 flex-wrap mb-5">
+                <ScoreRing score={latest.score} size={92} />
+                <div className="flex-1 min-w-[200px] space-y-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {(latest.matched_keywords ?? []).slice(0, 4).map((k) => (
+                      <span key={k} className="px-2 py-0.5 bg-[var(--good-bg)] text-[var(--good)] text-[11px] rounded-full font-medium">{k}</span>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(latest.missing_keywords ?? []).slice(0, 4).map((k) => (
+                      <span key={k} className="px-2 py-0.5 bg-[var(--bad-bg)] text-[var(--bad)] text-[11px] rounded-full font-medium">{k}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
+              <p className="text-xs text-[var(--muted)]">
+                {new Date(latest.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
             </div>
 
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold">Your recent checks</h2>
+              <h2 className="text-sm font-semibold">Your progress</h2>
               <Link href="/history" className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition">View all</Link>
             </div>
 
@@ -273,13 +423,21 @@ export default function DashboardPage() {
               <div className="space-y-2.5 mb-8">
                 {rest.map((s) => {
                   const color = s.score >= 75 ? 'var(--good)' : s.score >= 50 ? 'var(--warn)' : 'var(--bad)';
+                  const isBest = stats.personalBestIds.has(s.id);
                   return (
                     <div key={s.id} className="card card-hover-lift rounded-xl p-4 flex items-center gap-4">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs" style={{ background: color }}>
                         {s.score}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[var(--ink)] line-clamp-1">{s.job_description.slice(0, 80)}...</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-[var(--ink)] line-clamp-1">{s.job_description.slice(0, 70)}...</p>
+                          {isBest && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-ink)] shrink-0">
+                              <Trophy size={11} /> Best
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-[var(--muted)] mt-0.5">
                           {new Date(s.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </p>

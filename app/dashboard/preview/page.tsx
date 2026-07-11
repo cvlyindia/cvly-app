@@ -3,25 +3,21 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ScoreRing } from '@/components/ScoreRing';
-import { Plus, Info, History, ScanLine, Flame, ArrowRight } from 'lucide-react';
-import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
+import { Plus, Info, History, ScanLine, Flame, MessagesSquare, Trophy } from 'lucide-react';
 
-const SAMPLE_LATEST = {
+const SAMPLE = {
   score: 82,
-  summary: 'Strong match for this Senior Product Manager role — your roadmapping and SQL experience line up well, but a couple of stakeholder-management keywords are missing.',
-  date: '11 Jul 2026',
+  target: 95,
+  targetRole: 'Senior Product Manager',
+  matched: ['Product Strategy', 'Roadmapping', 'SQL', 'A/B Testing'],
   missing: ['Stakeholder mgmt', 'OKRs'],
+  date: '11 Jul 2026',
 };
 
 const SAMPLE_RECENT = [
-  { score: 88, role: 'Software Engineer — React/TypeScript role at a Series B fintech startup', date: '9 Jul' },
-  { score: 76, role: 'Data Analyst — growth team, requires Python and dbt experience', date: '6 Jul' },
-  { score: 91, role: 'Marketing Manager — D2C brand, SEO and campaign strategy focus', date: '2 Jul' },
-];
-
-const SAMPLE_TREND = [
-  { i: 0, score: 68 }, { i: 1, score: 74 }, { i: 2, score: 71 },
-  { i: 3, score: 79 }, { i: 4, score: 76 }, { i: 5, score: 88 }, { i: 6, score: 82 },
+  { score: 88, role: 'Software Engineer — React/TypeScript role at a Series B fintech startup', date: '9 Jul', best: true },
+  { score: 76, role: 'Data Analyst — growth team, requires Python and dbt experience', date: '6 Jul', best: false },
+  { score: 91, role: 'Marketing Manager — D2C brand, SEO and campaign strategy focus', date: '2 Jul', best: false },
 ];
 
 const SAMPLE_HEATMAP: number[] = Array.from({ length: 56 }, (_, i) => {
@@ -50,64 +46,83 @@ export default function DashboardPreviewPage() {
             <Image src="/logo.png" alt="Cvly" width={30} height={28} className="rounded-md" />
             <span className="text-[18px] font-bold tracking-[-0.02em]">Cvly</span>
           </Link>
-          <span className="text-sm text-[var(--muted)] flex items-center gap-1.5">
-            <History size={14} /> Full history
-          </span>
+          <span className="text-sm text-[var(--muted)] flex items-center gap-1.5"><History size={14} /> Full history</span>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-14 relative">
         <p className="text-sm text-[var(--muted)] mb-2">Good evening, Anurag</p>
-        <div className="flex items-end justify-between flex-wrap gap-6 mb-3">
-          <div className="flex items-end gap-4">
-            <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">{SAMPLE_LATEST.score}</span>
-            <span className="text-sm font-semibold mb-2 text-[var(--good)]">↑ 6</span>
-          </div>
-          <div className="w-32 h-14">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={SAMPLE_TREND} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="sparkGradPreview" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <YAxis domain={[0, 100]} hide />
-                <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2} fill="url(#sparkGradPreview)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="flex items-end gap-4 mb-3">
+          <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">{SAMPLE.score}</span>
+          <span className="text-sm font-semibold mb-2 text-[var(--good)]">↑ 6</span>
         </div>
-        <p className="text-lg text-[var(--ink)]/80 mb-1">Up 6 points since your last check. Keep going.</p>
-        <p className="text-sm text-[var(--muted)] mb-8">Your resume match, out of 100.</p>
+        <p className="text-lg text-[var(--ink)]/80 mb-1">{SAMPLE.target - SAMPLE.score} points from your target for {SAMPLE.targetRole}.</p>
+        <p className="text-sm text-[var(--muted)] mb-6">Your resume match, out of 100.</p>
+
+        <div className="card rounded-2xl p-5 mb-8">
+          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-2">{SAMPLE.targetRole}</p>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-sm font-semibold">{SAMPLE.score}</span>
+            <div className="flex-1 h-2 rounded-full bg-[var(--line)] overflow-hidden">
+              <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${(SAMPLE.score / SAMPLE.target) * 100}%` }} />
+            </div>
+            <span className="text-sm text-[var(--muted)]">{SAMPLE.target}</span>
+          </div>
+          <p className="text-xs text-[var(--muted)]">{SAMPLE.target - SAMPLE.score} points to go</p>
+        </div>
 
         <div className="flex items-center gap-3 mb-10 flex-wrap">
           <div className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
-            <ScanLine size={15} /> Continue improving
+            <ScanLine size={15} /> Tailor resume
+          </div>
+          <div className="card inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
+            <MessagesSquare size={15} /> Practice interview
           </div>
           <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[var(--warn-bg)] text-[var(--warn)] text-xs font-semibold">
             <Flame size={13} /> 4-day streak
           </span>
         </div>
 
-        <div className="rounded-2xl p-6 mb-6 bg-[var(--ink)] text-white">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/60 mb-3">Worth fixing next</p>
-          <p className="text-sm text-white/90 mb-4">Your latest check is missing these — adding them could strengthen your match.</p>
-          <div className="flex flex-wrap gap-2 mb-5">
-            {SAMPLE_LATEST.missing.map((kw) => (
-              <span key={kw} className="px-3 py-1.5 bg-white/10 border border-white/15 text-white text-xs rounded-full font-medium">{kw}</span>
+        <div className="rounded-2xl p-7 mb-6 bg-[var(--ink)] text-white">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Let&apos;s strengthen this first</p>
+            <span className="text-[11px] text-white/50">~2 min</span>
+          </div>
+          <p className="text-sm text-white/90 mb-5">Add these to your resume — they&apos;re what this role is looking for.</p>
+          <div className="space-y-2.5 mb-5">
+            {SAMPLE.missing.map((kw) => (
+              <div key={kw} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                <span className="w-5 h-5 rounded-full border border-white/30 shrink-0" />
+                <span className="text-sm text-white/90">{kw}</span>
+              </div>
             ))}
           </div>
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">
-            Fix this now <ArrowRight size={14} />
-          </span>
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">Fix it now →</span>
+        </div>
+
+        <div className="card rounded-2xl p-6 mb-6">
+          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">Career signals</p>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-2xl font-bold tabular-nums">{SAMPLE.score}</p>
+              <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
+            </div>
+            <div className="opacity-40">
+              <p className="text-sm font-medium">Soon</p>
+              <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
+            </div>
+            <div className="opacity-40">
+              <p className="text-sm font-medium">Soon</p>
+              <p className="text-xs text-[var(--muted)] mt-1">Portfolio</p>
+            </div>
+          </div>
         </div>
 
         <div className="card rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Consistency</p>
-              <p className="text-sm text-[var(--ink)]/80">4 days in a row</p>
+              <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">You&apos;re building momentum</p>
+              <p className="text-sm text-[var(--ink)]/80">4 days in a row. Keep it going tomorrow.</p>
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted-soft)]">
               <span>Less</span>
@@ -126,8 +141,8 @@ export default function DashboardPreviewPage() {
         </div>
 
         <div className="card rounded-2xl p-6 mb-6">
-          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Keeps coming up</p>
-          <p className="text-sm text-[var(--muted)] mb-4">Shows up as missing across more than one check.</p>
+          <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Skills recruiters consistently expect</p>
+          <p className="text-sm text-[var(--muted)] mb-4">Missing across more than one check.</p>
           <div className="flex flex-wrap gap-2">
             {[['Stakeholder mgmt', 3], ['OKRs', 2], ['Kubernetes', 2]].map(([kw, count]) => (
               <span key={kw as string} className="px-3 py-1.5 bg-[var(--bad-bg)] border border-[var(--bad)]/15 text-[var(--bad)] text-xs rounded-full font-medium">
@@ -139,17 +154,22 @@ export default function DashboardPreviewPage() {
 
         <div className="card rounded-2xl p-7 mb-8">
           <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Your latest check</p>
-          <div className="flex items-start gap-6 flex-wrap">
-            <ScoreRing score={SAMPLE_LATEST.score} size={104} />
-            <div className="flex-1 min-w-[220px]">
-              <p className="text-sm text-[var(--ink)]/85 leading-relaxed mb-3">{SAMPLE_LATEST.summary}</p>
-              <p className="text-xs text-[var(--muted)]">{SAMPLE_LATEST.date}</p>
+          <div className="flex items-start gap-6 flex-wrap mb-5">
+            <ScoreRing score={SAMPLE.score} size={92} />
+            <div className="flex-1 min-w-[200px] space-y-3">
+              <div className="flex flex-wrap gap-1.5">
+                {SAMPLE.matched.map((k) => <span key={k} className="px-2 py-0.5 bg-[var(--good-bg)] text-[var(--good)] text-[11px] rounded-full font-medium">{k}</span>)}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {SAMPLE.missing.map((k) => <span key={k} className="px-2 py-0.5 bg-[var(--bad-bg)] text-[var(--bad)] text-[11px] rounded-full font-medium">{k}</span>)}
+              </div>
             </div>
           </div>
+          <p className="text-xs text-[var(--muted)]">{SAMPLE.date}</p>
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold">Your recent checks</h2>
+          <h2 className="text-sm font-semibold">Your progress</h2>
           <span className="text-xs text-[var(--muted-soft)]">View all</span>
         </div>
 
@@ -158,11 +178,12 @@ export default function DashboardPreviewPage() {
             const color = s.score >= 75 ? 'var(--good)' : s.score >= 50 ? 'var(--warn)' : 'var(--bad)';
             return (
               <div key={i} className="card card-hover-lift rounded-xl p-4 flex items-center gap-4">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs" style={{ background: color }}>
-                  {s.score}
-                </div>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-xs" style={{ background: color }}>{s.score}</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[var(--ink)] line-clamp-1">{s.role}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-[var(--ink)] line-clamp-1">{s.role}</p>
+                    {s.best && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-ink)] shrink-0"><Trophy size={11} /> Best</span>}
+                  </div>
                   <p className="text-xs text-[var(--muted)] mt-0.5">{s.date}</p>
                 </div>
               </div>
