@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCoverLetter } from '@/lib/ai';
+import { createClient } from '@/lib/supabase/server';
+import { checkCredits, spendCredits } from '@/lib/credits';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +11,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Resume text and job description are both required' }, { status: 400 });
     }
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const credit = await checkCredits(supabase, user.id, 'cover');
+      if (!credit.allowed) {
+        return NextResponse.json(
+          { error: 'out_of_credits', plan: credit.plan, remaining: credit.remaining, resetAt: credit.resetAt },
+          { status: 402 }
+        );
+      }
+    }
+
     const letter = await generateCoverLetter(resumeText, jobDescription);
+
+    if (user) {
+      await spendCredits(supabase, user.id, 'cover');
+    }
+
     return NextResponse.json({ letter });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Cover letter generation failed';

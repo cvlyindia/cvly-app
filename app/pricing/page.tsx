@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, ArrowRight, Loader2, Sparkles, Building2 } from 'lucide-react';
+import { Check, ArrowRight, Loader2, Sparkles, Building2, Zap } from 'lucide-react';
 
 const FREE_FEATURES = [
   'ATS match score',
@@ -16,6 +16,7 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   'Everything in Free',
+  '150 credits every month',
   'Application tracker (Kanban board)',
   'LinkedIn profile review',
   'Portfolio review',
@@ -24,16 +25,26 @@ const PRO_FEATURES = [
 
 const ENTERPRISE_FEATURES = [
   'Everything in Pro, for your whole team',
+  '1,000 pooled credits every month',
   'Team seats & centralized billing',
   'Usage insights across your team',
   'Dedicated onboarding support',
-  'Custom integrations, on request',
 ];
 
-const MONTHLY_PRICE = 99;
-const YEARLY_PRICE = 999;
-const YEARLY_MONTHLY_EQUIVALENT = Math.round(YEARLY_PRICE / 12);
-const YEARLY_SAVINGS_PCT = Math.round((1 - YEARLY_PRICE / (MONTHLY_PRICE * 12)) * 100);
+const PRICING = {
+  pro: { monthly: 99, yearly: 999 },
+  enterprise: { monthly: 999, yearly: 9999 },
+};
+
+const TOPUPS = [
+  { credits: 20, price: 49 },
+  { credits: 60, price: 129 },
+  { credits: 150, price: 299 },
+];
+
+function yearlySavings(monthly: number, yearly: number) {
+  return Math.round((1 - yearly / (monthly * 12)) * 100);
+}
 
 function WaitlistForm({ plan }: { plan: 'pro' | 'enterprise' }) {
   const [email, setEmail] = useState('');
@@ -100,7 +111,9 @@ function WaitlistForm({ plan }: { plan: 'pro' | 'enterprise' }) {
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
-  const proPrice = billing === 'monthly' ? MONTHLY_PRICE : YEARLY_MONTHLY_EQUIVALENT;
+  const proPrice = billing === 'monthly' ? PRICING.pro.monthly : Math.round(PRICING.pro.yearly / 12);
+  const entPrice = billing === 'monthly' ? PRICING.enterprise.monthly : Math.round(PRICING.enterprise.yearly / 12);
+  const proSavings = yearlySavings(PRICING.pro.monthly, PRICING.pro.yearly);
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">
@@ -117,10 +130,9 @@ export default function PricingPage() {
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-8 fade-up">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">Simple pricing</h1>
-          <p className="text-[var(--muted)] max-w-md mx-auto">Everything is free right now, while we&apos;re building. Here&apos;s what&apos;s free today, and what&apos;s coming next.</p>
+          <p className="text-[var(--muted)] max-w-md mx-auto">Free comes with monthly credits so it stays fair for everyone. Upgrade any time for more.</p>
         </div>
 
-        {/* Billing toggle */}
         <div className="flex justify-center mb-10 fade-up fade-up-1">
           <div className="inline-flex items-center gap-1 p-1 rounded-full bg-[var(--surface)] border border-[var(--line)]">
             {(['monthly', 'yearly'] as const).map((b) => (
@@ -134,7 +146,7 @@ export default function PricingPage() {
                 {b === 'monthly' ? 'Monthly' : 'Yearly'}
                 {b === 'yearly' && (
                   <span className="text-[10px] font-bold text-white bg-[var(--good)] px-1.5 py-0.5 rounded-full">
-                    Save {YEARLY_SAVINGS_PCT}%
+                    Save {proSavings}%
                   </span>
                 )}
               </button>
@@ -142,7 +154,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-5 mb-14">
+        <div className="grid md:grid-cols-3 gap-5 mb-8">
           {/* Free */}
           <div className="card rounded-2xl p-6 fade-up fade-up-1">
             <div className="flex items-center justify-between mb-1">
@@ -150,7 +162,7 @@ export default function PricingPage() {
               <span className="text-[10px] font-bold text-white bg-[var(--good)] px-2 py-0.5 rounded-full">ACTIVE NOW</span>
             </div>
             <p className="text-3xl font-bold tracking-tight mb-1">₹0</p>
-            <p className="text-xs text-[var(--muted)] mb-6">No card, while we&apos;re in beta</p>
+            <p className="text-xs text-[var(--muted)] mb-6">5 credits every month, no card</p>
             <div className="space-y-2.5 mb-7">
               {FREE_FEATURES.map((f) => (
                 <div key={f} className="flex items-center gap-2.5">
@@ -175,7 +187,7 @@ export default function PricingPage() {
               <p className="text-sm text-[var(--muted)]">/mo</p>
             </div>
             <p className="text-xs text-[var(--muted)] mb-6">
-              {billing === 'yearly' ? `Billed ₹${YEARLY_PRICE} yearly` : 'Billed monthly, cancel anytime'}
+              {billing === 'yearly' ? `Billed ₹${PRICING.pro.yearly} yearly` : 'Billed monthly, cancel anytime'}
             </p>
             <div className="space-y-2.5 mb-7">
               {PRO_FEATURES.map((f) => (
@@ -192,9 +204,15 @@ export default function PricingPage() {
           <div className="rounded-2xl p-6 border border-[var(--line)] bg-[var(--surface)] fade-up fade-up-3">
             <div className="flex items-center justify-between mb-1">
               <p className="font-semibold flex items-center gap-1.5"><Building2 size={15} /> Enterprise</p>
+              <span className="text-[10px] font-bold text-[var(--muted)] bg-[var(--line)] px-2 py-0.5 rounded-full">COMING SOON</span>
             </div>
-            <p className="text-2xl font-bold tracking-tight mb-1 text-[var(--muted)]">Let&apos;s talk</p>
-            <p className="text-xs text-[var(--muted)] mb-6">For placement cells, agencies, and teams</p>
+            <div className="flex items-baseline gap-1 mb-1">
+              <p className="text-3xl font-bold tracking-tight text-[var(--muted)]">₹{entPrice}</p>
+              <p className="text-sm text-[var(--muted)]">/mo</p>
+            </div>
+            <p className="text-xs text-[var(--muted)] mb-6">
+              {billing === 'yearly' ? `Billed ₹${PRICING.enterprise.yearly} yearly` : 'For placement cells, agencies, teams'}
+            </p>
             <div className="space-y-2.5 mb-7">
               {ENTERPRISE_FEATURES.map((f) => (
                 <div key={f} className="flex items-center gap-2.5">
@@ -207,18 +225,37 @@ export default function PricingPage() {
           </div>
         </div>
 
+        {/* Credit top-ups */}
+        <div className="card rounded-2xl p-6 mb-14 fade-up">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap size={16} className="text-[var(--accent-ink)]" />
+            <p className="font-semibold text-sm">Need more credits without upgrading?</p>
+          </div>
+          <p className="text-xs text-[var(--muted)] mb-5">Top-up packs, on any plan. Coming soon alongside Pro.</p>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {TOPUPS.map((t) => (
+              <div key={t.credits} className="rounded-xl border border-[var(--line)] p-4 text-center opacity-60">
+                <p className="text-xl font-bold tracking-tight">{t.credits}</p>
+                <p className="text-xs text-[var(--muted)] mb-2">credits</p>
+                <p className="text-sm font-semibold">₹{t.price}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-[var(--muted-soft)] mt-4">1 credit = a score, rewrite, or cover letter. Interview prep (100 questions) uses 3 credits — it&apos;s a bigger request.</p>
+        </div>
+
         <div className="space-y-6 max-w-2xl mx-auto fade-up">
           <div>
-            <h3 className="text-sm font-semibold mb-1.5">Will Free stay free?</h3>
-            <p className="text-sm text-[var(--muted)] leading-relaxed">The core of Cvly — scoring, rewriting, cover letters, interview prep — stays free. Pro and Enterprise add extras on top, not take away what&apos;s already free.</p>
+            <h3 className="text-sm font-semibold mb-1.5">Why credits, if Free is free?</h3>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">Every check runs on real AI, and that has a real cost on our side. Credits keep the free tier generous and fair — 5 a month covers trying it properly — without it being abused by scripts or bulk scraping.</p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold mb-1.5">What happens to my account when Pro launches?</h3>
-            <p className="text-sm text-[var(--muted)] leading-relaxed">Nothing changes automatically. If you&apos;re on the waitlist, you&apos;ll hear from us first, with a fair price, before anything is billed.</p>
+            <h3 className="text-sm font-semibold mb-1.5">What happens when I run out?</h3>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">You&apos;ll see exactly when your credits reset, and you can top up or upgrade any time — nothing is ever charged without you choosing to.</p>
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-1.5">Are these final prices?</h3>
-            <p className="text-sm text-[var(--muted)] leading-relaxed">Pro&apos;s ₹{MONTHLY_PRICE}/month is our current target, not locked in yet. Waitlist members get advance notice of anything before it&apos;s live.</p>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">Pro and Enterprise pricing shown here are our current targets, not locked in. Waitlist members get advance notice before anything goes live.</p>
           </div>
         </div>
       </div>

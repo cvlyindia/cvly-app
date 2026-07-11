@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateInterviewPrep } from '@/lib/ai';
+import { createClient } from '@/lib/supabase/server';
+import { checkCredits, spendCredits } from '@/lib/credits';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +11,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Resume text and job description are both required' }, { status: 400 });
     }
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const credit = await checkCredits(supabase, user.id, 'interview');
+      if (!credit.allowed) {
+        return NextResponse.json(
+          { error: 'out_of_credits', plan: credit.plan, remaining: credit.remaining, resetAt: credit.resetAt },
+          { status: 402 }
+        );
+      }
+    }
+
     const questions = await generateInterviewPrep(resumeText, jobDescription);
+
+    if (user) {
+      await spendCredits(supabase, user.id, 'interview');
+    }
+
     return NextResponse.json({ questions });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Interview prep generation failed';

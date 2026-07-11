@@ -350,6 +350,7 @@ export default function Home() {
   const [revealHint, setRevealHint] = useState(false);
   const [practicedIds, setPracticedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
+  const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
@@ -369,6 +370,19 @@ export default function Home() {
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      const id = setTimeout(() => setCredits(null), 0);
+      return () => clearTimeout(id);
+    }
+    fetch('/api/credits')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.loggedIn) setCredits({ remaining: data.remaining, plan: data.plan });
+      })
+      .catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     if (window.location.hash === '#tool') {
@@ -446,10 +460,14 @@ export default function Home() {
         body: JSON.stringify({ resumeText, jobDescription }),
       });
       const data = await res.json();
+      if (data.error === 'out_of_credits') {
+        throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, or upgrade on the pricing page for more right now.`);
+      }
       if (data.error) throw new Error(data.error);
       setResult(data);
       setActiveTab('score');
       setToolOpen(true);
+      setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
 
       fetch('/api/save-scan', {
         method: 'POST',
@@ -479,10 +497,15 @@ export default function Home() {
         body: JSON.stringify({ resumeText, jobDescription }),
       });
       const data = await res.json();
+      if (data.error === 'out_of_credits') {
+        throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, or upgrade on the pricing page for more right now.`);
+      }
       if (data.error) throw new Error(data.error);
       if (tab === 'rewrite') setRewritten(data.rewritten);
       if (tab === 'cover') setCoverLetter(data.letter);
       if (tab === 'interview') setCategories(data.questions);
+      const cost = tab === 'interview' ? 3 : 1;
+      setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - cost) } : c));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -575,6 +598,11 @@ export default function Home() {
                 <Link href="/dashboard" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Dashboard</Link>
                 <Link href="/history" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">History</Link>
                 <button onClick={handleLogout} className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Sign out</button>
+                {credits && (
+                  <Link href="/pricing" className="hidden sm:flex items-center gap-1 text-xs font-mono text-[var(--muted)] hover:text-[var(--ink)] transition">
+                    {credits.remaining} credits
+                  </Link>
+                )}
                 <button onClick={() => setToolOpen(true)} className="btn-accent px-4 py-2 rounded-full text-sm font-semibold">
                   New check
                 </button>
@@ -975,6 +1003,9 @@ export default function Home() {
             </div>
 
             <div className="p-8">
+              {error && (
+                <div className="mb-6 p-3.5 rounded-xl bg-[var(--bad-bg)] text-[var(--bad)] text-sm">{error}</div>
+              )}
               {activeTab === 'score' && (
                 <div>
                   <DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} />
