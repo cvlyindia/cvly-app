@@ -8,6 +8,7 @@ import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
   Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart, Sparkles, Lock, Trash2,
+  Search, ChevronLeft, ChevronRight, Shuffle,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
@@ -343,6 +344,11 @@ export default function Home() {
   const [tabLoading, setTabLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [openCategory, setOpenCategory] = useState<number>(0);
+  const [interviewMode, setInterviewMode] = useState<'browse' | 'practice'>('browse');
+  const [interviewSearch, setInterviewSearch] = useState('');
+  const [practiceIndex, setPracticeIndex] = useState(0);
+  const [revealHint, setRevealHint] = useState(false);
+  const [practicedIds, setPracticedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
@@ -1038,36 +1044,151 @@ export default function Home() {
                     <SkeletonLines label="Building 100 questions — about 20 seconds…" sublabel="This one takes longer since it's generating a full set." />
                   ) : categories.length ? (
                     <>
-                      <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-                        <p className="text-xs text-[var(--muted)]">{totalQuestions} questions, 4 categories</p>
-                        <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} />
-                      </div>
-                      <div className="space-y-3">
-                        {categories.map((cat, ci) => (
-                          <div key={ci} className="rounded-xl border border-[var(--line)] overflow-hidden">
-                            <button
-                              onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)}
-                              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface)] transition"
-                            >
-                              <span className="font-semibold text-sm">{cat.category} <span className="text-xs text-[var(--muted)] ml-2 font-normal">{cat.questions.length} questions</span></span>
-                              <ChevronDown size={16} className={`text-[var(--muted)] transition-transform ${openCategory === ci ? 'rotate-180' : ''}`} />
-                            </button>
-                            {openCategory === ci && (
-                              <div className="divide-y divide-[var(--line)]">
-                                {cat.questions.map((q, qi) => (
-                                  <div key={qi} className="px-5 py-4">
-                                    <p className="text-sm font-medium mb-1.5 flex gap-2.5">
-                                      <span className="font-mono text-[var(--accent-ink)] text-xs shrink-0 pt-0.5">{String(qi + 1).padStart(2, '0')}</span>
-                                      {q.question}
-                                    </p>
-                                    <p className="text-xs text-[var(--muted)] pl-7 leading-relaxed">{q.starHint}</p>
-                                  </div>
-                                ))}
+                      {(() => {
+                        const flat = categories.flatMap((cat) => cat.questions.map((q) => ({ ...q, category: cat.category })));
+                        const filtered = interviewSearch.trim()
+                          ? categories
+                              .map((cat) => ({ ...cat, questions: cat.questions.filter((q) => q.question.toLowerCase().includes(interviewSearch.toLowerCase()) || cat.category.toLowerCase().includes(interviewSearch.toLowerCase())) }))
+                              .filter((cat) => cat.questions.length > 0)
+                          : categories;
+                        const current = flat[practiceIndex];
+
+                        return (
+                          <>
+                            <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+                              <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--surface)]">
+                                <button
+                                  onClick={() => setInterviewMode('browse')}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${interviewMode === 'browse' ? 'bg-white shadow-sm text-[var(--ink)]' : 'text-[var(--muted)]'}`}
+                                >
+                                  Browse
+                                </button>
+                                <button
+                                  onClick={() => { setInterviewMode('practice'); setRevealHint(false); }}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${interviewMode === 'practice' ? 'bg-white shadow-sm text-[var(--ink)]' : 'text-[var(--muted)]'}`}
+                                >
+                                  Practice
+                                </button>
                               </div>
+                              <div className="flex items-center gap-3">
+                                <p className="text-xs text-[var(--muted)]">{practicedIds.size} of {totalQuestions} practiced</p>
+                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} />
+                              </div>
+                            </div>
+
+                            {interviewMode === 'browse' ? (
+                              <>
+                                <div className="relative mb-5">
+                                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-soft)]" />
+                                  <input
+                                    value={interviewSearch}
+                                    onChange={(e) => setInterviewSearch(e.target.value)}
+                                    placeholder="Search questions…"
+                                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] transition"
+                                  />
+                                </div>
+                                {filtered.length === 0 ? (
+                                  <p className="text-sm text-[var(--muted)] text-center py-8">No questions match &quot;{interviewSearch}&quot;.</p>
+                                ) : (
+                                  <div className="space-y-3">
+                                    {filtered.map((cat) => {
+                                      const ci = categories.findIndex((c) => c.category === cat.category);
+                                      return (
+                                        <div key={cat.category} className="rounded-xl border border-[var(--line)] overflow-hidden">
+                                          <button
+                                            onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)}
+                                            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface)] transition"
+                                          >
+                                            <span className="font-semibold text-sm">{cat.category} <span className="text-xs text-[var(--muted)] ml-2 font-normal">{cat.questions.length} questions</span></span>
+                                            <ChevronDown size={16} className={`text-[var(--muted)] transition-transform ${openCategory === ci ? 'rotate-180' : ''}`} />
+                                          </button>
+                                          {(openCategory === ci || interviewSearch.trim()) && (
+                                            <div className="divide-y divide-[var(--line)]">
+                                              {cat.questions.map((q, qi) => (
+                                                <div key={qi} className="px-5 py-4">
+                                                  <p className="text-sm font-medium mb-1.5 flex gap-2.5 items-start">
+                                                    <span className="font-mono text-[var(--accent-ink)] text-xs shrink-0 pt-0.5">{String(qi + 1).padStart(2, '0')}</span>
+                                                    {q.question}
+                                                    {practicedIds.has(q.question) && <Check size={13} className="text-[var(--good)] shrink-0 mt-0.5" />}
+                                                  </p>
+                                                  <p className="text-xs text-[var(--muted)] pl-7 leading-relaxed">{q.starHint}</p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              current && (
+                                <div className="text-center">
+                                  <div className="flex items-center justify-between mb-6">
+                                    <p className="text-xs text-[var(--muted)] font-mono">Question {practiceIndex + 1} of {flat.length}</p>
+                                    <button
+                                      onClick={() => { setPracticeIndex(Math.floor(Math.random() * flat.length)); setRevealHint(false); }}
+                                      className="inline-flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--ink)] transition"
+                                    >
+                                      <Shuffle size={12} /> Shuffle
+                                    </button>
+                                  </div>
+                                  <div className="w-full h-1.5 rounded-full bg-[var(--line)] overflow-hidden mb-8">
+                                    <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-500" style={{ width: `${((practiceIndex + 1) / flat.length) * 100}%` }} />
+                                  </div>
+
+                                  <div key={practiceIndex} className="card-swap">
+                                    <p className="text-[11px] font-mono text-[var(--accent-ink)] uppercase tracking-wide mb-4">{current.category}</p>
+                                    <p className="text-xl font-semibold mb-8 leading-snug max-w-md mx-auto">{current.question}</p>
+
+                                    {revealHint ? (
+                                      <div className="card rounded-xl p-5 mb-6 text-left max-w-md mx-auto">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] mb-2">STAR hint</p>
+                                        <p className="text-sm text-[var(--ink)]/80 leading-relaxed">{current.starHint}</p>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => setRevealHint(true)}
+                                        className="mb-6 px-5 py-2.5 rounded-full border border-[var(--line)] text-sm font-medium hover:bg-[var(--surface)] transition"
+                                      >
+                                        Reveal hint
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center justify-center gap-3">
+                                    <button
+                                      onClick={() => { setPracticeIndex((i) => Math.max(0, i - 1)); setRevealHint(false); }}
+                                      disabled={practiceIndex === 0}
+                                      className="w-10 h-10 rounded-full border border-[var(--line)] flex items-center justify-center hover:bg-[var(--surface)] transition disabled:opacity-30"
+                                    >
+                                      <ChevronLeft size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setPracticedIds((prev) => new Set(prev).add(current.question));
+                                        setPracticeIndex((i) => Math.min(flat.length - 1, i + 1));
+                                        setRevealHint(false);
+                                      }}
+                                      className="btn-accent px-6 py-2.5 rounded-full text-sm font-semibold"
+                                    >
+                                      {practicedIds.has(current.question) ? 'Next' : 'Got it, next'}
+                                    </button>
+                                    <button
+                                      onClick={() => { setPracticeIndex((i) => Math.min(flat.length - 1, i + 1)); setRevealHint(false); }}
+                                      disabled={practiceIndex === flat.length - 1}
+                                      className="w-10 h-10 rounded-full border border-[var(--line)] flex items-center justify-center hover:bg-[var(--surface)] transition disabled:opacity-30"
+                                    >
+                                      <ChevronRight size={16} />
+                                    </button>
+                                  </div>
+                                </div>
+                              )
                             )}
-                          </div>
-                        ))}
-                      </div>
+                          </>
+                        );
+                      })()}
                     </>
                   ) : null}
                 </div>
