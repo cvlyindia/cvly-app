@@ -2,8 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-// Cheap, fast model for scoring/matching
-export const flashModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+// Cheap, fast model for scoring/matching — free-tier eligible
+export const flashModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
 export interface ScoreResult {
   score: number;
