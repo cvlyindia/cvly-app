@@ -246,7 +246,7 @@ export default function Home() {
   const [openCategory, setOpenCategory] = useState<number>(0);
   const [user, setUser] = useState<User | null>(null);
   const [copied, setCopied] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [toolOpen, setToolOpen] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
 
   useEffect(() => {
@@ -266,9 +266,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!modalOpen) return;
+    if (window.location.hash === '#tool') {
+      const id = setTimeout(() => {
+        setToolOpen(true);
+        history.replaceState(null, '', window.location.pathname);
+      }, 0);
+      return () => clearTimeout(id);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!toolOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setModalOpen(false);
+      if (e.key === 'Escape') setToolOpen(false);
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -276,7 +286,7 @@ export default function Home() {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [modalOpen]);
+  }, [toolOpen]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -322,7 +332,7 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
       setResult(data);
       setActiveTab('score');
-      setModalOpen(true);
+      setToolOpen(true);
 
       fetch('/api/save-scan', {
         method: 'POST',
@@ -465,12 +475,12 @@ export default function Home() {
           <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-10 max-w-md">
             See exactly what&apos;s standing between you and a shortlist — then fix it, write your cover letter, and prepare for the interview. One paste. Ten seconds.
           </p>
-          <a
-            href="#tool"
+          <button
+            onClick={() => setToolOpen(true)}
             className="fade-up fade-up-2 btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm"
           >
             See where you stand <ArrowRight size={16} />
-          </a>
+          </button>
           <div className="fade-up fade-up-2 flex items-center gap-5 mt-8 text-sm text-[var(--muted)]">
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No card</span>
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No signup wall</span>
@@ -626,58 +636,23 @@ export default function Home() {
       </section>
 
       {/* Tool */}
-      <section id="tool" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-16 relative">
-        <div className="float-slow absolute top-0 left-[3%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
+      <section id="tool" className="max-w-2xl mx-auto px-6 py-24 scroll-mt-16 text-center relative">
+        <div className="float-slow absolute top-0 left-[10%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-30 pointer-events-none" />
         <Reveal>
-          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">See where you stand</h2>
-          <p className="text-center text-[var(--muted)] text-sm mb-14">No signup. No card. Paste and see.</p>
+          <h2 className="text-3xl font-semibold tracking-tight mb-3">See where you stand</h2>
+          <p className="text-[var(--muted)] text-sm mb-8">No signup. No card. Paste and see in seconds.</p>
+          <button
+            onClick={() => setToolOpen(true)}
+            className="btn-accent inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm"
+          >
+            Start free check <ArrowRight size={16} />
+          </button>
         </Reveal>
 
-        <div className="grid md:grid-cols-2 gap-5 mb-6">
-          <div className="card rounded-2xl p-6">
-            <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-4">Your resume</label>
-            <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition mb-3">
-              <Upload size={14} /> Upload PDF / DOCX
-              <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
-            </label>
-            {fileName && <span className="block text-xs text-[var(--muted)] mb-2">{fileName}</span>}
-            <textarea
-              value={resumeText}
-              onChange={(e) => setResumeText(e.target.value)}
-              placeholder="...or paste your resume text here"
-              className="w-full h-44 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
-            />
-          </div>
-
-          <div className="card rounded-2xl p-6">
-            <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-4">The role</label>
-            <textarea
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the full job description here"
-              className="w-full h-[178px] mt-[46px] p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
-            />
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-3.5 rounded-xl bg-[var(--bad-bg)] text-[var(--bad)] text-sm">{error}</div>
-        )}
-
-        <div className="flex justify-center mb-16">
+        {result && (
           <button
-            onClick={handleScore}
-            disabled={loading}
-            className="btn-accent inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm disabled:opacity-40"
-          >
-            {loading ? <><Loader2 size={16} className="animate-spin" /> Checking…</> : <>See where you stand <ArrowRight size={16} /></>}
-          </button>
-        </div>
-
-        {result && !modalOpen && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="w-full card card-hover-lift rounded-2xl p-5 flex items-center justify-between gap-4 text-left"
+            onClick={() => setToolOpen(true)}
+            className="w-full card card-hover-lift rounded-2xl p-5 mt-8 flex items-center justify-between gap-4 text-left"
           >
             <div className="flex items-center gap-4">
               <div
@@ -696,21 +671,87 @@ export default function Home() {
             </span>
           </button>
         )}
+      </section>
 
-        {result && modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
-            <div
-              className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm"
-              onClick={() => setModalOpen(false)}
-            />
-            <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="sticky top-3 float-right mr-3 z-10 w-8 h-8 rounded-full bg-[var(--surface)] hover:bg-[var(--line)] flex items-center justify-center transition"
-                aria-label="Close"
-              >
-                <span className="text-lg leading-none text-[var(--muted)]">×</span>
-              </button>
+      {toolOpen && (
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
+          <div
+            className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm"
+            onClick={() => setToolOpen(false)}
+          />
+          <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
+              <span className="text-sm font-semibold">{result ? 'Your results' : 'See where you stand'}</span>
+              <div className="flex items-center gap-3">
+                {result && (
+                  <button
+                    onClick={() => {
+                      setResult(null);
+                      setRewritten('');
+                      setCoverLetter('');
+                      setCategories([]);
+                      setError('');
+                    }}
+                    className="text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] transition"
+                  >
+                    New scan
+                  </button>
+                )}
+                <button
+                  onClick={() => setToolOpen(false)}
+                  className="w-8 h-8 rounded-full bg-[var(--surface)] hover:bg-[var(--line)] flex items-center justify-center transition"
+                  aria-label="Close"
+                >
+                  <span className="text-lg leading-none text-[var(--muted)]">×</span>
+                </button>
+              </div>
+            </div>
+
+            {!result ? (
+              <div className="p-6">
+                <div className="grid gap-5 mb-6">
+                  <div>
+                    <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">Your resume</label>
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition mb-3">
+                      <Upload size={14} /> Upload PDF / DOCX
+                      <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                    {fileName && <span className="block text-xs text-[var(--muted)] mb-2">{fileName}</span>}
+                    <textarea
+                      value={resumeText}
+                      onChange={(e) => setResumeText(e.target.value)}
+                      placeholder="...or paste your resume text here"
+                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">The role</label>
+                    <textarea
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      placeholder="Paste the full job description here"
+                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="mb-6 p-3.5 rounded-xl bg-[var(--bad-bg)] text-[var(--bad)] text-sm">{error}</div>
+                )}
+
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleScore}
+                    disabled={loading}
+                    className="btn-accent inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm disabled:opacity-40"
+                  >
+                    {loading ? <><Loader2 size={16} className="animate-spin" /> Checking…</> : <>See where you stand <ArrowRight size={16} /></>}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
             <div className="flex border-b border-[var(--line)] overflow-x-auto">
               {tabs.map((tab) => (
                 <button
@@ -831,10 +872,12 @@ export default function Home() {
                 </div>
               )}
             </div>
-            </div>
+              </>
+            )}
           </div>
-        )}
-      </section>
+        </div>
+      )}
+
 
       {/* FAQ */}
       <section id="faq" className="max-w-3xl mx-auto px-6 py-24 scroll-mt-16">

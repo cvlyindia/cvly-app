@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
-import { ArrowRight, Plus, Loader2, TrendingUp, Target, Sparkles } from 'lucide-react';
+import { ArrowRight, Plus, Loader2, TrendingUp, Target, Sparkles, History, ScanLine } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
 type Scan = {
@@ -58,7 +58,21 @@ export default function DashboardPage() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
-    return { total: scans.length, avg, best, trendData, delta, topMissing };
+    const dayCounts = new Map<string, number>();
+    for (const s of scans) {
+      const key = new Date(s.created_at).toISOString().slice(0, 10);
+      dayCounts.set(key, (dayCounts.get(key) ?? 0) + 1);
+    }
+    const today = new Date();
+    const heatmap: { date: string; count: number }[] = [];
+    for (let i = 55; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      heatmap.push({ date: key, count: dayCounts.get(key) ?? 0 });
+    }
+
+    return { total: scans.length, avg, best, trendData, delta, topMissing, heatmap };
   }, [scans]);
 
   if (checkingAuth) {
@@ -123,6 +137,22 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Quick actions */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <Link href="/#tool" className="card card-hover-lift rounded-xl p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
+                  <ScanLine size={16} className="text-[var(--accent-ink)]" />
+                </div>
+                <span className="text-sm font-medium">New check</span>
+              </Link>
+              <Link href="/history" className="card card-hover-lift rounded-xl p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[var(--surface)] flex items-center justify-center shrink-0">
+                  <History size={16} className="text-[var(--muted)]" />
+                </div>
+                <span className="text-sm font-medium">Full history</span>
+              </Link>
+            </div>
+
             {/* Stats overview */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               {[
@@ -170,6 +200,37 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Activity heatmap */}
+            <div className="card rounded-2xl p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Last 8 weeks</p>
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted-soft)]">
+                  <span>Less</span>
+                  {[0, 1, 2, 3].map((lvl) => (
+                    <span
+                      key={lvl}
+                      className="w-2.5 h-2.5 rounded-[2px]"
+                      style={{ background: lvl === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + lvl * 0.25})` }}
+                    />
+                  ))}
+                  <span>More</span>
+                </div>
+              </div>
+              <div className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto pb-1" style={{ width: 'fit-content' }}>
+                {stats.heatmap.map((d) => {
+                  const bg = d.count === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + Math.min(d.count, 3) * 0.25})`;
+                  return (
+                    <div
+                      key={d.date}
+                      title={`${d.date}: ${d.count} check${d.count === 1 ? '' : 's'}`}
+                      className="w-3 h-3 rounded-[2px]"
+                      style={{ background: bg }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Suggested next step */}
             {suggestion && (

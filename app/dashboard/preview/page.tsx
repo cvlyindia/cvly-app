@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ScoreRing } from '@/components/ScoreRing';
-import { Plus, Info, Target, TrendingUp, Sparkles } from 'lucide-react';
+import { Plus, Info, Target, TrendingUp, Sparkles, History, ScanLine } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
 const SAMPLE_LATEST = {
@@ -22,6 +22,14 @@ const SAMPLE_TREND = [
   { i: 0, score: 68 }, { i: 1, score: 74 }, { i: 2, score: 71 },
   { i: 3, score: 79 }, { i: 4, score: 76 }, { i: 5, score: 88 }, { i: 6, score: 82 },
 ];
+
+const SAMPLE_HEATMAP: number[] = Array.from({ length: 56 }, (_, i) => {
+  const seed = (i * 37 + 11) % 10;
+  if (seed < 5) return 0;
+  if (seed < 7) return 1;
+  if (seed < 9) return 2;
+  return 3;
+});
 
 export default function DashboardPreviewPage() {
   return (
@@ -52,6 +60,21 @@ export default function DashboardPreviewPage() {
           <Sparkles size={16} className="text-[var(--accent)]" />
         </div>
         <p className="text-[var(--muted)] text-sm mb-10">Here&apos;s where things stand.</p>
+
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="card card-hover-lift rounded-xl p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
+              <ScanLine size={16} className="text-[var(--accent-ink)]" />
+            </div>
+            <span className="text-sm font-medium">New check</span>
+          </div>
+          <div className="card card-hover-lift rounded-xl p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[var(--surface)] flex items-center justify-center shrink-0">
+              <History size={16} className="text-[var(--muted)]" />
+            </div>
+            <span className="text-sm font-medium">Full history</span>
+          </div>
+        </div>
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
@@ -90,6 +113,29 @@ export default function DashboardPreviewPage() {
                 <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2.5} fill="url(#scoreGradPreview)" />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">Last 8 weeks</p>
+            <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted-soft)]">
+              <span>Less</span>
+              {[0, 1, 2, 3].map((lvl) => (
+                <span
+                  key={lvl}
+                  className="w-2.5 h-2.5 rounded-[2px]"
+                  style={{ background: lvl === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + lvl * 0.25})` }}
+                />
+              ))}
+              <span>More</span>
+            </div>
+          </div>
+          <div className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto pb-1" style={{ width: 'fit-content' }}>
+            {SAMPLE_HEATMAP.map((count, i) => {
+              const bg = count === 0 ? 'var(--line)' : `rgba(232,93,44,${0.25 + Math.min(count, 3) * 0.25})`;
+              return <div key={i} className="w-3 h-3 rounded-[2px]" style={{ background: bg }} />;
+            })}
           </div>
         </div>
 
