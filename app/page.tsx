@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
-  Upload, Check, X as XIcon, Download, Copy, ChevronDown, ArrowRight, Loader2,
+  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2,
 } from 'lucide-react';
 
 type ScoreResult = {
@@ -77,7 +77,7 @@ const FAQS = [
 ];
 
 const COMPARISON = [
-  { name: 'cvly', price: 'Free', scoring: true, rewrite: true, cover: true, interview: true, highlight: true },
+  { name: 'Cvly', price: 'Free', scoring: true, rewrite: true, cover: true, interview: true, highlight: true },
   { name: 'Jobscan', price: '$49.95/mo', scoring: true, rewrite: false, cover: false, interview: false },
   { name: 'Teal', price: '$9/week', scoring: true, rewrite: true, cover: true, interview: false },
   { name: 'Rezi', price: '$29/mo', scoring: true, rewrite: true, cover: false, interview: false },
@@ -274,8 +274,8 @@ export default function Home() {
       <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur-md z-20">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="cvly" width={30} height={30} className="rounded-lg" />
-            <span className="text-lg font-semibold tracking-tight">cvly</span>
+            <Image src="/logo.png" alt="Cvly" width={28} height={28} className="rounded-lg" />
+            <span className="text-[19px] font-bold tracking-[-0.01em] leading-none pt-0.5">Cvly</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="#compare" className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
@@ -297,26 +297,25 @@ export default function Home() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
         <div>
-          <p className="fade-up text-xs font-medium text-[var(--muted)] mb-6 uppercase tracking-[0.14em]">Free while we&apos;re building</p>
-          <h1 className="fade-up fade-up-1 text-[2.75rem] md:text-6xl font-semibold tracking-[-0.03em] leading-[1.05] mb-7">
+          <h1 className="fade-up text-[2.75rem] md:text-6xl font-semibold tracking-[-0.03em] leading-[1.05] mb-7">
             Walk into every interview<br />already prepared.
           </h1>
-          <p className="fade-up fade-up-2 text-[var(--muted)] text-lg leading-relaxed mb-10 max-w-md">
+          <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-10 max-w-md">
             See exactly what&apos;s standing between you and a shortlist — then fix it, write your cover letter, and prepare for the interview. One paste. Ten seconds.
           </p>
           <a
             href="#tool"
-            className="fade-up fade-up-3 btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm"
+            className="fade-up fade-up-2 btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm"
           >
             See where you stand <ArrowRight size={16} />
           </a>
-          <div className="fade-up fade-up-3 flex items-center gap-5 mt-8 text-sm text-[var(--muted)]">
+          <div className="fade-up fade-up-2 flex items-center gap-5 mt-8 text-sm text-[var(--muted)]">
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No card</span>
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No signup wall</span>
           </div>
         </div>
 
-        <div className="fade-up fade-up-2 card rounded-2xl p-7">
+        <div className="fade-up fade-up-1 card rounded-2xl p-7">
           <div className="flex items-center gap-5 mb-6 pb-6 border-b border-[var(--line)]">
             <ScoreRing score={82} size={96} />
             <div>
@@ -377,24 +376,59 @@ export default function Home() {
 
       {/* Comparison */}
       <section id="compare" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-16">
-        <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Where cvly fits</h2>
+        <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Where Cvly fits</h2>
         <p className="text-center text-[var(--muted)] mb-14 text-sm">Publicly listed pricing, 2026.</p>
         <div className="card rounded-2xl overflow-x-auto">
-          <table className="w-full text-sm min-w-[560px]">
+          <table className="w-full text-sm min-w-[640px] border-separate border-spacing-0">
             <thead>
-              <tr className="border-b border-[var(--line)]">
-                {['Tool', 'Price', 'Scoring', 'Rewrite', 'Cover letter', '100 Qs prep'].map((h, i) => (
-                  <th key={h} className={`text-[11px] font-medium uppercase tracking-wide text-[var(--muted)] p-4 ${i < 2 ? 'text-left' : 'text-center'}`}>{h}</th>
+              <tr>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] p-5 pb-4">Tool</th>
+                {[
+                  { icon: Target, label: 'Scoring' },
+                  { icon: PenLine, label: 'Rewrite' },
+                  { icon: Mail, label: 'Cover letter' },
+                  { icon: MessagesSquare, label: '100 Qs prep' },
+                ].map((h) => (
+                  <th key={h.label} className="p-5 pb-4">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <h.icon size={15} className="text-[var(--muted-soft)]" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{h.label}</span>
+                    </div>
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {COMPARISON.map((c) => (
-                <tr key={c.name} className={`border-b border-[var(--line)] last:border-0 ${c.highlight ? 'bg-[var(--accent-soft)]/50' : ''}`}>
-                  <td className="p-4 font-semibold">{c.name}{c.highlight && <span className="ml-2 text-[10px] font-medium text-[var(--accent-ink)]">this is us</span>}</td>
-                  <td className={`p-4 ${c.highlight ? 'text-[var(--accent-ink)] font-semibold' : 'text-[var(--muted)]'}`}>{c.price}</td>
+                <tr
+                  key={c.name}
+                  className={`transition ${c.highlight ? '' : 'hover:bg-[var(--surface)]'}`}
+                  style={c.highlight ? { background: 'var(--accent-soft)' } : undefined}
+                >
+                  <td
+                    className="p-5 border-t border-[var(--line)] first:rounded-l-none"
+                    style={c.highlight ? { borderLeft: '3px solid var(--accent)' } : undefined}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className={`font-semibold ${c.highlight ? 'text-[15px]' : ''}`}>{c.name}</span>
+                      {c.highlight && (
+                        <span className="text-[10px] font-bold text-white bg-[var(--accent)] px-2 py-0.5 rounded-full">FREE</span>
+                      )}
+                    </div>
+                    {!c.highlight && <span className="text-xs text-[var(--muted)]">{c.price}</span>}
+                  </td>
                   {[c.scoring, c.rewrite, c.cover, c.interview].map((v, i) => (
-                    <td key={i} className="p-4 text-center">{v ? <Check size={15} className="text-[var(--good)] mx-auto" /> : <XIcon size={15} className="text-[var(--line-strong)] mx-auto" />}</td>
+                    <td key={i} className="p-5 border-t border-[var(--line)] text-center">
+                      {v ? (
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--good)]">
+                          <Check size={13} className="text-white" strokeWidth={3} />
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--line)]">
+                          <span className="w-2 h-[1.5px] bg-[var(--muted-soft)]" />
+                        </span>
+                      )}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -599,9 +633,9 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-[var(--line)] py-10">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="cvly" width={22} height={22} className="rounded-md" />
-            <span className="font-semibold text-sm">cvly</span>
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Cvly" width={20} height={20} className="rounded-md" />
+            <span className="font-bold text-[15px] leading-none pt-0.5">Cvly</span>
           </div>
           <p className="text-xs text-[var(--muted)]">Built in Faridabad, India · cvly.in</p>
         </div>

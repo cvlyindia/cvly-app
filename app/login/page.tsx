@@ -34,8 +34,8 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2 justify-center mb-10">
-          <Image src="/logo.png" alt="cvly" width={30} height={30} className="rounded-lg" />
-          <span className="text-lg font-semibold tracking-tight">cvly</span>
+          <Image src="/logo.png" alt="Cvly" width={30} height={30} className="rounded-lg" />
+          <span className="text-lg font-semibold tracking-tight">Cvly</span>
         </div>
 
         {sent ? (

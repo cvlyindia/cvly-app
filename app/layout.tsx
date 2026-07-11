@@ -15,7 +15,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "cvly — Walk into every interview already prepared",
+  title: "Cvly — Walk into every interview already prepared",
   description: "See exactly what's standing between you and a shortlist, fix it, and prep for the interview. One paste, ten seconds. Free while we're building.",
 };
 

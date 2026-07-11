@@ -30,8 +30,8 @@ export default function HistoryPage() {
       <header className="border-b border-[var(--line)]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="cvly" width={26} height={26} className="rounded-lg" />
-            <span className="font-semibold tracking-tight">cvly</span>
+            <Image src="/logo.png" alt="Cvly" width={26} height={26} className="rounded-lg" />
+            <span className="font-semibold tracking-tight">Cvly</span>
           </Link>
           <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">← Back</Link>
         </div>
