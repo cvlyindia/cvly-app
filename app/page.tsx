@@ -180,6 +180,21 @@ const COMPARISON = [
   { name: 'Enhancv', price: '$17.99/mo', scoring: true, rewrite: true, cover: true, interview: false },
 ];
 
+function SkeletonLines({ label, sublabel }: { label: string; sublabel?: string }) {
+  const widths = ['92%', '78%', '85%', '60%', '90%', '70%'];
+  return (
+    <div>
+      <p className="text-[var(--muted)] text-sm flex items-center gap-2 mb-5"><Loader2 size={14} className="animate-spin" /> {label}</p>
+      <div className="space-y-3">
+        {widths.map((w, i) => (
+          <div key={i} className="h-3.5 rounded-md skeleton" style={{ width: w }} />
+        ))}
+      </div>
+      {sublabel && <p className="text-xs text-[var(--muted-soft)] mt-4">{sublabel}</p>}
+    </div>
+  );
+}
+
 function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -316,6 +331,7 @@ export default function Home() {
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [fileName, setFileName] = useState('');
+  const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -377,9 +393,7 @@ export default function Home() {
     setUser(null);
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function processResumeFile(file: File) {
     setFileName(file.name);
     setError('');
     const formData = new FormData();
@@ -392,6 +406,20 @@ export default function Home() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not read that file');
     }
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processResumeFile(file);
+  }
+
+  function handleResumeDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    processResumeFile(file);
   }
 
   async function handleScore() {
@@ -878,7 +906,12 @@ export default function Home() {
             {!result ? (
               <div className="p-6">
                 <div className="grid gap-5 mb-6">
-                  <div>
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                    onDragLeave={() => setDragActive(false)}
+                    onDrop={handleResumeDrop}
+                    className={`rounded-xl transition ${dragActive ? 'ring-2 ring-[var(--accent)] ring-offset-2' : ''}`}
+                  >
                     <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">Your resume</label>
                     <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition mb-3">
                       <Upload size={14} /> Upload PDF / DOCX
@@ -888,7 +921,7 @@ export default function Home() {
                     <textarea
                       value={resumeText}
                       onChange={(e) => setResumeText(e.target.value)}
-                      placeholder="...or paste your resume text here"
+                      placeholder={dragActive ? 'Drop your resume here' : '...or paste your resume text here, or drag a file in'}
                       className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
                     />
                   </div>
@@ -976,7 +1009,7 @@ export default function Home() {
               {activeTab === 'rewrite' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-[var(--muted)] text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Rewriting your resume…</p>
+                    <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
                       <DownloadBar blocks={rewriteBlocks()} baseFilename="cvly-rewrite" copyText={rewritten} copied={copied} onCopy={copyContent} />
@@ -989,7 +1022,7 @@ export default function Home() {
               {activeTab === 'cover' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-[var(--muted)] text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Writing your cover letter…</p>
+                    <SkeletonLines label="Writing your cover letter…" />
                   ) : coverLetter ? (
                     <>
                       <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} />
@@ -1002,7 +1035,7 @@ export default function Home() {
               {activeTab === 'interview' && (
                 <div>
                   {tabLoading ? (
-                    <p className="text-[var(--muted)] text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Building 100 questions — about 20 seconds…</p>
+                    <SkeletonLines label="Building 100 questions — about 20 seconds…" sublabel="This one takes longer since it's generating a full set." />
                   ) : categories.length ? (
                     <>
                       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
