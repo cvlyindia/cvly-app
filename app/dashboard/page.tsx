@@ -430,6 +430,7 @@ export default function DashboardPage() {
                     setLinkedinReview(d.linkedin);
                     setPortfolioReview(d.portfolio);
                   });
+                  setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
                 }}
               />
             )}

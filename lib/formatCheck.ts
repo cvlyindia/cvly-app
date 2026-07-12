@@ -93,21 +93,21 @@ async function checkDocx(buffer: Buffer): Promise<FormatCheckResult> {
     }
 
     // Header/footer content — many ATS parsers skip these entirely
-    const headerFiles = Object.keys(zip.files).filter((f) => /word\/header\d*\.xml/.test(f));
-    let headerHasContent = false;
-    for (const hf of headerFiles) {
+    const headerFooterFiles = Object.keys(zip.files).filter((f) => /word\/(header|footer)\d*\.xml/.test(f));
+    let headerFooterHasContent = false;
+    for (const hf of headerFooterFiles) {
       const content = await zip.file(hf)?.async('string');
       if (content) {
         const textMatch = content.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
         const text = (textMatch ?? []).join(' ').replace(/<[^>]+>/g, '').trim();
-        if (text.length > 15) headerHasContent = true;
+        if (text.length > 15) headerFooterHasContent = true;
       }
     }
-    if (headerHasContent) {
+    if (headerFooterHasContent) {
       issues.push({
         severity: 'medium',
-        title: 'Content found in header',
-        detail: 'Many ATS parsers skip headers and footers entirely. If your name or contact details are only in the header, some systems may never register them.',
+        title: 'Content found in header or footer',
+        detail: 'Many ATS parsers skip headers and footers entirely. If your name or contact details are only there, some systems may never register them.',
       });
     } else {
       passed.push('No content hidden in header/footer');
@@ -177,7 +177,9 @@ function checkSectionHeaders(extractedText: string, existing: FormatCheckResult)
     passed.push('Standard skills heading found');
   }
 
-  return { score: scoreFromIssues(issues), issues, passed, checked: true };
+  // Preserve an upstream checked:false (e.g. a corrupted DOCX we couldn't structurally
+  // inspect) — heading text-matching alone shouldn't upgrade an unverified result to verified.
+  return { score: scoreFromIssues(issues), issues, passed, checked: existing.checked };
 }
 
 export async function runFormatCheck(

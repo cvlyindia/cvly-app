@@ -342,6 +342,11 @@ export default function Home() {
 
   const [result, setResult] = useState<ScoreResult | null>(null);
   const [scanId, setScanId] = useState<string | null>(null);
+  const scanIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    scanIdRef.current = scanId;
+  }, [scanId]);
   const [activeTab, setActiveTab] = useState<'score' | 'rewrite' | 'cover' | 'interview'>('score');
   const [rewritten, setRewritten] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
@@ -604,9 +609,9 @@ export default function Home() {
       const cost = tab === 'interview' ? 3 : 1;
       setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - cost) } : c));
 
-      if (scanId) {
+      if (scanIdRef.current) {
         const patchField = tab === 'rewrite' ? { rewrittenResume: data.rewritten } : tab === 'cover' ? { coverLetter: data.letter } : { interviewQuestions: data.questions };
-        fetch(`/api/scans/${scanId}`, {
+        fetch(`/api/scans/${scanIdRef.current}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(patchField),
@@ -1367,8 +1372,8 @@ export default function Home() {
                                       onClick={() => {
                                         setPracticedIds((prev) => {
                                           const next = new Set(prev).add(current.question);
-                                          if (scanId) {
-                                            fetch(`/api/scans/${scanId}`, {
+                                          if (scanIdRef.current) {
+                                            fetch(`/api/scans/${scanIdRef.current}`, {
                                               method: 'PATCH',
                                               headers: { 'Content-Type': 'application/json' },
                                               body: JSON.stringify({ practicedQuestions: [...next] }),
