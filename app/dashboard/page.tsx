@@ -207,7 +207,7 @@ export default function DashboardPage() {
         ) : !latest || !stats ? (
           <div>
             <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}. You&apos;re in.</p>
-            <h1 className="text-4xl font-semibold tracking-tight mb-4 max-w-lg">Let&apos;s see where your resume stands.</h1>
+            <h2 className="text-4xl font-semibold tracking-tight mb-4 max-w-lg">Let&apos;s see where your resume stands.</h2>
             <p className="text-[var(--muted)] mb-10 max-w-md">Paste a resume and a role you&apos;re going for. Here&apos;s what happens next:</p>
 
             <div className="grid sm:grid-cols-3 gap-4 mb-10">
@@ -255,13 +255,13 @@ export default function DashboardPage() {
                     value={goalInput.role}
                     onChange={(e) => setGoalInput((g) => ({ ...g, role: e.target.value }))}
                     placeholder="Target role, e.g. Senior PM"
-                    className="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)]"
+                    className="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   />
                   <input
                     value={goalInput.score}
                     onChange={(e) => setGoalInput((g) => ({ ...g, score: e.target.value.replace(/\D/g, '') }))}
                     placeholder="Target score"
-                    className="w-28 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)]"
+                    className="w-28 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -273,7 +273,7 @@ export default function DashboardPage() {
               <div className="card rounded-2xl p-5 mb-8">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">{targetRole || 'Your target'}</p>
-                  <button onClick={() => { setGoalInput({ role: targetRole, score: String(targetScore) }); setEditingGoal(true); }} className="text-[var(--muted-soft)] hover:text-[var(--ink)]">
+                  <button onClick={() => { setGoalInput({ role: targetRole, score: String(targetScore) }); setEditingGoal(true); }} aria-label="Edit target" className="text-[var(--muted-soft)] hover:text-[var(--ink)]">
                     <Pencil size={12} />
                   </button>
                 </div>

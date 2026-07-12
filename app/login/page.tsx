@@ -52,7 +52,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full p-3 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm mb-3 focus:outline-none focus:border-[var(--ink)] transition"
+              className="w-full p-3 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
             />
             {error && <p className="text-xs text-[var(--bad)] mb-3">{error}</p>}
             <button

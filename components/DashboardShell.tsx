@@ -85,7 +85,7 @@ export function DashboardShell({
         <div className="md:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-[var(--ink)]/40" onClick={() => setMobileNavOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white flex flex-col">
-            <button onClick={() => setMobileNavOpen(false)} className="self-end mr-4 mt-4 w-8 h-8 rounded-full hover:bg-[var(--surface)] flex items-center justify-center">
+            <button onClick={() => setMobileNavOpen(false)} aria-label="Close menu" className="self-end mr-4 mt-4 w-8 h-8 rounded-full hover:bg-[var(--surface)] flex items-center justify-center">
               <X size={16} />
             </button>
             {SidebarContent}
@@ -97,7 +97,7 @@ export function DashboardShell({
         <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/90 backdrop-blur-md z-30">
           <div className="px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button onClick={() => setMobileNavOpen(true)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface)]">
+              <button onClick={() => setMobileNavOpen(true)} aria-label="Open menu" className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface)]">
                 <Menu size={18} />
               </button>
               <h1 className="text-lg font-semibold tracking-tight">{pageTitle}</h1>
@@ -106,6 +106,9 @@ export function DashboardShell({
             <div className="relative">
               <button
                 onClick={() => setProfileOpen((o) => !o)}
+                aria-label="Account menu"
+                aria-haspopup="true"
+                aria-expanded={profileOpen}
                 className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-[var(--surface)] transition"
               >
                 <span className="w-8 h-8 rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center text-sm font-semibold">

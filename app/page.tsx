@@ -356,6 +356,8 @@ export default function Home() {
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
 
   const closeTool = useCallback(() => {
     const returnTo = popReturnPath();
@@ -408,14 +410,53 @@ export default function Home() {
 
   useEffect(() => {
     if (!toolOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeTool();
+
+    // Remember what was focused so we can restore it when the modal closes
+    lastFocusedRef.current = document.activeElement as HTMLElement;
+
+    const getFocusable = () => {
+      if (!modalRef.current) return [];
+      return Array.from(
+        modalRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        )
+      );
     };
+
+    // Focus the first focusable element once the modal renders
+    const raf = requestAnimationFrame(() => {
+      const focusable = getFocusable();
+      focusable[0]?.focus();
+    });
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeTool();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
+      cancelAnimationFrame(raf);
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
+      lastFocusedRef.current?.focus();
     };
   }, [toolOpen, closeTool]);
 
@@ -593,6 +634,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Header */}
       <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur-md z-20">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -634,7 +676,7 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 pb-16 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
+      <section id="main-content" className="max-w-6xl mx-auto px-6 pt-24 pb-16 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
         <div>
           <h1 className="fade-up text-[2.75rem] md:text-6xl font-semibold tracking-[-0.03em] leading-[1.05] mb-7">
             The interview isn&apos;t<br />the hard part.<br /><span className="text-[var(--accent-ink)]">Getting one is.</span>
@@ -922,7 +964,13 @@ export default function Home() {
             className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm"
             onClick={closeTool}
           />
-          <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={result ? 'Your results' : 'Check your resume'}
+            className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white"
+          >
             <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
               <span className="text-sm font-semibold">{result ? 'Your results' : 'Check your resume'}</span>
               <div className="flex items-center gap-3">
@@ -969,7 +1017,7 @@ export default function Home() {
                       value={resumeText}
                       onChange={(e) => setResumeText(e.target.value)}
                       placeholder={dragActive ? 'Drop your resume here' : '...or paste your resume text here, or drag a file in'}
-                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
+                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none placeholder:text-[var(--muted-soft)] transition"
                     />
                   </div>
 
@@ -979,7 +1027,7 @@ export default function Home() {
                       value={jobDescription}
                       onChange={(e) => setJobDescription(e.target.value)}
                       placeholder="Paste the full job description here"
-                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] resize-none placeholder:text-[var(--muted-soft)] transition"
+                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none placeholder:text-[var(--muted-soft)] transition"
                     />
                   </div>
                 </div>
@@ -1128,7 +1176,7 @@ export default function Home() {
                                     value={interviewSearch}
                                     onChange={(e) => setInterviewSearch(e.target.value)}
                                     placeholder="Search questions…"
-                                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] transition"
+                                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
                                   />
                                 </div>
                                 {filtered.length === 0 ? (
@@ -1205,6 +1253,7 @@ export default function Home() {
                                     <button
                                       onClick={() => { setPracticeIndex((i) => Math.max(0, i - 1)); setRevealHint(false); }}
                                       disabled={practiceIndex === 0}
+                                      aria-label="Previous question"
                                       className="w-10 h-10 rounded-full border border-[var(--line)] flex items-center justify-center hover:bg-[var(--surface)] transition disabled:opacity-30"
                                     >
                                       <ChevronLeft size={16} />
@@ -1222,6 +1271,7 @@ export default function Home() {
                                     <button
                                       onClick={() => { setPracticeIndex((i) => Math.min(flat.length - 1, i + 1)); setRevealHint(false); }}
                                       disabled={practiceIndex === flat.length - 1}
+                                      aria-label="Next question"
                                       className="w-10 h-10 rounded-full border border-[var(--line)] flex items-center justify-center hover:bg-[var(--surface)] transition disabled:opacity-30"
                                     >
                                       <ChevronRight size={16} />

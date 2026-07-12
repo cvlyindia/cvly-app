@@ -86,7 +86,7 @@ function WaitlistForm({ plan }: { plan: 'pro' | 'enterprise' }) {
           value={company}
           onChange={(e) => setCompany(e.target.value)}
           placeholder="Company name (optional)"
-          className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] transition"
+          className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
         />
       )}
       <input
@@ -95,7 +95,7 @@ function WaitlistForm({ plan }: { plan: 'pro' | 'enterprise' }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
-        className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[var(--line)] text-sm focus:outline-none focus:border-[var(--ink)] transition"
+        className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
       />
       {status === 'error' && <p className="text-xs text-[var(--bad)]">{errorMsg}</p>}
       <button
