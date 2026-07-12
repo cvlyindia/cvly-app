@@ -9,7 +9,7 @@ import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
   Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart, Sparkles, Lock, Trash2,
-  Search, ChevronLeft, ChevronRight, Shuffle,
+  Search, ChevronLeft, ChevronRight, Shuffle, FileScan, AlertTriangle,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
@@ -335,6 +335,7 @@ export default function Home() {
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [fileName, setFileName] = useState('');
+  const [formatCheck, setFormatCheck] = useState<{ score: number; checked: boolean; issues: { severity: string; title: string; detail: string }[]; passed: string[] } | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -469,6 +470,7 @@ export default function Home() {
   async function processResumeFile(file: File) {
     setFileName(file.name);
     setError('');
+    setFormatCheck(null);
     const formData = new FormData();
     formData.append('file', file);
     try {
@@ -476,6 +478,7 @@ export default function Home() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResumeText(data.text);
+      if (data.formatCheck) setFormatCheck(data.formatCheck);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not read that file');
     }
@@ -579,6 +582,12 @@ export default function Home() {
       { type: 'title', text: 'Cvly — Results' },
       { type: 'body', text: `Score: ${result.score}/100` },
       { type: 'body', text: result.summary },
+      ...(formatCheck && formatCheck.checked
+        ? [
+            { type: 'heading' as const, text: `Parse safety: ${formatCheck.score}/100` },
+            ...formatCheck.issues.map((iss): ExportBlock => ({ type: 'body', text: `• ${iss.title} — ${iss.detail}` })),
+          ]
+        : []),
       { type: 'heading', text: 'What you have' },
       ...result.matchedKeywords.map((k): ExportBlock => ({ type: 'body', text: `• ${k}` })),
       { type: 'heading', text: 'What\'s missing' },
@@ -1085,6 +1094,34 @@ export default function Home() {
               {activeTab === 'score' && (
                 <div>
                   <DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} />
+
+                  {formatCheck && formatCheck.checked && (
+                    <div className={`rounded-xl border p-5 mb-8 ${formatCheck.issues.length > 0 ? 'border-[var(--warn)]/25 bg-[var(--warn-bg)]' : 'border-[var(--good)]/20 bg-[var(--good-bg)]'}`}>
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <FileScan size={16} className={formatCheck.issues.length > 0 ? 'text-[var(--warn)]' : 'text-[var(--good)]'} />
+                        <p className="text-sm font-semibold">Parse safety: {formatCheck.score}/100</p>
+                      </div>
+                      <p className="text-xs text-[var(--muted)] mb-3">
+                        Whether the file itself can be read by ATS software — separate from how well the content matches this role.
+                      </p>
+                      {formatCheck.issues.length === 0 ? (
+                        <p className="text-sm text-[var(--good)]">Clean, single-column format. Nothing here should trip up a real ATS parser.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {formatCheck.issues.map((issue, i) => (
+                            <div key={i} className="flex gap-2.5">
+                              <AlertTriangle size={14} className={`shrink-0 mt-0.5 ${issue.severity === 'high' ? 'text-[var(--bad)]' : 'text-[var(--warn)]'}`} />
+                              <div>
+                                <p className="text-sm font-medium">{issue.title}</p>
+                                <p className="text-xs text-[var(--muted)] leading-relaxed mt-0.5">{issue.detail}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-start gap-8 mb-8 flex-wrap">
                     <ScoreRing score={result.score} />
                     <p className="flex-1 min-w-[220px] pt-3 leading-relaxed text-[var(--ink)]/90">{result.summary}</p>
