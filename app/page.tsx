@@ -369,6 +369,17 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const jd = new URLSearchParams(window.location.search).get('jd');
+    if (!jd) return;
+    const id = setTimeout(() => {
+      setJobDescription(jd);
+      setToolOpen(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    }, 0);
+    return () => clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
     const resumeId = new URLSearchParams(window.location.search).get('resume');
     if (!resumeId) return;
 

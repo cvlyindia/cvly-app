@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Cvly</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --ink: #0B0B0C;
+    --muted: #68686E;
+    --muted-soft: #9A9AA0;
+    --line: #E7E7E9;
+    --accent: #E85D2C;
+    --accent-soft: #FDEBE3;
+    --accent-ink: #C44A20;
+    --good: #1B8A5A;
+    --good-bg: #E7F6EF;
+    --bad: #D33A2C;
+    --bad-bg: #FBEAE8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 340px;
+    margin: 0;
+    padding: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .header img { width: 26px; height: 24px; border-radius: 6px; }
+  .header span { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+  p.sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 11px 16px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    width: 100%;
+    background: white;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { background: var(--bg); }
+  .preview {
+    margin-top: 14px;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(11,11,12,0.8);
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .status {
+    margin-top: 10px;
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    display: none;
+  }
+  .status.error { background: var(--bad-bg); color: var(--bad); display: block; }
+  .status.warn { background: #FDF6E8; color: #8A5A1B; display: block; }
+  .status.good { background: var(--good-bg); color: var(--good); display: block; }
+  .footer-link {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: var(--muted-soft);
+    text-decoration: none;
+  }
+  .footer-link:hover { color: var(--muted); }
+  .spinner {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon48.png" alt="Cvly" />
+    <span>Cvly</span>
+  </div>
+  <p class="sub">Grab the job description from this page, then check your resume against it on Cvly — free ATS score, rewrite, cover letter, and interview prep.</p>
+
+  <button id="extractBtn" class="btn-primary">
+    <span class="spinner" id="spinner"></span>
+    <span id="extractLabel">Get job description from this page</span>
+  </button>
+
+  <div id="preview" class="preview"></div>
+  <div id="status" class="status"></div>
+
+  <button id="openBtn" class="btn-secondary" style="display:none;">Open in Cvly →</button>
+
+  <a href="https://cvly.in" target="_blank" class="footer-link">cvly.in — free while we're building</a>
+
+  <script src="popup.js"></script>
+</body>
+</html>
