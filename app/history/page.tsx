@@ -252,12 +252,17 @@ export default function HistoryPage() {
                                 <span className="text-[var(--accent-ink)] flex items-center gap-1"><Copy size={11} /> {copiedKey === `${s.id}-cover` ? 'Copied' : 'Copy'}</span>
                               </button>
                             )}
-                            {s.interview_questions && (
+                            {s.interview_questions ? (
                               <Link href={`/?resume=${s.id}`} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
                                 <span className="font-medium">
                                   {s.practiced_questions?.length ?? 0} of {s.interview_questions.reduce((sum, c) => sum + c.questions.length, 0)} questions practiced
                                 </span>
                                 <span className="text-[var(--accent-ink)] font-semibold">Continue →</span>
+                              </Link>
+                            ) : (
+                              <Link href={`/?resume=${s.id}`} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
+                                <span className="font-medium">Reopen this check in the full tool</span>
+                                <span className="text-[var(--accent-ink)] font-semibold">Open →</span>
                               </Link>
                             )}
                           </div>

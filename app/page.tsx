@@ -422,7 +422,16 @@ export default function Home() {
     fetch(`/api/scans/${resumeId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.error || !data.scan) return;
+        if (data.error === 'Not logged in') {
+          window.location.href = `/login?next=${encodeURIComponent(`/?resume=${resumeId}`)}`;
+          return;
+        }
+        if (data.error || !data.scan) {
+          setError('Couldn\'t find that check — it may have been deleted.');
+          setToolOpen(true);
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
         const scan = data.scan;
         setResumeText(scan.resume_text ?? '');
         setJobDescription(scan.job_description ?? '');
@@ -441,6 +450,10 @@ export default function Home() {
           setPracticedIds(new Set(scan.practiced_questions ?? []));
           setActiveTab('interview');
           setInterviewMode('practice');
+        } else if (scan.rewritten_resume) {
+          setActiveTab('rewrite');
+        } else if (scan.cover_letter) {
+          setActiveTab('cover');
         } else {
           setActiveTab('score');
         }
