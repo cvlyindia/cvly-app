@@ -10,6 +10,8 @@ import { SkeletonLines, DownloadBar } from '@/components/ScannerShared';
 import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
 import type { ExportBlock } from '@/lib/export';
 import type { ScoreResult, InterviewCategory, StructuredResume } from '@/lib/ai';
+import { PAYWALL_ENABLED } from '@/lib/featureFlags';
+import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
 
 interface FormatCheckResult {
   score: number;
@@ -46,6 +48,7 @@ export function ScannerModal({
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [outOfCredits, setOutOfCredits] = useState<{ plan: string; resetAt: string } | null>(null);
 
   const [result, setResult] = useState<ScoreResult | null>(null);
   const [scanId, setScanId] = useState<string | null>(null);
@@ -189,7 +192,8 @@ export function ScannerModal({
       });
       const data = await res.json();
       if (data.error === 'out_of_credits') {
-        throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, or upgrade on the pricing page for more right now.`);
+        setOutOfCredits({ plan: data.plan, resetAt: data.resetAt });
+        return;
       }
       if (data.error) throw new Error(data.error);
       setResult(data);
@@ -231,7 +235,8 @@ export function ScannerModal({
       });
       const data = await res.json();
       if (data.error === 'out_of_credits') {
-        throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, or upgrade on the pricing page for more right now.`);
+        setOutOfCredits({ plan: data.plan, resetAt: data.resetAt });
+        return;
       }
       if (data.error) throw new Error(data.error);
       if (tab === 'rewrite') setRewritten(data.rewritten);
@@ -323,6 +328,7 @@ export function ScannerModal({
   ];
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm" onClick={onClose} />
       <div
@@ -436,7 +442,9 @@ export function ScannerModal({
               </button>
             </div>
             {credits && (
-              <p className="text-center text-xs text-[var(--muted-soft)] mt-4">{credits.remaining} credits left</p>
+              <p className="text-center text-xs text-[var(--muted-soft)] mt-4">
+                {credits.remaining} credits left · <a href="/pricing" className="text-[var(--accent-ink)] hover:underline">Buy more</a>
+              </p>
             )}
           </div>
         ) : (
@@ -531,7 +539,7 @@ export function ScannerModal({
                     <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
-                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={credits?.plan === 'free'} />
+                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
                         <div className="text-center mb-6 pb-5 border-b border-[var(--line)]">
                           <h2 className="text-xl font-bold tracking-tight">{rewritten.name}</h2>
@@ -583,7 +591,7 @@ export function ScannerModal({
                     <SkeletonLines label="Writing your cover letter…" />
                   ) : coverLetter ? (
                     <>
-                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={credits?.plan === 'free'} />
+                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
                     </>
                   ) : null}
@@ -624,7 +632,7 @@ export function ScannerModal({
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className="text-xs text-[var(--muted)]">{practicedIds.size} of {totalQuestions} practiced</p>
-                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} locked={credits?.plan === 'free'} />
+                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
                               </div>
                             </div>
 
@@ -658,14 +666,14 @@ export function ScannerModal({
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  if (credits?.plan === 'free') { window.location.href = '/pricing'; return; }
+                                                  if (PAYWALL_ENABLED && credits?.plan === 'free') { window.location.href = '/pricing'; return; }
                                                   const text = cat.questions.map((q, i) => `${i + 1}. ${q.question}\n   Lead with: ${q.starHint}${q.suggestedAnswer ? `\n   Suggested answer: ${q.suggestedAnswer}` : ''}`).join('\n\n');
                                                   copyContent(`${cat.category}\n\n${text}`);
                                                 }}
-                                                aria-label={credits?.plan === 'free' ? `Upgrade to copy ${cat.category} questions` : `Copy ${cat.category} questions`}
+                                                aria-label={PAYWALL_ENABLED && credits?.plan === 'free' ? `Upgrade to copy ${cat.category} questions` : `Copy ${cat.category} questions`}
                                                 className="text-[var(--muted)] hover:text-[var(--ink)] transition"
                                               >
-                                                {credits?.plan === 'free' ? <Lock size={13} /> : <Copy size={14} />}
+                                                {PAYWALL_ENABLED && credits?.plan === 'free' ? <Lock size={13} /> : <Copy size={14} />}
                                               </button>
                                               <button onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)} aria-label="Toggle category">
                                                 <ChevronDown size={16} className={`text-[var(--muted)] transition-transform ${openCategory === ci ? 'rotate-180' : ''}`} />
@@ -682,13 +690,13 @@ export function ScannerModal({
                                                     {practicedIds.has(q.question) && <Check size={13} className="text-[var(--good)] shrink-0 mt-0.5" />}
                                                     <button
                                                       onClick={() => {
-                                                        if (credits?.plan === 'free') { window.location.href = '/pricing'; return; }
+                                                        if (PAYWALL_ENABLED && credits?.plan === 'free') { window.location.href = '/pricing'; return; }
                                                         copyContent(`${q.question}\n\nLead with: ${q.starHint}${q.suggestedAnswer ? `\nSuggested answer: ${q.suggestedAnswer}` : ''}`);
                                                       }}
-                                                      aria-label={credits?.plan === 'free' ? 'Upgrade to copy this question' : 'Copy this question'}
+                                                      aria-label={PAYWALL_ENABLED && credits?.plan === 'free' ? 'Upgrade to copy this question' : 'Copy this question'}
                                                       className="shrink-0 text-[var(--muted-soft)] hover:text-[var(--ink)] transition"
                                                     >
-                                                      {credits?.plan === 'free' ? <Lock size={11} /> : <Copy size={12} />}
+                                                      {PAYWALL_ENABLED && credits?.plan === 'free' ? <Lock size={11} /> : <Copy size={12} />}
                                                     </button>
                                                   </p>
                                                   <p className="text-xs text-[var(--muted-soft)] pl-7 mb-2">{q.starHint}</p>
@@ -801,5 +809,9 @@ export function ScannerModal({
         )}
       </div>
     </div>
+    {outOfCredits && (
+      <OutOfCreditsModal plan={outOfCredits.plan} resetAt={outOfCredits.resetAt} onClose={() => setOutOfCredits(null)} />
+    )}
+    </>
   );
 }
