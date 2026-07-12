@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -64,7 +65,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${mono.variable}`}>
+        {children}
+        <WhatsAppButton />
+      </body>
     </html>
   );
 }

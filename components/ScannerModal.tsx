@@ -12,6 +12,8 @@ import type { ExportBlock } from '@/lib/export';
 import type { ScoreResult, InterviewCategory, StructuredResume } from '@/lib/ai';
 import { PAYWALL_ENABLED } from '@/lib/featureFlags';
 import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
+import { ListenButton } from '@/components/ListenButton';
+import { ShareButton } from '@/components/ShareButton';
 
 interface FormatCheckResult {
   score: number;
@@ -469,7 +471,11 @@ export function ScannerModal({
               )}
               {activeTab === 'score' && (
                 <div>
-                  <DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} />
+                  <div className="flex items-center gap-2 flex-wrap mb-6">
+                    <div className="flex-1 min-w-0"><DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} /></div>
+                    <ListenButton text={`Your score is ${result.score} out of 100. ${result.summary} What to fix: ${result.improvements.join('. ')}`} />
+                    <ShareButton score={result.score} />
+                  </div>
 
                   {formatCheck && formatCheck.checked && (
                     <div className={`rounded-xl border p-5 mb-8 ${formatCheck.issues.length > 0 ? 'border-[var(--warn)]/25 bg-[var(--warn-bg)]' : 'border-[var(--good)]/20 bg-[var(--good-bg)]'}`}>
@@ -539,7 +545,10 @@ export function ScannerModal({
                     <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
-                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
+                      <div className="flex items-center gap-2 flex-wrap mb-6">
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} /></div>
+                        <ListenButton text={structuredResumeToPlainText(rewritten)} />
+                      </div>
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
                         <div className="text-center mb-6 pb-5 border-b border-[var(--line)]">
                           <h2 className="text-xl font-bold tracking-tight">{rewritten.name}</h2>
@@ -591,7 +600,10 @@ export function ScannerModal({
                     <SkeletonLines label="Writing your cover letter…" />
                   ) : coverLetter ? (
                     <>
-                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
+                      <div className="flex items-center gap-2 flex-wrap mb-6">
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} /></div>
+                        <ListenButton text={coverLetter} />
+                      </div>
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
                     </>
                   ) : null}
@@ -731,7 +743,13 @@ export function ScannerModal({
 
                                   <div key={practiceIndex} className="card-swap">
                                     <p className="text-[11px] font-mono text-[var(--accent-ink)] uppercase tracking-wide mb-4">{current.category}</p>
-                                    <p className="text-xl font-semibold mb-8 leading-snug max-w-md mx-auto">{current.question}</p>
+                                    <p className="text-xl font-semibold mb-4 leading-snug max-w-md mx-auto">{current.question}</p>
+                                    <div className="mb-6">
+                                      <ListenButton
+                                        text={revealHint ? `${current.question}. Lead with: ${current.starHint}. ${current.suggestedAnswer ? `Suggested answer: ${current.suggestedAnswer}` : ''}` : current.question}
+                                        label="Listen to question"
+                                      />
+                                    </div>
 
                                     {revealHint ? (
                                       <div className="card rounded-xl p-5 mb-6 text-left max-w-md mx-auto space-y-3">

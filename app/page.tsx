@@ -16,8 +16,11 @@ import { SkeletonLines, DownloadBar } from '@/components/ScannerShared';
 import type { ExportBlock } from '@/lib/export';
 import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
 import { popReturnPath } from '@/lib/toolNav';
+import { InstagramIcon, FacebookIcon, LinkedinIcon, XIcon } from '@/components/SocialIcons';
 import { PAYWALL_ENABLED } from '@/lib/featureFlags';
 import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
+import { ListenButton } from '@/components/ListenButton';
+import { ShareButton } from '@/components/ShareButton';
 
 type ScoreResult = {
   score: number;
@@ -1177,7 +1180,11 @@ export default function Home() {
               )}
               {activeTab === 'score' && (
                 <div>
-                  <DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} />
+                  <div className="flex items-center gap-2 flex-wrap mb-6">
+                    <div className="flex-1 min-w-0"><DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} /></div>
+                    <ListenButton text={`Your score is ${result.score} out of 100. ${result.summary} What to fix: ${result.improvements.join('. ')}`} />
+                    <ShareButton score={result.score} />
+                  </div>
 
                   {formatCheck && formatCheck.checked && (
                     <div className={`rounded-xl border p-5 mb-8 ${formatCheck.issues.length > 0 ? 'border-[var(--warn)]/25 bg-[var(--warn-bg)]' : 'border-[var(--good)]/20 bg-[var(--good-bg)]'}`}>
@@ -1247,7 +1254,10 @@ export default function Home() {
                     <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
-                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
+                      <div className="flex items-center gap-2 flex-wrap mb-6">
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} /></div>
+                        <ListenButton text={structuredResumeToPlainText(rewritten)} />
+                      </div>
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
                         <div className="text-center mb-6 pb-5 border-b border-[var(--line)]">
                           <h2 className="text-xl font-bold tracking-tight">{rewritten.name}</h2>
@@ -1299,7 +1309,10 @@ export default function Home() {
                     <SkeletonLines label="Writing your cover letter…" />
                   ) : coverLetter ? (
                     <>
-                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
+                      <div className="flex items-center gap-2 flex-wrap mb-6">
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} /></div>
+                        <ListenButton text={coverLetter} />
+                      </div>
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
                     </>
                   ) : null}
@@ -1439,7 +1452,13 @@ export default function Home() {
 
                                   <div key={practiceIndex} className="card-swap">
                                     <p className="text-[11px] font-mono text-[var(--accent-ink)] uppercase tracking-wide mb-4">{current.category}</p>
-                                    <p className="text-xl font-semibold mb-8 leading-snug max-w-md mx-auto">{current.question}</p>
+                                    <p className="text-xl font-semibold mb-4 leading-snug max-w-md mx-auto">{current.question}</p>
+                                    <div className="mb-6">
+                                      <ListenButton
+                                        text={revealHint ? `${current.question}. Lead with: ${current.starHint}. ${current.suggestedAnswer ? `Suggested answer: ${current.suggestedAnswer}` : ''}` : current.question}
+                                        label="Listen to question"
+                                      />
+                                    </div>
 
                                     {revealHint ? (
                                       <div className="card rounded-xl p-5 mb-6 text-left max-w-md mx-auto space-y-3">
@@ -1591,9 +1610,23 @@ export default function Home() {
                 <Image src="/logo.png" alt="Cvly" width={28} height={26} className="rounded-md" />
                 <span className="font-bold text-[17px]">Cvly</span>
               </div>
-              <p className="text-sm text-[var(--muted)] max-w-xs leading-relaxed">
+              <p className="text-sm text-[var(--muted)] max-w-xs leading-relaxed mb-4">
                 The interview isn&apos;t the hard part. Getting one is. Free while we&apos;re building.
               </p>
+              <div className="flex items-center gap-3">
+                <a href="https://www.instagram.com/cvly.in/" target="_blank" rel="noopener noreferrer" aria-label="Cvly on Instagram" className="text-[var(--muted)] hover:text-[var(--ink)] transition">
+                  <InstagramIcon size={17} />
+                </a>
+                <a href="https://www.facebook.com/cvly.in" target="_blank" rel="noopener noreferrer" aria-label="Cvly on Facebook" className="text-[var(--muted)] hover:text-[var(--ink)] transition">
+                  <FacebookIcon size={17} />
+                </a>
+                <a href="https://www.linkedin.com/company/getcvly" target="_blank" rel="noopener noreferrer" aria-label="Cvly on LinkedIn" className="text-[var(--muted)] hover:text-[var(--ink)] transition">
+                  <LinkedinIcon size={17} />
+                </a>
+                <a href="https://x.com/getcvly" target="_blank" rel="noopener noreferrer" aria-label="Cvly on X" className="text-[var(--muted)] hover:text-[var(--ink)] transition">
+                  <XIcon size={17} />
+                </a>
+              </div>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-3">Product</p>
