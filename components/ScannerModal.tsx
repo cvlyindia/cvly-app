@@ -435,10 +435,10 @@ export function ScannerModal({
                         <p className="text-sm font-semibold">Parse safety: {formatCheck.score}/100</p>
                       </div>
                       <p className="text-xs text-[var(--muted)] mb-3">
-                        Whether the file itself can be read by ATS software — separate from how well the content matches this role.
+                        Whether the file itself can be read by systems like Workday, Greenhouse, or Taleo — separate from how well the content matches this role.
                       </p>
                       {formatCheck.issues.length === 0 ? (
-                        <p className="text-sm text-[var(--good)]">Clean, single-column format. Nothing here should trip up a real ATS parser.</p>
+                        <p className="text-sm text-[var(--good)]">Clean, single-column format. Nothing here should trip up Workday, Greenhouse, or Taleo.</p>
                       ) : (
                         <div className="space-y-3">
                           {formatCheck.issues.map((issue, i) => (

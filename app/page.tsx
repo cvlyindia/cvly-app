@@ -152,7 +152,7 @@ const EXAMPLES = [
 
 const STEPS = [
   { n: '01', icon: Upload, title: 'Upload', desc: 'Your resume, however it looks right now.' },
-  { n: '02', icon: Target, title: 'Compare', desc: 'Against the role, the way a recruiter\'s software actually reads it.' },
+  { n: '02', icon: Target, title: 'Compare', desc: 'Against the role, the way Workday, Greenhouse, or Taleo actually reads it.' },
   { n: '03', icon: KeyRound, title: 'Understand', desc: 'Exactly what\'s missing, and why it matters here.' },
   { n: '04', icon: PenLine, title: 'Improve', desc: 'Nothing invented. Nothing exaggerated. Just your experience, presented better.' },
   { n: '05', icon: MessagesSquare, title: 'Practice', desc: '100 questions for this exact role, so nothing catches you off guard.' },
@@ -1190,10 +1190,10 @@ export default function Home() {
                         <p className="text-sm font-semibold">Parse safety: {formatCheck.score}/100</p>
                       </div>
                       <p className="text-xs text-[var(--muted)] mb-3">
-                        Whether the file itself can be read by ATS software — separate from how well the content matches this role.
+                        Whether the file itself can be read by systems like Workday, Greenhouse, or Taleo — separate from how well the content matches this role.
                       </p>
                       {formatCheck.issues.length === 0 ? (
-                        <p className="text-sm text-[var(--good)]">Clean, single-column format. Nothing here should trip up a real ATS parser.</p>
+                        <p className="text-sm text-[var(--good)]">Clean, single-column format. Nothing here should trip up Workday, Greenhouse, or Taleo.</p>
                       ) : (
                         <div className="space-y-3">
                           {formatCheck.issues.map((issue, i) => (

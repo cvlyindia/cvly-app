@@ -143,6 +143,38 @@ function checkPdfTextDensity(extractedText: string, numPages: number): FormatChe
   return { score: scoreFromIssues(issues), issues, passed, checked: true };
 }
 
+function checkDateConsistency(extractedText: string, existing: FormatCheckResult): FormatCheckResult {
+  const issues = [...existing.issues];
+  const passed = [...existing.passed];
+
+  // Three common date-range styles seen in resumes. Mixing them within one document
+  // is a recognized, real inconsistency that reads as sloppy and can confuse some
+  // date-parsing logic — but it never blocks the resume from being read, hence 'low'.
+  const monthNameStyle = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{4}\b/gi;
+  const numericSlashStyle = /\b(0?[1-9]|1[0-2])[/-]\d{4}\b/g;
+  const isoStyle = /\b\d{4}-(0?[1-9]|1[0-2])\b/g;
+
+  const styles: { name: string; count: number }[] = [
+    { name: 'Month YYYY (e.g. "Jan 2022")', count: (extractedText.match(monthNameStyle) ?? []).length },
+    { name: 'MM/YYYY (e.g. "01/2022")', count: (extractedText.match(numericSlashStyle) ?? []).length },
+    { name: 'YYYY-MM (e.g. "2022-01")', count: (extractedText.match(isoStyle) ?? []).length },
+  ];
+
+  const stylesUsed = styles.filter((s) => s.count > 0);
+
+  if (stylesUsed.length > 1) {
+    issues.push({
+      severity: 'low',
+      title: 'Mixed date formats',
+      detail: `Found ${stylesUsed.map((s) => s.name).join(' and ')} used in the same resume. Pick one style and use it for every date — it reads as more careful, and keeps date parsing consistent.`,
+    });
+  } else if (stylesUsed.length === 1) {
+    passed.push('Consistent date format throughout');
+  }
+
+  return { score: scoreFromIssues(issues), issues, passed, checked: existing.checked };
+}
+
 function checkSectionHeaders(extractedText: string, existing: FormatCheckResult): FormatCheckResult {
   const issues = [...existing.issues];
   const passed = [...existing.passed];
@@ -199,5 +231,5 @@ export async function runFormatCheck(
     return { score: 100, issues: [], passed: [], checked: false };
   }
 
-  return checkSectionHeaders(extractedText, result);
+  return checkDateConsistency(extractedText, checkSectionHeaders(extractedText, result));
 }
