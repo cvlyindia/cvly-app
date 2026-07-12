@@ -124,3 +124,60 @@ ${jobDescription}`;
     throw new Error('Failed to parse AI response as JSON');
   }
 }
+
+export interface CareerReviewResult {
+  score: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+}
+
+export async function reviewLinkedInProfile(profileText: string): Promise<CareerReviewResult> {
+  const prompt = `You are a career coach reviewing a LinkedIn profile. The person pasted the text content of their profile below (headline, about section, experience, skills — whatever they included). Give honest, specific, actionable feedback. Do not invent achievements or numbers that aren't in the text. Return ONLY valid JSON, no markdown, no backticks.
+
+PROFILE TEXT:
+${profileText}
+
+Return JSON in exactly this shape:
+{
+  "score": <number 0-100, overall profile strength for being found and making a strong impression>,
+  "summary": "<2-3 sentence plain-language summary>",
+  "strengths": [<3-5 short things that are genuinely working well>],
+  "improvements": [<3-5 specific, actionable fixes — e.g. headline clarity, About section hook, quantifying experience bullets, keyword coverage for recruiter search>]
+}`;
+
+  const result = await flashModel.generateContent(prompt);
+  const text = result.response.text();
+  const cleaned = text.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    throw new Error('Failed to parse AI response as JSON');
+  }
+}
+
+export async function reviewPortfolio(portfolioText: string): Promise<CareerReviewResult> {
+  const prompt = `You are a career coach reviewing a portfolio — project descriptions, case studies, or work samples the person pasted below. Give honest, specific, actionable feedback on how well it would land with a hiring manager or recruiter. Do not invent achievements or numbers that aren't in the text. Return ONLY valid JSON, no markdown, no backticks.
+
+PORTFOLIO CONTENT:
+${portfolioText}
+
+Return JSON in exactly this shape:
+{
+  "score": <number 0-100, overall strength of the portfolio at demonstrating real, hireable skill>,
+  "summary": "<2-3 sentence plain-language summary>",
+  "strengths": [<3-5 short things that are genuinely working well>],
+  "improvements": [<3-5 specific, actionable fixes — e.g. missing outcomes/metrics, unclear problem statement, no visible process or reasoning, weak project selection>]
+}`;
+
+  const result = await flashModel.generateContent(prompt);
+  const text = result.response.text();
+  const cleaned = text.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    throw new Error('Failed to parse AI response as JSON');
+  }
+}

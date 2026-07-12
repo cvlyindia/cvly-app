@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
+import { CareerReviewModal } from '@/components/CareerReviewModal';
 import { ArrowRight, Plus, Loader2, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target, Zap } from 'lucide-react';
 import { PLAN_LIMITS } from '@/lib/credits';
 import { rememberReturnPath } from '@/lib/toolNav';
@@ -57,6 +58,9 @@ export default function DashboardPage() {
   const [goalInput, setGoalInput] = useState({ role: '', score: '90' });
   const [doneTasks, setDoneTasks] = useState<Set<string>>(new Set());
   const [credits, setCredits] = useState<{ remaining: number; plan: string; resetAt: string } | null>(null);
+  const [reviewModal, setReviewModal] = useState<'linkedin' | 'portfolio' | null>(null);
+  const [linkedinReview, setLinkedinReview] = useState<{ score: number } | null>(null);
+  const [portfolioReview, setPortfolioReview] = useState<{ score: number } | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -75,6 +79,13 @@ export default function DashboardPage() {
         .then((d) => {
           if (d.loggedIn) setCredits({ remaining: d.remaining, plan: d.plan, resetAt: d.resetAt });
         });
+      fetch('/api/career-reviews')
+        .then((res) => res.json())
+        .then((d) => {
+          if (d.linkedin) setLinkedinReview(d.linkedin);
+          if (d.portfolio) setPortfolioReview(d.portfolio);
+        })
+        .catch(() => {});
     });
 
     const savedRole = localStorage.getItem('cvly_target_role');
@@ -382,7 +393,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Career signals — honest: real resume score, others clearly labeled with explanation */}
+            {/* Career signals — real resume score, plus LinkedIn/Portfolio review */}
             <div className="card rounded-2xl p-6 mb-6">
               <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">What we&apos;re tracking for you</p>
               <div className="grid grid-cols-3 gap-4 mb-3">
@@ -390,17 +401,38 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold tabular-nums">{latest.score}</p>
                   <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
                 </div>
-                <div className="opacity-50">
-                  <p className="text-sm font-medium">Coming soon</p>
+                <button onClick={() => setReviewModal('linkedin')} className="text-left hover:opacity-70 transition">
+                  {linkedinReview ? (
+                    <p className="text-2xl font-bold tabular-nums">{linkedinReview.score}</p>
+                  ) : (
+                    <p className="text-sm font-medium text-[var(--accent-ink)]">Review now</p>
+                  )}
                   <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
-                </div>
-                <div className="opacity-50">
-                  <p className="text-sm font-medium">Coming soon</p>
+                </button>
+                <button onClick={() => setReviewModal('portfolio')} className="text-left hover:opacity-70 transition">
+                  {portfolioReview ? (
+                    <p className="text-2xl font-bold tabular-nums">{portfolioReview.score}</p>
+                  ) : (
+                    <p className="text-sm font-medium text-[var(--accent-ink)]">Review now</p>
+                  )}
                   <p className="text-xs text-[var(--muted)] mt-1">Portfolio</p>
-                </div>
+                </button>
               </div>
-              <p className="text-xs text-[var(--muted-soft)] leading-relaxed">We&apos;re building LinkedIn and portfolio review next, so you can see your whole application, not just your resume.</p>
+              <p className="text-xs text-[var(--muted-soft)] leading-relaxed">Paste your profile or portfolio content — no login or scraping, just like the resume check.</p>
             </div>
+
+            {reviewModal && (
+              <CareerReviewModal
+                type={reviewModal}
+                onClose={() => setReviewModal(null)}
+                onSaved={() => {
+                  fetch('/api/career-reviews').then((res) => res.json()).then((d) => {
+                    setLinkedinReview(d.linkedin);
+                    setPortfolioReview(d.portfolio);
+                  });
+                }}
+              />
+            )}
 
             {/* Consistency — coaching framing */}
             <div className="card rounded-2xl p-6 mb-6">

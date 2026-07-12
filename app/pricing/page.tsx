@@ -18,8 +18,8 @@ const PRO_FEATURES = [
   'Everything in Free',
   '150 credits every month',
   'Application tracker (Kanban board)',
-  'LinkedIn profile review (in development)',
-  'Portfolio review (in development)',
+  'LinkedIn profile review',
+  'Portfolio review',
   'Priority processing (in development)',
 ];
 

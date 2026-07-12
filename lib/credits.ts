@@ -11,6 +11,8 @@ export const ACTION_COSTS = {
   rewrite: 1,
   cover: 1,
   interview: 3, // heavier Gemini call — larger output, longer generation
+  linkedin: 1,
+  portfolio: 1,
 } as const;
 
 export type CreditAction = keyof typeof ACTION_COSTS;
