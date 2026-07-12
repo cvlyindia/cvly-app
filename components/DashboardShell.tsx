@@ -6,6 +6,7 @@ import Image from 'next/image';
 import {
   LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown,
 } from 'lucide-react';
+import { rememberReturnPath } from '@/lib/toolNav';
 
 type ActivePage = 'dashboard' | 'history' | 'settings';
 
@@ -58,6 +59,7 @@ export function DashboardShell({
       <div className="px-3 pb-5">
         <Link
           href="/#tool"
+          onClick={rememberReturnPath}
           className="btn-accent w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold"
         >
           New check

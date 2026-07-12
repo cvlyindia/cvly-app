@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
+import { popReturnPath } from '@/lib/toolNav';
 
 type ScoreResult = {
   score: number;
@@ -329,6 +331,7 @@ function SampleReport() {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [fileName, setFileName] = useState('');
@@ -353,6 +356,15 @@ export default function Home() {
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
+
+  const closeTool = useCallback(() => {
+    const returnTo = popReturnPath();
+    if (returnTo) {
+      router.push(returnTo);
+    } else {
+      setToolOpen(false);
+    }
+  }, [router]);
   const [exampleIndex, setExampleIndex] = useState(0);
 
   useEffect(() => {
@@ -397,7 +409,7 @@ export default function Home() {
   useEffect(() => {
     if (!toolOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setToolOpen(false);
+      if (e.key === 'Escape') closeTool();
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -405,7 +417,7 @@ export default function Home() {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [toolOpen]);
+  }, [toolOpen, closeTool]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -908,7 +920,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
           <div
             className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm"
-            onClick={() => setToolOpen(false)}
+            onClick={closeTool}
           />
           <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
             <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
@@ -929,7 +941,7 @@ export default function Home() {
                   </button>
                 )}
                 <button
-                  onClick={() => setToolOpen(false)}
+                  onClick={closeTool}
                   className="w-8 h-8 rounded-full bg-[var(--surface)] hover:bg-[var(--line)] flex items-center justify-center transition"
                   aria-label="Close"
                 >

@@ -8,6 +8,7 @@ import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { ArrowRight, Plus, Loader2, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target, Zap } from 'lucide-react';
 import { PLAN_LIMITS } from '@/lib/credits';
+import { rememberReturnPath } from '@/lib/toolNav';
 
 type Scan = {
   id: string;
@@ -226,7 +227,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold">
+            <Link href="/#tool" onClick={rememberReturnPath} className="btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold">
               Let&apos;s go <ArrowRight size={16} />
             </Link>
           </div>
@@ -335,10 +336,10 @@ export default function DashboardPage() {
 
             {/* Next actions */}
             <div className="flex items-center gap-3 mb-10 flex-wrap">
-              <Link href="/#tool" className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
+              <Link href="/#tool" onClick={rememberReturnPath} className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
                 <ScanLine size={15} /> Tailor resume
               </Link>
-              <Link href="/#tool" className="card card-hover-lift inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
+              <Link href="/#tool" onClick={rememberReturnPath} className="card card-hover-lift inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
                 <MessagesSquare size={15} /> Practice interview
               </Link>
               {stats.streak >= 2 && (
@@ -374,7 +375,7 @@ export default function DashboardPage() {
                 {allTasksDone ? (
                   <p className="text-sm font-semibold text-[var(--accent)] fade-up">That&apos;s the mission done. Run a new check to see it move.</p>
                 ) : (
-                  <Link href="/#tool" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
+                  <Link href="/#tool" onClick={rememberReturnPath} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
                     Fix it now <ArrowRight size={14} />
                   </Link>
                 )}
@@ -500,7 +501,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <Link href="/#tool" className="card card-hover-lift rounded-2xl p-5 flex items-center justify-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition">
+            <Link href="/#tool" onClick={rememberReturnPath} className="card card-hover-lift rounded-2xl p-5 flex items-center justify-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition">
               <Plus size={16} /> Run another check
             </Link>
           </>
