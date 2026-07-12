@@ -55,7 +55,17 @@ export interface StructuredResume {
 }
 
 export async function rewriteResume(resumeText: string, jobDescription: string): Promise<StructuredResume> {
-  const prompt = `You are an expert resume writer. Rewrite the resume below to better match the job description, while keeping it 100% truthful to the person's real experience (do not invent companies, titles, dates, or numbers that aren't already there). Optimize keyword usage for ATS parsing and tighten bullet points to be achievement-focused. Return ONLY valid JSON, no markdown, no backticks, no preamble.
+  const prompt = `You are a resume writer who has gotten hundreds of people past ATS screens and into interviews. Rewrite the resume below for this specific job, following professional resume-writing craft — not generic paraphrasing. Every bullet should read like it was written by someone who does this for a living, not by an AI restating the original.
+
+RULES YOU MUST FOLLOW:
+1. Every bullet starts with a strong past-tense action verb (Led, Built, Reduced, Launched, Negotiated, Redesigned) — never "Responsible for," "Worked on," "Helped with," or any first-person pronoun ("I").
+2. Use the XYZ formula wherever the original resume has enough material: "Accomplished [X], measured by [Y], by doing [Z]." If the original already contains a number, percentage, dollar amount, team size, or timeframe, make sure it survives into the rewrite — don't let a real number get lost in a rewording. If no number exists in the original for a given bullet, do not invent one — describe the scope or method instead (e.g., "led a cross-functional team" is fine without a headcount if none was given).
+3. Mirror the exact terminology the job description uses wherever the candidate's real experience genuinely matches it (e.g., if the JD says "stakeholder management" and the resume describes something equivalent but calls it "working with clients," use the JD's phrase) — this is a well-established technique, useful both for ATS keyword matching and for how a human reviewer pattern-matches a resume against the role they're hiring for. Never do this if the match isn't genuinely there.
+4. Cut filler adjectives with no evidence behind them ("hardworking," "detail-oriented," "team player," "passionate") — show it through what was actually accomplished, don't just assert it.
+5. Keep every bullet to one or two lines. If a bullet runs long, it usually means two accomplishments got merged — split them or cut the less relevant one.
+6. Current role stays present tense; every past role is past tense. Be consistent within each entry.
+7. The professional summary (if you write one) must be specific to THIS role and company context — not a generic "results-driven professional" opener that could apply to any resume.
+8. Never invent a company, job title, date, degree, or number that isn't in the original resume. If the original is thin on a section, keep that section honest and short rather than padding it with invented specifics.
 
 ORIGINAL RESUME:
 ${resumeText}
@@ -63,11 +73,11 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}
 
-Return JSON in exactly this shape:
+Return ONLY valid JSON, no markdown, no backticks, no preamble, in exactly this shape:
 {
   "name": "<the person's name as it appears on the resume>",
   "contact": "<a single line — email, phone, city, LinkedIn, whatever was actually on the original resume, separated by ' | '>",
-  "summary": "<a short 2-3 sentence professional summary tailored to this role, only if there's real content to base it on — empty string if not>",
+  "summary": "<a short 2-3 sentence professional summary tailored to this specific role — empty string if there's not enough real content to base one on>",
   "experience": [
     { "company": "...", "title": "...", "dates": "...", "bullets": ["...", "..."] }
   ],
@@ -88,13 +98,26 @@ Return JSON in exactly this shape:
 }
 
 export async function generateCoverLetter(resumeText: string, jobDescription: string): Promise<string> {
-  const prompt = `Write a concise, professional, non-generic cover letter (under 300 words) based on this resume and job description. Avoid cliches like "I am writing to express my interest." Sound human and specific to the role. Return ONLY the letter text.
+  const prompt = `Write a cover letter for this specific role, based only on what's actually in the resume below. This should read like a real person wrote it in fifteen focused minutes, not like a template with the blanks filled in.
+
+STRUCTURE:
+1. Opening (1-2 sentences): a specific hook — name the role and, if the job description names the company, the company — plus one concrete reason this role fits their actual background. Never open with "I am writing to express my interest in..." or "I am excited to apply for..." — start with something that could only be about this person and this role, not any cover letter for any job.
+2. Body (2-3 short paragraphs): pick the ONE or TWO strongest, most relevant things from their actual resume and go deeper on them — the specific problem, what they did, what happened. Do not just restate resume bullets in sentence form; add the connective narrative between their experience and what this role actually needs. If the resume doesn't have much to work with for a requirement in the JD, don't fabricate experience to cover it — either skip it or address it honestly (e.g., "while I haven't worked directly in X, my experience in Y gave me...").
+3. Close (1-2 sentences): confident, specific, no groveling. Not "I look forward to hearing from you" — something that shows genuine interest in this specific opportunity.
+
+RULES:
+- Under 300 words total.
+- Never invent an employer, project, title, or achievement that isn't in the resume.
+- No filler phrases: "team player," "results-driven," "passionate about," "proven track record" — earn every claim with something specific instead of asserting it.
+- Write in first person, naturally — not stiff corporate voice.
 
 RESUME:
 ${resumeText}
 
 JOB DESCRIPTION:
-${jobDescription}`;
+${jobDescription}
+
+Return ONLY the letter text, no subject line, no "Dear Hiring Manager" placeholder commentary, no explanation of what you wrote.`;
 
   return generateWithFallback(prompt);
 }
