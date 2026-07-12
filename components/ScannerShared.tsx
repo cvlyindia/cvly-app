@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Loader2, Download, ChevronDown, Copy } from 'lucide-react';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
+import { downloadResumeDocx, downloadResumePdf, structuredResumeToPlainText } from '@/lib/resumeTemplate';
+import type { StructuredResume } from '@/lib/ai';
 
 export function SkeletonLines({ label, sublabel }: { label: string; sublabel?: string }) {
   const widths = ['92%', '78%', '85%', '60%', '90%', '70%'];
@@ -19,7 +21,7 @@ export function SkeletonLines({ label, sublabel }: { label: string; sublabel?: s
   );
 }
 
-export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void }) {
+export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy, resumeData }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void; resumeData?: StructuredResume }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -27,7 +29,14 @@ export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy }: 
     setOpen(false);
     setBusy(true);
     try {
-      if (format === 'txt') downloadTxt(`${baseFilename}.txt`, blocks);
+      if (resumeData) {
+        if (format === 'txt') {
+          const blob = new Blob([structuredResumeToPlainText(resumeData)], { type: 'text/plain;charset=utf-8' });
+          const { saveAs } = await import('file-saver');
+          saveAs(blob, `${baseFilename}.txt`);
+        } else if (format === 'pdf') downloadResumePdf(`${baseFilename}.pdf`, resumeData);
+        else await downloadResumeDocx(`${baseFilename}.docx`, resumeData);
+      } else if (format === 'txt') downloadTxt(`${baseFilename}.txt`, blocks);
       else if (format === 'pdf') downloadPdf(`${baseFilename}.pdf`, blocks);
       else await downloadDocx(`${baseFilename}.docx`, blocks);
     } finally {

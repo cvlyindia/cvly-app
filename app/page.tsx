@@ -8,11 +8,13 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
-  Upload, Check, Download, Copy, ChevronDown, ArrowRight, Loader2, Heart, Sparkles, Lock, Trash2,
+  Upload, Check, ChevronDown, ArrowRight, Loader2, Heart, Sparkles, Lock, Trash2,
   Search, ChevronLeft, ChevronRight, Shuffle, FileScan, AlertTriangle,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
-import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
+import { SkeletonLines, DownloadBar } from '@/components/ScannerShared';
+import type { ExportBlock } from '@/lib/export';
+import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
 import { popReturnPath } from '@/lib/toolNav';
 
 type ScoreResult = {
@@ -21,6 +23,15 @@ type ScoreResult = {
   missingKeywords: string[];
   summary: string;
   improvements: string[];
+};
+
+type StructuredResume = {
+  name: string;
+  contact: string;
+  summary: string;
+  experience: { company: string; title: string; dates: string; bullets: string[] }[];
+  education: { institution: string; degree: string; dates: string }[];
+  skills: string[];
 };
 
 type InterviewQuestion = { question: string; starHint: string };
@@ -183,78 +194,6 @@ const COMPARISON = [
   { name: 'Enhancv', price: '$17.99/mo', scoring: true, rewrite: true, cover: true, interview: false },
 ];
 
-function SkeletonLines({ label, sublabel }: { label: string; sublabel?: string }) {
-  const widths = ['92%', '78%', '85%', '60%', '90%', '70%'];
-  return (
-    <div>
-      <p className="text-[var(--muted)] text-sm flex items-center gap-2 mb-5"><Loader2 size={14} className="animate-spin" /> {label}</p>
-      <div className="space-y-3">
-        {widths.map((w, i) => (
-          <div key={i} className="h-3.5 rounded-md skeleton" style={{ width: w }} />
-        ))}
-      </div>
-      {sublabel && <p className="text-xs text-[var(--muted-soft)] mt-4">{sublabel}</p>}
-    </div>
-  );
-}
-
-function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  async function handleFormat(format: 'txt' | 'pdf' | 'docx') {
-    setOpen(false);
-    setBusy(true);
-    try {
-      if (format === 'txt') downloadTxt(`${baseFilename}.txt`, blocks);
-      else if (format === 'pdf') downloadPdf(`${baseFilename}.pdf`, blocks);
-      else await downloadDocx(`${baseFilename}.docx`, blocks);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2 mb-6 relative">
-      <div className="relative">
-        <button
-          onClick={() => setOpen((o) => !o)}
-          disabled={busy}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[var(--line)] text-xs font-medium text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--surface)] transition disabled:opacity-50"
-        >
-          <Download size={13} /> {busy ? 'Preparing…' : 'Download'} <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-        {open && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute left-0 top-full mt-1.5 w-36 card rounded-lg overflow-hidden z-20 shadow-lg">
-              {[
-                { key: 'pdf', label: 'PDF document' },
-                { key: 'docx', label: 'Word (.docx)' },
-                { key: 'txt', label: 'Plain text' },
-              ].map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => handleFormat(f.key as 'txt' | 'pdf' | 'docx')}
-                  className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--surface)] transition"
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      <button
-        onClick={() => onCopy(copyText)}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[var(--line)] text-xs font-medium text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--surface)] transition"
-      >
-        <Copy size={13} /> {copied ? 'Copied' : 'Copy'}
-      </button>
-    </div>
-  );
-}
-
 const SAMPLE_REPORT = {
   score: 78,
   role: 'Marketing Manager — D2C skincare brand',
@@ -348,7 +287,7 @@ export default function Home() {
     scanIdRef.current = scanId;
   }, [scanId]);
   const [activeTab, setActiveTab] = useState<'score' | 'rewrite' | 'cover' | 'interview'>('score');
-  const [rewritten, setRewritten] = useState('');
+  const [rewritten, setRewritten] = useState<StructuredResume | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [categories, setCategories] = useState<InterviewCategory[]>([]);
   const [tabLoading, setTabLoading] = useState(false);
@@ -568,7 +507,7 @@ export default function Home() {
     setError('');
     setLoading(true);
     setResult(null);
-    setRewritten('');
+    setRewritten(null);
     setCoverLetter('');
     setCategories([]);
     setScanId(null);
@@ -672,13 +611,6 @@ export default function Home() {
       ...result.improvements.map((imp, i): ExportBlock => ({ type: 'body', text: `${i + 1}. ${imp}` })),
       { type: 'space' },
       { type: 'body', text: 'cvly.in' },
-    ];
-  }
-
-  function rewriteBlocks(): ExportBlock[] {
-    return [
-      { type: 'title', text: 'Cvly — Optimized Resume' },
-      ...rewritten.split('\n').filter((l) => l.trim()).map((line): ExportBlock => ({ type: 'body', text: line })),
     ];
   }
 
@@ -1079,7 +1011,7 @@ export default function Home() {
                   <button
                     onClick={() => {
                       setResult(null);
-                      setRewritten('');
+                      setRewritten(null);
                       setCoverLetter('');
                       setCategories([]);
                       setScanId(null);
@@ -1251,8 +1183,47 @@ export default function Home() {
                     <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
-                      <DownloadBar blocks={rewriteBlocks()} baseFilename="cvly-rewrite" copyText={rewritten} copied={copied} onCopy={copyContent} />
-                      <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{rewritten}</pre>
+                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} />
+                      <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
+                        <div className="text-center mb-6 pb-5 border-b border-[var(--line)]">
+                          <h2 className="text-xl font-bold tracking-tight">{rewritten.name}</h2>
+                          {rewritten.contact && <p className="text-xs text-[var(--muted)] mt-1.5">{rewritten.contact}</p>}
+                        </div>
+                        {rewritten.summary && <p className="text-sm text-[var(--ink)]/85 leading-relaxed mb-6">{rewritten.summary}</p>}
+                        {rewritten.experience.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--accent-ink)] border-b border-[var(--accent)]/20 pb-1.5 mb-3">Experience</h3>
+                            {rewritten.experience.map((e, i) => (
+                              <div key={i} className="mb-4 last:mb-0">
+                                <p className="text-sm font-semibold">{e.title} — {e.company}</p>
+                                <p className="text-xs text-[var(--muted)] italic mb-2">{e.dates}</p>
+                                <ul className="space-y-1">
+                                  {e.bullets.map((b, bi) => (
+                                    <li key={bi} className="text-sm text-[var(--ink)]/80 flex gap-2"><span className="text-[var(--accent-ink)]">•</span> {b}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {rewritten.education.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--accent-ink)] border-b border-[var(--accent)]/20 pb-1.5 mb-3">Education</h3>
+                            {rewritten.education.map((ed, i) => (
+                              <div key={i} className="mb-3 last:mb-0">
+                                <p className="text-sm font-semibold">{ed.degree} — {ed.institution}</p>
+                                <p className="text-xs text-[var(--muted)] italic">{ed.dates}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {rewritten.skills.length > 0 && (
+                          <div>
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--accent-ink)] border-b border-[var(--accent)]/20 pb-1.5 mb-3">Skills</h3>
+                            <p className="text-sm text-[var(--ink)]/80">{rewritten.skills.join(', ')}</p>
+                          </div>
+                        )}
+                      </div>
                     </>
                   ) : null}
                 </div>

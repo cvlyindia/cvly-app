@@ -7,6 +7,16 @@ import { Trash2, Search, ChevronDown, Trophy, Loader2, Copy } from 'lucide-react
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { createClient } from '@/lib/supabase/client';
+import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
+
+type StructuredResume = {
+  name: string;
+  contact: string;
+  summary: string;
+  experience: { company: string; title: string; dates: string; bullets: string[] }[];
+  education: { institution: string; degree: string; dates: string }[];
+  skills: string[];
+};
 
 type InterviewCategory = { category: string; questions: { question: string; starHint: string }[] };
 
@@ -19,7 +29,7 @@ type Scan = {
   matched_keywords: string[] | null;
   missing_keywords: string[] | null;
   improvements: string[] | null;
-  rewritten_resume: string | null;
+  rewritten_resume: StructuredResume | null;
   cover_letter: string | null;
   interview_questions: InterviewCategory[] | null;
   practiced_questions: string[] | null;
@@ -241,7 +251,7 @@ export default function HistoryPage() {
                         {(s.rewritten_resume || s.cover_letter || s.interview_questions) && (
                           <div className="mt-4 pt-4 border-t border-[var(--line)] space-y-2">
                             {s.rewritten_resume && (
-                              <button onClick={() => copyToClipboard(s.rewritten_resume!, `${s.id}-rewrite`)} className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
+                              <button onClick={() => copyToClipboard(structuredResumeToPlainText(s.rewritten_resume!), `${s.id}-rewrite`)} className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
                                 <span className="font-medium">Rewritten resume saved</span>
                                 <span className="text-[var(--accent-ink)] flex items-center gap-1"><Copy size={11} /> {copiedKey === `${s.id}-rewrite` ? 'Copied' : 'Copy'}</span>
                               </button>

@@ -7,8 +7,9 @@ import {
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { SkeletonLines, DownloadBar } from '@/components/ScannerShared';
+import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
 import type { ExportBlock } from '@/lib/export';
-import type { ScoreResult, InterviewCategory } from '@/lib/ai';
+import type { ScoreResult, InterviewCategory, StructuredResume } from '@/lib/ai';
 
 interface FormatCheckResult {
   score: number;
@@ -51,7 +52,7 @@ export function ScannerModal({
   }, [scanId]);
 
   const [activeTab, setActiveTab] = useState<'score' | 'rewrite' | 'cover' | 'interview'>('score');
-  const [rewritten, setRewritten] = useState('');
+  const [rewritten, setRewritten] = useState<StructuredResume | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [categories, setCategories] = useState<InterviewCategory[]>([]);
   const [tabLoading, setTabLoading] = useState(false);
@@ -152,7 +153,7 @@ export function ScannerModal({
     setError('');
     setLoading(true);
     setResult(null);
-    setRewritten('');
+    setRewritten(null);
     setCoverLetter('');
     setCategories([]);
     setScanId(null);
@@ -261,13 +262,6 @@ export function ScannerModal({
     ];
   }
 
-  function rewriteBlocks(): ExportBlock[] {
-    return [
-      { type: 'title', text: 'Cvly — Optimized Resume' },
-      ...rewritten.split('\n').filter((l) => l.trim()).map((line): ExportBlock => ({ type: 'body', text: line })),
-    ];
-  }
-
   function coverBlocks(): ExportBlock[] {
     return [
       { type: 'title', text: 'Cvly — Cover Letter' },
@@ -321,7 +315,7 @@ export function ScannerModal({
               <button
                 onClick={() => {
                   setResult(null);
-                  setRewritten('');
+                  setRewritten(null);
                   setCoverLetter('');
                   setCategories([]);
                   setScanId(null);
@@ -496,8 +490,47 @@ export function ScannerModal({
                     <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
-                      <DownloadBar blocks={rewriteBlocks()} baseFilename="cvly-rewrite" copyText={rewritten} copied={copied} onCopy={copyContent} />
-                      <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{rewritten}</pre>
+                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} />
+                      <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
+                        <div className="text-center mb-6 pb-5 border-b border-[var(--line)]">
+                          <h2 className="text-xl font-bold tracking-tight">{rewritten.name}</h2>
+                          {rewritten.contact && <p className="text-xs text-[var(--muted)] mt-1.5">{rewritten.contact}</p>}
+                        </div>
+                        {rewritten.summary && <p className="text-sm text-[var(--ink)]/85 leading-relaxed mb-6">{rewritten.summary}</p>}
+                        {rewritten.experience.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--accent-ink)] border-b border-[var(--accent)]/20 pb-1.5 mb-3">Experience</h3>
+                            {rewritten.experience.map((e, i) => (
+                              <div key={i} className="mb-4 last:mb-0">
+                                <p className="text-sm font-semibold">{e.title} — {e.company}</p>
+                                <p className="text-xs text-[var(--muted)] italic mb-2">{e.dates}</p>
+                                <ul className="space-y-1">
+                                  {e.bullets.map((b, bi) => (
+                                    <li key={bi} className="text-sm text-[var(--ink)]/80 flex gap-2"><span className="text-[var(--accent-ink)]">•</span> {b}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {rewritten.education.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--accent-ink)] border-b border-[var(--accent)]/20 pb-1.5 mb-3">Education</h3>
+                            {rewritten.education.map((ed, i) => (
+                              <div key={i} className="mb-3 last:mb-0">
+                                <p className="text-sm font-semibold">{ed.degree} — {ed.institution}</p>
+                                <p className="text-xs text-[var(--muted)] italic">{ed.dates}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {rewritten.skills.length > 0 && (
+                          <div>
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--accent-ink)] border-b border-[var(--accent)]/20 pb-1.5 mb-3">Skills</h3>
+                            <p className="text-sm text-[var(--ink)]/80">{rewritten.skills.join(', ')}</p>
+                          </div>
+                        )}
+                      </div>
                     </>
                   ) : null}
                 </div>

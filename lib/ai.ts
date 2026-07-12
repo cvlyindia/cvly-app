@@ -36,16 +36,55 @@ Return JSON in exactly this shape:
   }
 }
 
-export async function rewriteResume(resumeText: string, jobDescription: string): Promise<string> {
-  const prompt = `You are an expert resume writer. Rewrite the resume below to better match the job description, while keeping it 100% truthful to the person's real experience (do not invent companies, titles, or dates). Optimize keyword usage for ATS parsing, tighten bullet points to be achievement-focused, and keep formatting simple (no tables, no columns, no graphics) since this needs to pass ATS parsing. Return ONLY the rewritten resume text, no preamble, no explanation.
+export interface StructuredResume {
+  name: string;
+  contact: string;
+  summary: string;
+  experience: {
+    company: string;
+    title: string;
+    dates: string;
+    bullets: string[];
+  }[];
+  education: {
+    institution: string;
+    degree: string;
+    dates: string;
+  }[];
+  skills: string[];
+}
+
+export async function rewriteResume(resumeText: string, jobDescription: string): Promise<StructuredResume> {
+  const prompt = `You are an expert resume writer. Rewrite the resume below to better match the job description, while keeping it 100% truthful to the person's real experience (do not invent companies, titles, dates, or numbers that aren't already there). Optimize keyword usage for ATS parsing and tighten bullet points to be achievement-focused. Return ONLY valid JSON, no markdown, no backticks, no preamble.
 
 ORIGINAL RESUME:
 ${resumeText}
 
 JOB DESCRIPTION:
-${jobDescription}`;
+${jobDescription}
 
-  return generateWithFallback(prompt);
+Return JSON in exactly this shape:
+{
+  "name": "<the person's name as it appears on the resume>",
+  "contact": "<a single line — email, phone, city, LinkedIn, whatever was actually on the original resume, separated by ' | '>",
+  "summary": "<a short 2-3 sentence professional summary tailored to this role, only if there's real content to base it on — empty string if not>",
+  "experience": [
+    { "company": "...", "title": "...", "dates": "...", "bullets": ["...", "..."] }
+  ],
+  "education": [
+    { "institution": "...", "degree": "...", "dates": "..." }
+  ],
+  "skills": ["...", "..."]
+}`;
+
+  const text = await generateWithFallback(prompt);
+  const cleaned = text.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    throw new Error('Failed to parse AI response as JSON');
+  }
 }
 
 export async function generateCoverLetter(resumeText: string, jobDescription: string): Promise<string> {
