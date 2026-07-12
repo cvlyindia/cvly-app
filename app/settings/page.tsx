@@ -46,7 +46,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <DashboardShell activePage="settings" pageTitle="Settings" userEmail={email} credits={credits} onSignOut={handleSignOut}>
+    <DashboardShell activePage="settings" pageTitle="Settings" userEmail={email} credits={credits} onCreditsChange={(updater) => setCredits((c) => (c ? { ...c, ...updater(c) } : c))} onSignOut={handleSignOut}>
       <div className="max-w-xl space-y-6">
         {/* Account */}
         <div className="card rounded-2xl p-6">

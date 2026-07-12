@@ -111,7 +111,7 @@ export default function TrackerPage() {
   }
 
   return (
-    <DashboardShell activePage="tracker" pageTitle="Tracker" userEmail={email} credits={credits} onSignOut={handleSignOut}>
+    <DashboardShell activePage="tracker" pageTitle="Tracker" userEmail={email} credits={credits} onCreditsChange={setCredits} onSignOut={handleSignOut}>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <p className="text-sm text-[var(--muted)]">
           {jobs === null ? 'Loading…' : `${jobs.length} job${jobs.length === 1 ? '' : 's'} tracked`}

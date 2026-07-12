@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
+import { NewCheckButton } from '@/components/NewCheckButton';
 import { CareerReviewModal } from '@/components/CareerReviewModal';
 import { ArrowRight, Plus, Loader2, ScanLine, Flame, Pencil, Trophy, MessagesSquare, Upload, Target, Zap } from 'lucide-react';
 import { PLAN_LIMITS } from '@/lib/credits';
-import { rememberReturnPath } from '@/lib/toolNav';
 
 type Scan = {
   id: string;
@@ -205,8 +205,14 @@ export default function DashboardPage() {
     router.replace('/');
   }
 
+  function refreshScans() {
+    fetch('/api/history')
+      .then((res) => res.json())
+      .then((d) => setScans(d.scans ?? []));
+  }
+
   return (
-    <DashboardShell activePage="dashboard" pageTitle="Dashboard" userEmail={email} credits={credits} onSignOut={handleSignOut}>
+    <DashboardShell activePage="dashboard" pageTitle="Dashboard" userEmail={email} credits={credits} onCreditsChange={(updater) => setCredits((c) => (c ? { ...c, ...updater(c) } : c))} onScanSaved={refreshScans} onSignOut={handleSignOut}>
       <div className="relative">
       <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
 
@@ -238,9 +244,9 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <Link href="/#tool" onClick={rememberReturnPath} className="btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold">
+            <NewCheckButton className="btn-accent inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold">
               Let&apos;s go <ArrowRight size={16} />
-            </Link>
+            </NewCheckButton>
           </div>
         ) : (
           <>
@@ -347,12 +353,12 @@ export default function DashboardPage() {
 
             {/* Next actions */}
             <div className="flex items-center gap-3 mb-10 flex-wrap">
-              <Link href="/#tool" onClick={rememberReturnPath} className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
+              <NewCheckButton className="btn-accent inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold">
                 <ScanLine size={15} /> Tailor resume
-              </Link>
-              <Link href="/#tool" onClick={rememberReturnPath} className="card card-hover-lift inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
+              </NewCheckButton>
+              <NewCheckButton className="card card-hover-lift inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium">
                 <MessagesSquare size={15} /> Practice interview
-              </Link>
+              </NewCheckButton>
               {stats.streak >= 2 && (
                 <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[var(--warn-bg)] text-[var(--warn)] text-xs font-semibold">
                   <Flame size={13} /> {stats.streak}-day streak
@@ -386,9 +392,9 @@ export default function DashboardPage() {
                 {allTasksDone ? (
                   <p className="text-sm font-semibold text-[var(--accent)] fade-up">That&apos;s the mission done. Run a new check to see it move.</p>
                 ) : (
-                  <Link href="/#tool" onClick={rememberReturnPath} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
+                  <NewCheckButton className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
                     Fix it now <ArrowRight size={14} />
-                  </Link>
+                  </NewCheckButton>
                 )}
               </div>
             )}
@@ -534,9 +540,9 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <Link href="/#tool" onClick={rememberReturnPath} className="card card-hover-lift rounded-2xl p-5 flex items-center justify-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition">
+            <NewCheckButton className="card card-hover-lift rounded-2xl p-5 flex items-center justify-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] transition">
               <Plus size={16} /> Run another check
-            </Link>
+            </NewCheckButton>
           </>
         )}
       </div>

@@ -118,7 +118,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <DashboardShell activePage="history" pageTitle="History" userEmail={email} credits={credits} onSignOut={handleSignOut}>
+    <DashboardShell activePage="history" pageTitle="History" userEmail={email} credits={credits} onCreditsChange={setCredits} onScanSaved={() => fetch('/api/history').then((res) => res.json()).then((d) => setScans(d.scans ?? []))} onSignOut={handleSignOut}>
       {narrative ? (
         <p className="text-sm text-[var(--muted)] mb-8">
           {narrative.total} check{narrative.total === 1 ? '' : 's'} so far, averaging {narrative.avg}.{' '}

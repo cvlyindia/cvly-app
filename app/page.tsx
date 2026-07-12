@@ -360,6 +360,7 @@ export default function Home() {
   const [revealHint, setRevealHint] = useState(false);
   const [practicedIds, setPracticedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
+  const [checkingRedirect, setCheckingRedirect] = useState(true);
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
@@ -385,12 +386,15 @@ export default function Home() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+    supabase.auth.getSession().then(({ data }) => {
+      const sessionUser = data.session?.user ?? null;
       const bareVisit = window.location.hash === '' && window.location.search === '';
-      if (data.user && bareVisit) {
+      if (sessionUser && bareVisit) {
         router.replace('/dashboard');
+        return; // stay gated — we're navigating away, never paint the homepage
       }
+      setUser(sessionUser);
+      setCheckingRedirect(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -714,6 +718,14 @@ export default function Home() {
     { key: 'cover', label: 'Cover letter' },
     { key: 'interview', label: 'Interview prep' },
   ];
+
+  if (checkingRedirect) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
+        <Loader2 size={20} className="animate-spin text-[var(--muted)]" />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">

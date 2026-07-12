@@ -6,7 +6,8 @@ import Image from 'next/image';
 import {
   LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown, KanbanSquare,
 } from 'lucide-react';
-import { rememberReturnPath } from '@/lib/toolNav';
+import { ScannerModal } from '@/components/ScannerModal';
+import { ScannerContext } from '@/components/ScannerContext';
 
 type ActivePage = 'dashboard' | 'history' | 'settings' | 'tracker';
 
@@ -23,6 +24,8 @@ export function DashboardShell({
   pageTitle,
   userEmail,
   credits,
+  onCreditsChange,
+  onScanSaved,
   onSignOut,
 }: {
   children: React.ReactNode;
@@ -30,10 +33,13 @@ export function DashboardShell({
   pageTitle: string;
   userEmail: string;
   credits: { remaining: number; plan: string } | null;
+  onCreditsChange: (updater: (c: { remaining: number; plan: string } | null) => { remaining: number; plan: string } | null) => void;
+  onScanSaved?: () => void;
   onSignOut: () => void;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const initial = userEmail ? userEmail[0].toUpperCase() : '?';
 
   const SidebarContent = (
@@ -58,13 +64,12 @@ export function DashboardShell({
         ))}
       </nav>
       <div className="px-3 pb-5">
-        <Link
-          href="/#tool"
-          onClick={rememberReturnPath}
+        <button
+          onClick={() => setScannerOpen(true)}
           className="btn-accent w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold"
         >
           New check
-        </Link>
+        </button>
         {credits?.plan === 'free' && (
           <Link href="/pricing" className="block text-center text-xs text-[var(--accent-ink)] hover:underline mt-3">
             Upgrade for more credits
@@ -75,6 +80,7 @@ export function DashboardShell({
   );
 
   return (
+    <ScannerContext.Provider value={{ openScanner: () => setScannerOpen(true) }}>
     <div className="min-h-screen flex bg-[var(--bg)]">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-56 border-r border-[var(--line)] shrink-0">
@@ -160,6 +166,15 @@ export function DashboardShell({
 
         <main className="max-w-4xl mx-auto px-6 py-10">{children}</main>
       </div>
+
+      <ScannerModal
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        credits={credits}
+        onCreditsChange={onCreditsChange}
+        onScanSaved={onScanSaved}
+      />
     </div>
+    </ScannerContext.Provider>
   );
 }
