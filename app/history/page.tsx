@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Trash2, Search, ChevronDown, Trophy, Loader2, Copy } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
@@ -21,6 +22,7 @@ type Scan = {
   rewritten_resume: string | null;
   cover_letter: string | null;
   interview_questions: InterviewCategory[] | null;
+  practiced_questions: string[] | null;
 };
 
 export default function HistoryPage() {
@@ -251,11 +253,12 @@ export default function HistoryPage() {
                               </button>
                             )}
                             {s.interview_questions && (
-                              <div className="text-xs px-3 py-2 rounded-lg bg-[var(--surface)]">
+                              <Link href={`/?resume=${s.id}`} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
                                 <span className="font-medium">
-                                  {s.interview_questions.reduce((sum, c) => sum + c.questions.length, 0)} interview questions saved
+                                  {s.practiced_questions?.length ?? 0} of {s.interview_questions.reduce((sum, c) => sum + c.questions.length, 0)} questions practiced
                                 </span>
-                              </div>
+                                <span className="text-[var(--accent-ink)] font-semibold">Continue →</span>
+                              </Link>
                             )}
                           </div>
                         )}

@@ -411,6 +411,41 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const resumeId = new URLSearchParams(window.location.search).get('resume');
+    if (!resumeId) return;
+
+    fetch(`/api/scans/${resumeId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error || !data.scan) return;
+        const scan = data.scan;
+        setResumeText(scan.resume_text ?? '');
+        setJobDescription(scan.job_description ?? '');
+        setResult({
+          score: scan.score,
+          summary: scan.summary,
+          matchedKeywords: scan.matched_keywords ?? [],
+          missingKeywords: scan.missing_keywords ?? [],
+          improvements: scan.improvements ?? [],
+        });
+        setScanId(scan.id);
+        if (scan.rewritten_resume) setRewritten(scan.rewritten_resume);
+        if (scan.cover_letter) setCoverLetter(scan.cover_letter);
+        if (scan.interview_questions) {
+          setCategories(scan.interview_questions);
+          setPracticedIds(new Set(scan.practiced_questions ?? []));
+          setActiveTab('interview');
+          setInterviewMode('practice');
+        } else {
+          setActiveTab('score');
+        }
+        setToolOpen(true);
+        window.history.replaceState(null, '', window.location.pathname);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!toolOpen) return;
 
     // Remember what was focused so we can restore it when the modal closes
@@ -511,6 +546,7 @@ export default function Home() {
     setCoverLetter('');
     setCategories([]);
     setScanId(null);
+    setPracticedIds(new Set());
     try {
       const res = await fetch('/api/score', {
         method: 'POST',
@@ -1021,6 +1057,7 @@ export default function Home() {
                       setCoverLetter('');
                       setCategories([]);
                       setScanId(null);
+                      setPracticedIds(new Set());
                       setError('');
                     }}
                     className="text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] transition"
@@ -1328,7 +1365,17 @@ export default function Home() {
                                     </button>
                                     <button
                                       onClick={() => {
-                                        setPracticedIds((prev) => new Set(prev).add(current.question));
+                                        setPracticedIds((prev) => {
+                                          const next = new Set(prev).add(current.question);
+                                          if (scanId) {
+                                            fetch(`/api/scans/${scanId}`, {
+                                              method: 'PATCH',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ practicedQuestions: [...next] }),
+                                            }).catch(() => {});
+                                          }
+                                          return next;
+                                        });
                                         setPracticeIndex((i) => Math.min(flat.length - 1, i + 1));
                                         setRevealHint(false);
                                       }}
