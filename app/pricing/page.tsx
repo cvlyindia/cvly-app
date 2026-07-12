@@ -18,16 +18,16 @@ const PRO_FEATURES = [
   'Everything in Free',
   '150 credits every month',
   'Application tracker (Kanban board)',
-  'LinkedIn profile review',
-  'Portfolio review',
-  'Priority processing',
+  'LinkedIn profile review (in development)',
+  'Portfolio review (in development)',
+  'Priority processing (in development)',
 ];
 
 const ENTERPRISE_FEATURES = [
   'Everything in Pro, for your whole team',
   '1,000 pooled credits every month',
-  'Team seats & centralized billing',
-  'Usage insights across your team',
+  'Team seats & centralized billing (in development)',
+  'Usage insights across your team (in development)',
   'Dedicated onboarding support',
 ];
 
@@ -256,6 +256,10 @@ export default function PricingPage() {
           <div>
             <h3 className="text-sm font-semibold mb-1.5">Are these final prices?</h3>
             <p className="text-sm text-[var(--muted)] leading-relaxed">Pro and Enterprise pricing shown here are our current targets, not locked in. Waitlist members get advance notice before anything goes live.</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-1.5">What does &quot;in development&quot; mean?</h3>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">Exactly that — not built yet. We won&apos;t bill anyone for a feature before it&apos;s real. Everything else on this page (credits, the tracker, everything in the Free tier) is live today.</p>
           </div>
         </div>
       </div>

@@ -4,14 +4,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown,
+  LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown, KanbanSquare,
 } from 'lucide-react';
 import { rememberReturnPath } from '@/lib/toolNav';
 
-type ActivePage = 'dashboard' | 'history' | 'settings';
+type ActivePage = 'dashboard' | 'history' | 'settings' | 'tracker';
 
 const NAV_ITEMS: { key: ActivePage; label: string; href: string; icon: typeof LayoutDashboard }[] = [
   { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'tracker', label: 'Tracker', href: '/tracker', icon: KanbanSquare },
   { key: 'history', label: 'History', href: '/history', icon: History },
   { key: 'settings', label: 'Settings', href: '/settings', icon: Settings },
 ];
