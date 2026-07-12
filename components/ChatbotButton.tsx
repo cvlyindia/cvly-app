@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { PRESET_QUESTIONS } from '@/lib/chatbotFacts';
 
-const WHATSAPP_NUMBER = '919818086846'; // confirm/replace with the real support number
+const SUPPORT_EMAIL = 'support@cvly.in';
 
 type Message = { role: 'bot' | 'user'; text: string };
 
@@ -50,7 +50,7 @@ export function ChatbotButton() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: 'bot', text: err instanceof Error ? err.message : "Something went wrong — try the WhatsApp option below instead." },
+        { role: 'bot', text: err instanceof Error ? err.message : "Something went wrong — try the email option below instead." },
       ]);
     } finally {
       setLoading(false);
@@ -112,12 +112,10 @@ export function ChatbotButton() {
             )}
 
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hi! I have a question about Cvly.')}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Question about Cvly')}`}
               className="flex items-center justify-center gap-2 mt-2 py-2.5 rounded-xl border border-[var(--line)] text-xs font-medium text-[var(--good)] hover:bg-[var(--good-bg)] transition"
             >
-              Talk to a real person on WhatsApp →
+              Email a real person: {SUPPORT_EMAIL}
             </a>
           </div>
 

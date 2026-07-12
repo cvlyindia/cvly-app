@@ -35,11 +35,11 @@ export default function PrivacyPage() {
           </section>
           <section>
             <h2 className="font-semibold text-base mb-2">How results are generated</h2>
-            <p>Your resume and the job description are sent to Google&apos;s Gemini API to generate your score, rewrite, cover letter, and interview questions. That&apos;s the only third party involved in generating your results.</p>
+            <p>Your resume and the job description are sent to an AI provider to generate your score, rewrite, cover letter, and interview questions — normally Google&apos;s Gemini. If Gemini is unavailable, the request automatically retries through one of a small number of backup providers (Groq, OpenRouter, or Cerebras) so the tool keeps working. These are the only third parties involved in generating your results.</p>
           </section>
           <section>
             <h2 className="font-semibold text-base mb-2">Deleting your data</h2>
-            <p>If you&apos;re signed in, you can delete any saved check from your <Link href="/history" className="text-[var(--accent-ink)] underline">history page</Link> at any time. Deleting your account entirely — email us and we&apos;ll remove everything tied to it.</p>
+            <p>If you&apos;re signed in, you can delete any saved check from your <Link href="/history" className="text-[var(--accent-ink)] underline">history page</Link> at any time. Deleting your account entirely — email <a href="mailto:support@cvly.in?subject=Delete my Cvly account" className="text-[var(--accent-ink)] underline">support@cvly.in</a> and we&apos;ll remove everything tied to it.</p>
           </section>
           <section>
             <h2 className="font-semibold text-base mb-2">Contact</h2>

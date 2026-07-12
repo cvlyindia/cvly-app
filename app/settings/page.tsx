@@ -107,7 +107,7 @@ export default function SettingsPage() {
         <div className="rounded-2xl p-6 border border-[var(--bad)]/20 bg-[var(--bad-bg)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--bad)] mb-2">Account deletion</p>
           <p className="text-sm text-[var(--ink)]/75 mb-4 leading-relaxed">
-            We don&apos;t have self-serve account deletion built yet. Email us and we&apos;ll remove your account and everything tied to it, by hand, within a few days.
+            We don&apos;t have self-serve account deletion built yet. Email <a href="mailto:support@cvly.in?subject=Delete my Cvly account" className="text-[var(--bad)] underline">support@cvly.in</a> and we&apos;ll remove your account and everything tied to it, by hand, within a few days.
           </p>
           <button onClick={handleSignOut} className="text-sm font-semibold text-[var(--bad)] hover:underline">
             Sign out of this device
