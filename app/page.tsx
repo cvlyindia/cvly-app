@@ -385,12 +385,18 @@ export default function Home() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      const bareVisit = window.location.hash === '' && window.location.search === '';
+      if (data.user && bareVisit) {
+        router.replace('/dashboard');
+      }
+    });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!user) {
