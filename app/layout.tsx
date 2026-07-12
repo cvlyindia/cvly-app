@@ -14,9 +14,47 @@ const mono = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
+const SITE_URL = "https://cvly.in";
+const TITLE = "Cvly — The interview isn't the hard part. Getting one is.";
+const DESCRIPTION = "See exactly what's standing between your resume and a callback — then fix it. ATS score, rewrite, cover letter, and 100 interview questions, free while we're building.";
+
 export const metadata: Metadata = {
-  title: "Cvly — Walk into every interview already prepared",
-  description: "See exactly what's standing between you and a shortlist, fix it, and prep for the interview. One paste, ten seconds. Free while we're building.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    template: "%s — Cvly",
+  },
+  description: DESCRIPTION,
+  keywords: [
+    "ATS resume checker", "resume score", "resume scanner", "ATS score",
+    "resume keywords", "cover letter generator", "interview questions",
+    "resume rewrite AI", "job application tracker", "career tool India",
+  ],
+  authors: [{ name: "Cvly" }],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "Cvly",
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: "en_IN",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Cvly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

@@ -1,5 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms',
+  description: 'The short version of what using Cvly means, kept plain on purpose.',
+};
 
 export default function TermsPage() {
   return (

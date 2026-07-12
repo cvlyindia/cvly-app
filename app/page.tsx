@@ -634,6 +634,22 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'Cvly',
+            url: 'https://cvly.in',
+            description: "See exactly what's standing between your resume and a callback — then fix it. ATS score, rewrite, cover letter, and 100 interview questions.",
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+            publisher: { '@type': 'Organization', name: 'Cvly', url: 'https://cvly.in', logo: 'https://cvly.in/logo.png' },
+          }),
+        }}
+      />
       <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Header */}
       <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur-md z-20">

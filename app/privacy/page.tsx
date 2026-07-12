@@ -1,5 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy',
+  description: 'What Cvly collects, what we don\'t, and how to delete your data — in plain language.',
+};
 
 export default function PrivacyPage() {
   return (
