@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Search, ChevronDown, Trophy, Loader2 } from 'lucide-react';
+import { Trash2, Search, ChevronDown, Trophy, Loader2, Copy } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { createClient } from '@/lib/supabase/client';
+
+type InterviewCategory = { category: string; questions: { question: string; starHint: string }[] };
 
 type Scan = {
   id: string;
@@ -16,6 +18,9 @@ type Scan = {
   matched_keywords: string[] | null;
   missing_keywords: string[] | null;
   improvements: string[] | null;
+  rewritten_resume: string | null;
+  cover_letter: string | null;
+  interview_questions: InterviewCategory[] | null;
 };
 
 export default function HistoryPage() {
@@ -27,6 +32,14 @@ export default function HistoryPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  function copyToClipboard(text: string, key: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1600);
+    });
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -220,6 +233,30 @@ export default function HistoryPage() {
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                        )}
+
+                        {(s.rewritten_resume || s.cover_letter || s.interview_questions) && (
+                          <div className="mt-4 pt-4 border-t border-[var(--line)] space-y-2">
+                            {s.rewritten_resume && (
+                              <button onClick={() => copyToClipboard(s.rewritten_resume!, `${s.id}-rewrite`)} className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
+                                <span className="font-medium">Rewritten resume saved</span>
+                                <span className="text-[var(--accent-ink)] flex items-center gap-1"><Copy size={11} /> {copiedKey === `${s.id}-rewrite` ? 'Copied' : 'Copy'}</span>
+                              </button>
+                            )}
+                            {s.cover_letter && (
+                              <button onClick={() => copyToClipboard(s.cover_letter!, `${s.id}-cover`)} className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--line)] transition">
+                                <span className="font-medium">Cover letter saved</span>
+                                <span className="text-[var(--accent-ink)] flex items-center gap-1"><Copy size={11} /> {copiedKey === `${s.id}-cover` ? 'Copied' : 'Copy'}</span>
+                              </button>
+                            )}
+                            {s.interview_questions && (
+                              <div className="text-xs px-3 py-2 rounded-lg bg-[var(--surface)]">
+                                <span className="font-medium">
+                                  {s.interview_questions.reduce((sum, c) => sum + c.questions.length, 0)} interview questions saved
+                                </span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

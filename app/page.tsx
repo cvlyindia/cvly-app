@@ -341,6 +341,7 @@ export default function Home() {
   const [error, setError] = useState('');
 
   const [result, setResult] = useState<ScoreResult | null>(null);
+  const [scanId, setScanId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'score' | 'rewrite' | 'cover' | 'interview'>('score');
   const [rewritten, setRewritten] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
@@ -509,6 +510,7 @@ export default function Home() {
     setRewritten('');
     setCoverLetter('');
     setCategories([]);
+    setScanId(null);
     try {
       const res = await fetch('/api/score', {
         method: 'POST',
@@ -529,7 +531,10 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription, ...data }),
-      }).catch(() => {});
+      })
+        .then((r) => r.json())
+        .then((d) => { if (d.id) setScanId(d.id); })
+        .catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -562,6 +567,15 @@ export default function Home() {
       if (tab === 'interview') setCategories(data.questions);
       const cost = tab === 'interview' ? 3 : 1;
       setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - cost) } : c));
+
+      if (scanId) {
+        const patchField = tab === 'rewrite' ? { rewrittenResume: data.rewritten } : tab === 'cover' ? { coverLetter: data.letter } : { interviewQuestions: data.questions };
+        fetch(`/api/scans/${scanId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patchField),
+        }).catch(() => {});
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -1006,6 +1020,7 @@ export default function Home() {
                       setRewritten('');
                       setCoverLetter('');
                       setCategories([]);
+                      setScanId(null);
                       setError('');
                     }}
                     className="text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] transition"

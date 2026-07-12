@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { resumeText, jobDescription, score, summary, matchedKeywords, missingKeywords, improvements } = body;
 
-    const { error } = await supabase.from('scans').insert({
+    const { data, error } = await supabase.from('scans').insert({
       user_id: user.id,
       resume_text: resumeText,
       job_description: jobDescription,
@@ -23,11 +23,11 @@ export async function POST(req: NextRequest) {
       matched_keywords: matchedKeywords,
       missing_keywords: missingKeywords,
       improvements,
-    });
+    }).select('id').single();
 
     if (error) throw error;
 
-    return NextResponse.json({ saved: true });
+    return NextResponse.json({ saved: true, id: data.id });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to save scan';
     return NextResponse.json({ error: message }, { status: 500 });
