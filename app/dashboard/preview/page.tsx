@@ -126,16 +126,16 @@ export default function DashboardPreviewPage() {
               <p className="text-2xl font-bold tabular-nums">{SAMPLE.score}</p>
               <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
             </div>
-            <div className="opacity-50">
-              <p className="text-sm font-medium">Coming soon</p>
+            <div>
+              <p className="text-2xl font-bold tabular-nums">76</p>
               <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
             </div>
-            <div className="opacity-50">
-              <p className="text-sm font-medium">Coming soon</p>
+            <div>
+              <p className="text-2xl font-bold tabular-nums">81</p>
               <p className="text-xs text-[var(--muted)] mt-1">Portfolio</p>
             </div>
           </div>
-          <p className="text-xs text-[var(--muted-soft)] leading-relaxed">We&apos;re building LinkedIn and portfolio review next, so you can see your whole application, not just your resume.</p>
+          <p className="text-xs text-[var(--muted-soft)] leading-relaxed">Paste your profile or portfolio content — no login or scraping, just like the resume check.</p>
         </div>
 
         <div className="card rounded-2xl p-6 mb-6">

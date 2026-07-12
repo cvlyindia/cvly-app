@@ -7,11 +7,22 @@
 -- Any existing rows saved before this change have plain text in this column,
 -- not JSON — those can't be cast to jsonb, so this sets them to null instead
 -- of failing the whole migration. Only affects old saved rewrites; nothing else.
-alter table scans
-  alter column rewritten_resume type jsonb
-  using (
-    case
-      when rewritten_resume ~ '^\s*[\{\[]' then rewritten_resume::jsonb
-      else null
-    end
-  );
+--
+-- Guarded so this is safe to run more than once — checks the current column
+-- type first instead of assuming it's never been applied.
+do $$
+begin
+  if (
+    select data_type from information_schema.columns
+    where table_name = 'scans' and column_name = 'rewritten_resume'
+  ) != 'jsonb' then
+    alter table scans
+      alter column rewritten_resume type jsonb
+      using (
+        case
+          when rewritten_resume ~ '^\s*[\{\[]' then rewritten_resume::jsonb
+          else null
+        end
+      );
+  end if;
+end $$;
