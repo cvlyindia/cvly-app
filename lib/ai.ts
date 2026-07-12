@@ -1,9 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-// Cheap, fast model for scoring/matching — alias auto-points to current gen, avoids breakage on retirement
-export const flashModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+import { generateWithFallback } from './aiProviders';
 
 export interface ScoreResult {
   score: number;
@@ -31,8 +26,7 @@ Return JSON in exactly this shape:
   "improvements": [<3-5 short, specific, actionable bullet points to improve the resume for this JD>]
 }`;
 
-  const result = await flashModel.generateContent(prompt);
-  const text = result.response.text();
+  const text = await generateWithFallback(prompt);
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -51,8 +45,7 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  const result = await flashModel.generateContent(prompt);
-  return result.response.text();
+  return generateWithFallback(prompt);
 }
 
 export async function generateCoverLetter(resumeText: string, jobDescription: string): Promise<string> {
@@ -64,8 +57,7 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  const result = await flashModel.generateContent(prompt);
-  return result.response.text();
+  return generateWithFallback(prompt);
 }
 
 export interface InterviewQuestion {
@@ -101,11 +93,7 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  const result = await flashModel.generateContent({
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: { maxOutputTokens: 32768 },
-  });
-  const text = result.response.text();
+  const text = await generateWithFallback(prompt, { maxTokens: 32768 });
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -146,8 +134,7 @@ Return JSON in exactly this shape:
   "improvements": [<3-5 specific, actionable fixes — e.g. headline clarity, About section hook, quantifying experience bullets, keyword coverage for recruiter search>]
 }`;
 
-  const result = await flashModel.generateContent(prompt);
-  const text = result.response.text();
+  const text = await generateWithFallback(prompt);
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -171,8 +158,7 @@ Return JSON in exactly this shape:
   "improvements": [<3-5 specific, actionable fixes — e.g. missing outcomes/metrics, unclear problem statement, no visible process or reasoning, weak project selection>]
 }`;
 
-  const result = await flashModel.generateContent(prompt);
-  const text = result.response.text();
+  const text = await generateWithFallback(prompt);
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
