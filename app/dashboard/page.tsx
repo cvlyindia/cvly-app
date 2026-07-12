@@ -390,7 +390,12 @@ export default function DashboardPage() {
                   ))}
                 </div>
                 {allTasksDone ? (
-                  <p className="text-sm font-semibold text-[var(--accent)] fade-up">That&apos;s the mission done. Run a new check to see it move.</p>
+                  <NewCheckButton className="fade-up inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:gap-3 transition-all">
+                    <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-white flex items-center justify-center shrink-0">
+                      <span className="text-[10px]">✓</span>
+                    </span>
+                    Nice work — see your new score <ArrowRight size={14} />
+                  </NewCheckButton>
                 ) : (
                   <NewCheckButton className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:gap-2.5 transition-all">
                     Fix it now <ArrowRight size={14} />

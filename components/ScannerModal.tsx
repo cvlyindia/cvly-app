@@ -262,6 +262,13 @@ export function ScannerModal({
     }
   }
 
+  function scoreHeadline(score: number): string {
+    if (score >= 85) return "This is a strong match. You're ready to apply.";
+    if (score >= 75) return 'Strong fit — a few tweaks and this is ready.';
+    if (score >= 50) return "You're getting there. Here's exactly what's missing.";
+    return "Real gaps here, but every one is fixable. Let's go through them.";
+  }
+
   function copyContent(text: string) {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -471,6 +478,12 @@ export function ScannerModal({
               )}
               {activeTab === 'score' && (
                 <div>
+                  <div key={`hero-${result.score}`} className="flex flex-col items-center text-center mb-8 pb-8 border-b border-[var(--line)]">
+                    <div className="fade-up"><ScoreRing score={result.score} size={148} /></div>
+                    <h2 className="fade-up fade-up-1 text-xl font-semibold tracking-tight mt-5 max-w-sm">{scoreHeadline(result.score)}</h2>
+                    <p className="fade-up fade-up-2 text-sm text-[var(--ink)]/70 leading-relaxed mt-2 max-w-md">{result.summary}</p>
+                  </div>
+
                   <div className="flex items-center gap-2 flex-wrap mb-6">
                     <div className="flex-1 min-w-0"><DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} /></div>
                     <ListenButton text={`Your score is ${result.score} out of 100. ${result.summary} What to fix: ${result.improvements.join('. ')}`} />
@@ -503,11 +516,6 @@ export function ScannerModal({
                       )}
                     </div>
                   )}
-
-                  <div className="flex items-start gap-8 mb-8 flex-wrap">
-                    <ScoreRing score={result.score} />
-                    <p className="flex-1 min-w-[220px] pt-3 leading-relaxed text-[var(--ink)]/90">{result.summary}</p>
-                  </div>
 
                   <div className="grid md:grid-cols-2 gap-8 mb-8">
                     <div>
@@ -725,6 +733,20 @@ export function ScannerModal({
                                   </div>
                                 )}
                               </>
+                            ) : practicedIds.size >= flat.length ? (
+                              <div className="text-center py-6">
+                                <div className="w-14 h-14 rounded-full bg-[var(--good-bg)] flex items-center justify-center mx-auto mb-4">
+                                  <Check size={24} className="text-[var(--good)]" />
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">All {flat.length} questions practiced.</h3>
+                                <p className="text-sm text-[var(--muted)] max-w-xs mx-auto mb-6">That&apos;s real preparation — most people walk in having practiced a handful. You&apos;ve gone through all of them.</p>
+                                <button
+                                  onClick={() => { setPracticeIndex(0); setRevealHint(false); }}
+                                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent-ink)] hover:underline"
+                                >
+                                  Go through them again
+                                </button>
+                              </div>
                             ) : (
                               current && (
                                 <div className="text-center">
