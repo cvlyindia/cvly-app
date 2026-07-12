@@ -350,20 +350,30 @@ export function ScannerModal({
                 onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleResumeDrop}
-                className={`rounded-xl transition ${dragActive ? 'ring-2 ring-[var(--accent)] ring-offset-2' : ''}`}
+                className={`rounded-xl border-2 border-dashed p-6 text-center transition ${dragActive ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line)]'}`}
               >
                 <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">Your resume</label>
-                <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition mb-3">
-                  <Upload size={14} /> Upload PDF / DOCX
-                  <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
-                </label>
-                {fileName && <span className="block text-xs text-[var(--muted)] mb-2">{fileName}</span>}
-                <textarea
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                  placeholder={dragActive ? 'Drop your resume here' : '...or paste your resume text here, or drag a file in'}
-                  className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none placeholder:text-[var(--muted-soft)] transition"
-                />
+                {resumeText ? (
+                  <div>
+                    <p className="inline-flex items-center gap-2 text-sm font-medium text-[var(--good)]">
+                      <Check size={16} /> {fileName || 'Resume uploaded'}
+                    </p>
+                    <button
+                      onClick={() => { setResumeText(''); setFileName(''); setFormatCheck(null); }}
+                      className="block mx-auto mt-2 text-xs text-[var(--muted)] hover:text-[var(--ink)] underline underline-offset-2 transition"
+                    >
+                      Change file
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition bg-white">
+                      <Upload size={14} /> Upload PDF / DOCX
+                      <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                    <p className="text-xs text-[var(--muted-soft)] mt-3">{dragActive ? 'Drop your resume here' : 'or drag a file in'}</p>
+                  </>
+                )}
               </div>
 
               <div>

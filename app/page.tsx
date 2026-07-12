@@ -170,9 +170,9 @@ const TRUST_POINTS = [
 const FAQS = [
   { q: 'Is this actually free?', a: 'Yes. While we\'re in beta, every tool here — scoring, rewriting, cover letters, interview prep — is free. No card on file.' },
   { q: 'What happens to my resume?', a: 'Your resume is used only to generate your results. If you sign in, your results save to your private history. If you don\'t, nothing is stored.' },
-  { q: 'What can I upload?', a: 'PDF, DOCX, or plain text — or just paste your resume directly.' },
+  { q: 'What can I upload?', a: 'PDF, DOCX, or plain text. Upload keeps your resume exactly as it is — nothing to accidentally edit or retype.' },
   { q: 'Will it make things up?', a: 'No. Rewrites and cover letters only reframe what\'s actually on your resume. Nothing is invented — no fake numbers, no fake companies.' },
-  { q: 'Why not just use ChatGPT?', a: 'You can. This just skips the prompt-writing — paste your resume and the role once, and get a score, a rewrite, a letter, and 100 questions to prepare with, in one place.' },
+  { q: 'Why not just use ChatGPT?', a: 'You can. This just skips the prompt-writing — upload your resume, paste the role once, and get a score, a rewrite, a letter, and 100 questions to prepare with, in one place.' },
 ];
 
 const COMPARISON = [
@@ -360,7 +360,6 @@ export default function Home() {
   const [revealHint, setRevealHint] = useState(false);
   const [practicedIds, setPracticedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
-  const [checkingRedirect, setCheckingRedirect] = useState(true);
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
@@ -391,10 +390,9 @@ export default function Home() {
       const bareVisit = window.location.hash === '' && window.location.search === '';
       if (sessionUser && bareVisit) {
         router.replace('/dashboard');
-        return; // stay gated — we're navigating away, never paint the homepage
+        return;
       }
       setUser(sessionUser);
-      setCheckingRedirect(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -718,14 +716,6 @@ export default function Home() {
     { key: 'cover', label: 'Cover letter' },
     { key: 'interview', label: 'Interview prep' },
   ];
-
-  if (checkingRedirect) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-        <Loader2 size={20} className="animate-spin text-[var(--muted)]" />
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">
@@ -1118,20 +1108,30 @@ export default function Home() {
                     onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                     onDragLeave={() => setDragActive(false)}
                     onDrop={handleResumeDrop}
-                    className={`rounded-xl transition ${dragActive ? 'ring-2 ring-[var(--accent)] ring-offset-2' : ''}`}
+                    className={`rounded-xl border-2 border-dashed p-6 text-center transition ${dragActive ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line)]'}`}
                   >
                     <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">Your resume</label>
-                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition mb-3">
-                      <Upload size={14} /> Upload PDF / DOCX
-                      <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
-                    </label>
-                    {fileName && <span className="block text-xs text-[var(--muted)] mb-2">{fileName}</span>}
-                    <textarea
-                      value={resumeText}
-                      onChange={(e) => setResumeText(e.target.value)}
-                      placeholder={dragActive ? 'Drop your resume here' : '...or paste your resume text here, or drag a file in'}
-                      className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none placeholder:text-[var(--muted-soft)] transition"
-                    />
+                    {resumeText ? (
+                      <div>
+                        <p className="inline-flex items-center gap-2 text-sm font-medium text-[var(--good)]">
+                          <Check size={16} /> {fileName || 'Resume uploaded'}
+                        </p>
+                        <button
+                          onClick={() => { setResumeText(''); setFileName(''); setFormatCheck(null); }}
+                          className="block mx-auto mt-2 text-xs text-[var(--muted)] hover:text-[var(--ink)] underline underline-offset-2 transition"
+                        >
+                          Change file
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition bg-white">
+                          <Upload size={14} /> Upload PDF / DOCX
+                          <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+                        </label>
+                        <p className="text-xs text-[var(--muted-soft)] mt-3">{dragActive ? 'Drop your resume here' : 'or drag a file in'}</p>
+                      </>
+                    )}
                   </div>
 
                   <div>
@@ -1448,7 +1448,7 @@ export default function Home() {
 
       {/* FAQ */}
       <section id="faq" className="max-w-3xl mx-auto px-6 py-20 scroll-mt-16">
-        <Reveal><h2 className="text-3xl font-semibold tracking-tight text-center mb-14">Before you paste your resume</h2></Reveal>
+        <Reveal><h2 className="text-3xl font-semibold tracking-tight text-center mb-14">Before you upload your resume</h2></Reveal>
         <div className="space-y-3">
           {FAQS.map((f, i) => (
             <Reveal key={i} delayMs={i * 60}>

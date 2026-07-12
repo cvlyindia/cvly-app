@@ -1,8 +1,8 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export const PLAN_LIMITS: Record<string, number> = {
-  free: 5,
-  pro: 150,
+  free: 10,
+  pro: 100,
   enterprise: 1000,
 };
 
@@ -27,7 +27,7 @@ export interface CreditStatus {
 
 /**
  * Gets the user's credit row, creating one with free-tier defaults if it doesn't exist yet.
- * Also resets credits if the monthly reset window has passed.
+ * Also resets credits if the daily reset window has passed.
  */
 async function getOrCreateCredits(supabase: SupabaseClient, userId: string) {
   const { data: existing } = await supabase
@@ -45,13 +45,13 @@ async function getOrCreateCredits(supabase: SupabaseClient, userId: string) {
     return created;
   }
 
-  // Monthly reset check
+  // Daily reset check
   if (new Date(existing.credits_reset_at) <= new Date()) {
     const { data: reset } = await supabase
       .from('user_credits')
       .update({
         credits_remaining: PLAN_LIMITS[existing.plan] ?? PLAN_LIMITS.free,
-        credits_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        credits_reset_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq('user_id', userId)
       .select('*')

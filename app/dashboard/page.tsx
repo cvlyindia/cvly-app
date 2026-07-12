@@ -346,7 +346,7 @@ export default function DashboardPage() {
                   <span className="text-sm text-[var(--muted)] tabular-nums">{PLAN_LIMITS[credits.plan] ?? 5}</span>
                 </div>
                 <p className="text-xs text-[var(--muted)]">
-                  Credits left this month · resets {new Date(credits.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  Credits left today · resets {new Date(credits.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                 </p>
               </div>
             )}

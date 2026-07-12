@@ -16,7 +16,7 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   'Everything in Free',
-  '150 credits every month',
+  '100 credits every day',
   'Application tracker (Kanban board)',
   'LinkedIn profile review',
   'Portfolio review',
@@ -25,7 +25,7 @@ const PRO_FEATURES = [
 
 const ENTERPRISE_FEATURES = [
   'Everything in Pro, for your whole team',
-  '1,000 pooled credits every month',
+  '1,000 pooled credits every day',
   'Team seats & centralized billing (in development)',
   'Usage insights across your team (in development)',
   'Dedicated onboarding support',
@@ -130,7 +130,7 @@ export default function PricingPage() {
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-8 fade-up">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">Simple pricing</h1>
-          <p className="text-[var(--muted)] max-w-md mx-auto">Free comes with monthly credits so it stays fair for everyone. Upgrade any time for more.</p>
+          <p className="text-[var(--muted)] max-w-md mx-auto">Free comes with daily credits so it stays fair for everyone. Upgrade any time for more.</p>
         </div>
 
         <div className="flex justify-center mb-10 fade-up fade-up-1">
@@ -162,7 +162,7 @@ export default function PricingPage() {
               <span className="text-[10px] font-bold text-white bg-[var(--good)] px-2 py-0.5 rounded-full">ACTIVE NOW</span>
             </div>
             <p className="text-3xl font-bold tracking-tight mb-1">₹0</p>
-            <p className="text-xs text-[var(--muted)] mb-6">5 credits every month, no card</p>
+            <p className="text-xs text-[var(--muted)] mb-6">10 credits every day, no card</p>
             <div className="space-y-2.5 mb-7">
               {FREE_FEATURES.map((f) => (
                 <div key={f} className="flex items-center gap-2.5">
@@ -247,7 +247,7 @@ export default function PricingPage() {
         <div className="space-y-6 max-w-2xl mx-auto fade-up">
           <div>
             <h3 className="text-sm font-semibold mb-1.5">Why credits, if Free is free?</h3>
-            <p className="text-sm text-[var(--muted)] leading-relaxed">Every check runs on real AI, and that has a real cost on our side. Credits keep the free tier generous and fair — 5 a month covers trying it properly — without it being abused by scripts or bulk scraping.</p>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">Every check runs on real AI, and that has a real cost on our side. Credits keep the free tier generous and fair — 10 a day covers trying it properly — without it being abused by scripts or bulk scraping.</p>
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-1.5">What happens when I run out?</h3>

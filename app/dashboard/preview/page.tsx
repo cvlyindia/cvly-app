@@ -86,7 +86,7 @@ export default function DashboardPreviewPage() {
             </div>
             <span className="text-sm text-[var(--muted)] tabular-nums">5</span>
           </div>
-          <p className="text-xs text-[var(--muted)]">Credits left this month · resets 24 Jul</p>
+          <p className="text-xs text-[var(--muted)]">Credits left today · resets tomorrow</p>
         </div>
 
         <div className="flex items-center gap-3 mb-10 flex-wrap">
