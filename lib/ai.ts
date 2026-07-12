@@ -102,6 +102,7 @@ ${jobDescription}`;
 export interface InterviewQuestion {
   question: string;
   starHint: string;
+  suggestedAnswer: string;
 }
 
 export interface InterviewCategory {
@@ -116,11 +117,13 @@ export async function generateInterviewPrep(resumeText: string, jobDescription: 
 3. "Situational & Problem-Solving" — hypothetical scenarios for this role
 4. "Culture, Motivation & Curveballs" — why this company, career goals, unexpected questions
 
-For each question give a very short hint (max 15 words) on how to answer using the STAR method with THEIR actual resume background.
+For each question, provide:
+- "starHint": a very short cue (max 12 words) on which STAR element to lead with.
+- "suggestedAnswer": a concise example answer (2-3 sentences, max 50 words) that draws on SPECIFIC details actually present in their resume — a real project, tool, number, or outcome they listed. Never invent a company, title, metric, or achievement that isn't in the resume. If the resume genuinely doesn't have enough detail for a specific question, write a short answer framework instead ("Structure this around a time you...") rather than fabricating specifics.
 
 Return ONLY valid JSON, no markdown fences, in exactly this shape:
 [
-  { "category": "Behavioral", "questions": [ { "question": "...", "starHint": "..." } ] },
+  { "category": "Behavioral", "questions": [ { "question": "...", "starHint": "...", "suggestedAnswer": "..." } ] },
   { "category": "Technical & Role-Specific", "questions": [...] },
   { "category": "Situational & Problem-Solving", "questions": [...] },
   { "category": "Culture, Motivation & Curveballs", "questions": [...] }

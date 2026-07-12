@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight, Upload, Loader2, Check, ChevronDown, Search, ChevronLeft, ChevronRight,
-  Shuffle, FileScan, AlertTriangle,
+  Shuffle, FileScan, AlertTriangle, Copy, Lock,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { SkeletonLines, DownloadBar } from '@/components/ScannerShared';
@@ -38,6 +38,9 @@ export function ScannerModal({
 }) {
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [jobUrl, setJobUrl] = useState('');
+  const [importingJob, setImportingJob] = useState(false);
+  const [importError, setImportError] = useState('');
   const [fileName, setFileName] = useState('');
   const [formatCheck, setFormatCheck] = useState<FormatCheckResult | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -143,6 +146,26 @@ export function ScannerModal({
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     processResumeFile(file);
+  }
+
+  async function handleImportJob() {
+    if (!jobUrl.trim()) return;
+    setImportingJob(true);
+    setImportError('');
+    try {
+      const res = await fetch('/api/import-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: jobUrl.trim() }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setJobDescription(data.description);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Could not import from that link');
+    } finally {
+      setImportingJob(false);
+    }
   }
 
   async function handleScore() {
@@ -276,7 +299,8 @@ export function ScannerModal({
         { type: 'heading', text: cat.category },
         ...cat.questions.flatMap((q, i): ExportBlock[] => [
           { type: 'body', text: `${i + 1}. ${q.question}` },
-          { type: 'body', text: `   ${q.starHint}` },
+          { type: 'body', text: `   Lead with: ${q.starHint}` },
+          ...(q.suggestedAnswer ? [{ type: 'body' as const, text: `   Suggested answer: ${q.suggestedAnswer}` }] : []),
         ]),
       ]),
       { type: 'space' },
@@ -372,10 +396,27 @@ export function ScannerModal({
 
               <div>
                 <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">The role</label>
+                <div className="flex gap-2 mb-2.5">
+                  <input
+                    value={jobUrl}
+                    onChange={(e) => setJobUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleImportJob(); } }}
+                    placeholder="Paste a job posting link (optional)"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
+                  />
+                  <button
+                    onClick={handleImportJob}
+                    disabled={importingJob || !jobUrl.trim()}
+                    className="shrink-0 px-3.5 py-2 rounded-lg border border-[var(--line)] text-xs font-medium hover:bg-[var(--surface)] transition disabled:opacity-40"
+                  >
+                    {importingJob ? 'Importing…' : 'Import'}
+                  </button>
+                </div>
+                {importError && <p className="text-xs text-[var(--bad)] mb-2.5">{importError}</p>}
                 <textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the full job description here"
+                  placeholder="...or paste the full job description here"
                   className="w-full h-36 p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none placeholder:text-[var(--muted-soft)] transition"
                 />
               </div>
@@ -490,7 +531,7 @@ export function ScannerModal({
                     <SkeletonLines label="Rewriting your resume…" />
                   ) : rewritten ? (
                     <>
-                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} />
+                      <DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={credits?.plan === 'free'} />
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
                         <div className="text-center mb-6 pb-5 border-b border-[var(--line)]">
                           <h2 className="text-xl font-bold tracking-tight">{rewritten.name}</h2>
@@ -542,7 +583,7 @@ export function ScannerModal({
                     <SkeletonLines label="Writing your cover letter…" />
                   ) : coverLetter ? (
                     <>
-                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} />
+                      <DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={credits?.plan === 'free'} />
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
                     </>
                   ) : null}
@@ -583,7 +624,7 @@ export function ScannerModal({
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className="text-xs text-[var(--muted)]">{practicedIds.size} of {totalQuestions} practiced</p>
-                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} />
+                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} locked={credits?.plan === 'free'} />
                               </div>
                             </div>
 
@@ -606,23 +647,54 @@ export function ScannerModal({
                                       const ci = categories.findIndex((c) => c.category === cat.category);
                                       return (
                                         <div key={cat.category} className="rounded-xl border border-[var(--line)] overflow-hidden">
-                                          <button
-                                            onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)}
-                                            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface)] transition"
-                                          >
-                                            <span className="font-semibold text-sm">{cat.category} <span className="text-xs text-[var(--muted)] ml-2 font-normal">{cat.questions.length} questions</span></span>
-                                            <ChevronDown size={16} className={`text-[var(--muted)] transition-transform ${openCategory === ci ? 'rotate-180' : ''}`} />
-                                          </button>
+                                          <div className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface)] transition">
+                                            <button
+                                              onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)}
+                                              className="flex-1 text-left flex items-center gap-2"
+                                            >
+                                              <span className="font-semibold text-sm">{cat.category} <span className="text-xs text-[var(--muted)] ml-2 font-normal">{cat.questions.length} questions</span></span>
+                                            </button>
+                                            <div className="flex items-center gap-3 shrink-0">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (credits?.plan === 'free') { window.location.href = '/pricing'; return; }
+                                                  const text = cat.questions.map((q, i) => `${i + 1}. ${q.question}\n   Lead with: ${q.starHint}${q.suggestedAnswer ? `\n   Suggested answer: ${q.suggestedAnswer}` : ''}`).join('\n\n');
+                                                  copyContent(`${cat.category}\n\n${text}`);
+                                                }}
+                                                aria-label={credits?.plan === 'free' ? `Upgrade to copy ${cat.category} questions` : `Copy ${cat.category} questions`}
+                                                className="text-[var(--muted)] hover:text-[var(--ink)] transition"
+                                              >
+                                                {credits?.plan === 'free' ? <Lock size={13} /> : <Copy size={14} />}
+                                              </button>
+                                              <button onClick={() => setOpenCategory(openCategory === ci ? -1 : ci)} aria-label="Toggle category">
+                                                <ChevronDown size={16} className={`text-[var(--muted)] transition-transform ${openCategory === ci ? 'rotate-180' : ''}`} />
+                                              </button>
+                                            </div>
+                                          </div>
                                           {(openCategory === ci || interviewSearch.trim()) && (
                                             <div className="divide-y divide-[var(--line)]">
                                               {cat.questions.map((q, qi) => (
                                                 <div key={qi} className="px-5 py-4">
                                                   <p className="text-sm font-medium mb-1.5 flex gap-2.5 items-start">
                                                     <span className="font-mono text-[var(--accent-ink)] text-xs shrink-0 pt-0.5">{String(qi + 1).padStart(2, '0')}</span>
-                                                    {q.question}
+                                                    <span className="flex-1">{q.question}</span>
                                                     {practicedIds.has(q.question) && <Check size={13} className="text-[var(--good)] shrink-0 mt-0.5" />}
+                                                    <button
+                                                      onClick={() => {
+                                                        if (credits?.plan === 'free') { window.location.href = '/pricing'; return; }
+                                                        copyContent(`${q.question}\n\nLead with: ${q.starHint}${q.suggestedAnswer ? `\nSuggested answer: ${q.suggestedAnswer}` : ''}`);
+                                                      }}
+                                                      aria-label={credits?.plan === 'free' ? 'Upgrade to copy this question' : 'Copy this question'}
+                                                      className="shrink-0 text-[var(--muted-soft)] hover:text-[var(--ink)] transition"
+                                                    >
+                                                      {credits?.plan === 'free' ? <Lock size={11} /> : <Copy size={12} />}
+                                                    </button>
                                                   </p>
-                                                  <p className="text-xs text-[var(--muted)] pl-7 leading-relaxed">{q.starHint}</p>
+                                                  <p className="text-xs text-[var(--muted-soft)] pl-7 mb-2">{q.starHint}</p>
+                                                  {q.suggestedAnswer && (
+                                                    <p className="text-xs text-[var(--ink)]/75 leading-relaxed bg-[var(--surface)] rounded-lg p-3 ml-7">{q.suggestedAnswer}</p>
+                                                  )}
                                                 </div>
                                               ))}
                                             </div>
@@ -654,16 +726,24 @@ export function ScannerModal({
                                     <p className="text-xl font-semibold mb-8 leading-snug max-w-md mx-auto">{current.question}</p>
 
                                     {revealHint ? (
-                                      <div className="card rounded-xl p-5 mb-6 text-left max-w-md mx-auto">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] mb-2">STAR hint</p>
-                                        <p className="text-sm text-[var(--ink)]/80 leading-relaxed">{current.starHint}</p>
+                                      <div className="card rounded-xl p-5 mb-6 text-left max-w-md mx-auto space-y-3">
+                                        <div>
+                                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] mb-1.5">Lead with</p>
+                                          <p className="text-sm text-[var(--ink)]/80 leading-relaxed">{current.starHint}</p>
+                                        </div>
+                                        {current.suggestedAnswer && (
+                                          <div className="pt-3 border-t border-[var(--line)]">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-ink)] mb-1.5">Suggested answer</p>
+                                            <p className="text-sm text-[var(--ink)]/80 leading-relaxed">{current.suggestedAnswer}</p>
+                                          </div>
+                                        )}
                                       </div>
                                     ) : (
                                       <button
                                         onClick={() => setRevealHint(true)}
                                         className="mb-6 px-5 py-2.5 rounded-full border border-[var(--line)] text-sm font-medium hover:bg-[var(--surface)] transition"
                                       >
-                                        Reveal hint
+                                        Reveal answer
                                       </button>
                                     )}
                                   </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Download, ChevronDown, Copy } from 'lucide-react';
+import { Loader2, Download, ChevronDown, Copy, Lock } from 'lucide-react';
 import { downloadTxt, downloadPdf, downloadDocx, type ExportBlock } from '@/lib/export';
 import { downloadResumeDocx, downloadResumePdf, structuredResumeToPlainText } from '@/lib/resumeTemplate';
 import type { StructuredResume } from '@/lib/ai';
@@ -21,9 +21,19 @@ export function SkeletonLines({ label, sublabel }: { label: string; sublabel?: s
   );
 }
 
-export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy, resumeData }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void; resumeData?: StructuredResume }) {
+export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy, resumeData, locked }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void; resumeData?: StructuredResume; locked?: boolean }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  if (locked) {
+    return (
+      <div className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)]">
+        <Lock size={13} className="text-[var(--muted)]" />
+        <p className="text-xs text-[var(--muted)] flex-1">Downloading and copying this section needs Pro.</p>
+        <a href="/pricing" className="text-xs font-semibold text-[var(--accent-ink)] hover:underline shrink-0">Upgrade</a>
+      </div>
+    );
+  }
 
   async function handleFormat(format: 'txt' | 'pdf' | 'docx') {
     setOpen(false);
