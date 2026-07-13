@@ -12,14 +12,14 @@ const FREE_FEATURES = [
   'Cover letter generator',
   '100 interview questions',
   'Dashboard, history & goal tracking',
+  'Application tracker (Kanban board)',
+  'LinkedIn profile review',
+  'Portfolio review',
 ];
 
 const PRO_FEATURES = [
   'Everything in Free',
-  '100 credits every day',
-  'Application tracker (Kanban board)',
-  'LinkedIn profile review',
-  'Portfolio review',
+  '100 credits every day — 10x the free plan',
   'Priority processing (in development)',
 ];
 
