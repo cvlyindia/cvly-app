@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
+import { GoogleIcon, LinkedinIcon } from '@/components/SocialIcons';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -12,12 +13,31 @@ function LoginForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'linkedin_oidc' | null>(null);
+
+  const next = searchParams.get('next');
+
+  async function handleOAuth(provider: 'google' | 'linkedin_oidc') {
+    setError('');
+    setOauthLoading(provider);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`,
+      },
+    });
+    if (error) {
+      setError(error.message);
+      setOauthLoading(null);
+    }
+    // On success, Supabase redirects the browser away immediately — no further action needed here.
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const next = searchParams.get('next');
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -41,25 +61,54 @@ function LoginForm() {
           <p className="text-sm text-[var(--muted)]">We sent a link to {email}. Click it to sign in — no password needed.</p>
         </div>
       ) : (
-        <form onSubmit={handleLogin} className="card rounded-2xl p-7">
-          <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">Sign in to save your results</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full p-3 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
-          />
-          {error && <p className="text-xs text-[var(--bad)] mb-3">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-accent w-full py-3 rounded-full font-medium text-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
-          >
-            {loading ? <><Loader2 size={15} className="animate-spin" /> Sending…</> : 'Send login link'}
-          </button>
-        </form>
+        <div className="card rounded-2xl p-7">
+          <div className="space-y-2.5 mb-5">
+            <button
+              type="button"
+              onClick={() => handleOAuth('google')}
+              disabled={oauthLoading !== null}
+              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-full border border-[var(--line)] text-sm font-medium hover:bg-[var(--surface)] transition disabled:opacity-50"
+            >
+              {oauthLoading === 'google' ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon size={17} />}
+              Continue with Google
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOAuth('linkedin_oidc')}
+              disabled={oauthLoading !== null}
+              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-full border border-[var(--line)] text-sm font-medium hover:bg-[var(--surface)] transition disabled:opacity-50"
+            >
+              {oauthLoading === 'linkedin_oidc' ? <Loader2 size={16} className="animate-spin" /> : <LinkedinIcon size={17} className="text-[#0A66C2]" />}
+              Continue with LinkedIn
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-[var(--line)]" />
+            <span className="text-xs text-[var(--muted-soft)]">or</span>
+            <div className="flex-1 h-px bg-[var(--line)]" />
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <label className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide block mb-3">Sign in to save your results</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full p-3 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
+            />
+            {error && <p className="text-xs text-[var(--bad)] mb-3">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || oauthLoading !== null}
+              className="btn-accent w-full py-3 rounded-full font-medium text-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            >
+              {loading ? <><Loader2 size={15} className="animate-spin" /> Sending…</> : 'Send login link'}
+            </button>
+          </form>
+        </div>
       )}
     </>
   );

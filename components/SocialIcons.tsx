@@ -1,3 +1,14 @@
+export function GoogleIcon({ size = 18, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+      <path d="M22.5 12.23c0-.79-.07-1.54-.2-2.27H12v4.3h5.9a5.05 5.05 0 0 1-2.19 3.32v2.75h3.55c2.08-1.92 3.24-4.74 3.24-8.1z" fill="#4285F4" />
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.67l-3.55-2.75c-.99.66-2.25 1.05-3.73 1.05-2.87 0-5.3-1.94-6.17-4.53H2.16v2.84A11 11 0 0 0 12 23z" fill="#34A853" />
+      <path d="M5.83 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.16a11 11 0 0 0 0 9.88l3.67-2.84z" fill="#FBBC05" />
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.84 6.06l3.67 2.84C6.7 7.32 9.13 5.38 12 5.38z" fill="#EA4335" />
+    </svg>
+  );
+}
+
 export function InstagramIcon({ size = 18, className = '' }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
