@@ -1,3 +1,5 @@
+export const maxDuration = 30;
+
 import { NextRequest, NextResponse } from 'next/server';
 import { reviewPortfolio } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';

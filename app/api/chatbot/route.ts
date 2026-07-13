@@ -1,3 +1,5 @@
+export const maxDuration = 30;
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createClient } from '@/lib/supabase/server';

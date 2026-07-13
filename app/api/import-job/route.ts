@@ -1,3 +1,5 @@
+export const maxDuration = 15;
+
 import { NextRequest, NextResponse } from 'next/server';
 import { importJobFromUrl } from '@/lib/importJob';
 
