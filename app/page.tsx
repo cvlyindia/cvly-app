@@ -19,6 +19,7 @@ import { popReturnPath } from '@/lib/toolNav';
 import { InstagramIcon, FacebookIcon, LinkedinIcon, XIcon } from '@/components/SocialIcons';
 import { PAYWALL_ENABLED } from '@/lib/featureFlags';
 import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
+import { SaveResultPrompt } from '@/components/SaveResultPrompt';
 import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
 
@@ -1192,6 +1193,10 @@ export default function Home() {
                     <h2 className="fade-up fade-up-1 text-xl font-semibold tracking-tight mt-5 max-w-sm">{scoreHeadline(result.score)}</h2>
                     <p className="fade-up fade-up-2 text-sm text-[var(--ink)]/70 leading-relaxed mt-2 max-w-md">{result.summary}</p>
                   </div>
+
+                  {!user && (
+                    <SaveResultPrompt resumeText={resumeText} jobDescription={jobDescription} result={result} />
+                  )}
 
                   <div className="flex items-center gap-2 flex-wrap mb-6">
                     <div className="flex-1 min-w-0"><DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} /></div>

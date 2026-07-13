@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { popPendingScan } from '@/lib/pendingScan';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { NewCheckButton } from '@/components/NewCheckButton';
@@ -71,6 +72,24 @@ export default function DashboardPage() {
       }
       setEmail(data.user.email ?? '');
       setCheckingAuth(false);
+
+      // If they just signed in specifically to save a result they scanned anonymously,
+      // that result only ever existed in the browser's memory — never on our servers.
+      // Restore it now that we actually have a real account to attach it to.
+      const pending = popPendingScan();
+      if (pending) {
+        fetch('/api/save-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pending),
+        })
+          .then((res) => res.json())
+          .then((d) => {
+            if (d.id) router.replace(`/?resume=${d.id}`);
+          })
+          .catch(() => {});
+      }
+
       fetch('/api/history')
         .then((res) => res.json())
         .then((d) => setScans(d.scans ?? []));
