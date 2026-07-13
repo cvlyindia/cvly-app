@@ -691,7 +691,7 @@ export function ScannerModal({
                                                   copyContent(`${cat.category}\n\n${text}`);
                                                 }}
                                                 aria-label={PAYWALL_ENABLED && credits?.plan === 'free' ? `Upgrade to copy ${cat.category} questions` : `Copy ${cat.category} questions`}
-                                                className="text-[var(--muted)] hover:text-[var(--ink)] transition"
+                                                className="p-1.5 -m-1.5 text-[var(--muted)] hover:text-[var(--ink)] transition"
                                               >
                                                 {PAYWALL_ENABLED && credits?.plan === 'free' ? <Lock size={13} /> : <Copy size={14} />}
                                               </button>
@@ -714,7 +714,7 @@ export function ScannerModal({
                                                         copyContent(`${q.question}\n\nLead with: ${q.starHint}${q.suggestedAnswer ? `\nSuggested answer: ${q.suggestedAnswer}` : ''}`);
                                                       }}
                                                       aria-label={PAYWALL_ENABLED && credits?.plan === 'free' ? 'Upgrade to copy this question' : 'Copy this question'}
-                                                      className="shrink-0 text-[var(--muted-soft)] hover:text-[var(--ink)] transition"
+                                                      className="shrink-0 p-1.5 -m-1.5 text-[var(--muted-soft)] hover:text-[var(--ink)] transition"
                                                     >
                                                       {PAYWALL_ENABLED && credits?.plan === 'free' ? <Lock size={11} /> : <Copy size={12} />}
                                                     </button>

@@ -99,7 +99,7 @@ export function ChatbotButton() {
       </button>
 
       {open && (
-        <div className="panel-pop fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] sm:w-96 h-[70vh] sm:h-[520px] max-h-[calc(100vh-9rem)] card rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white origin-bottom-right">
+        <div className="panel-pop fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] sm:w-96 h-[70dvh] sm:h-[520px] max-h-[calc(100dvh-9rem)] card rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white origin-bottom-right">
           <div className="px-5 py-4 border-b border-[var(--line)] bg-[var(--surface)] flex items-center gap-3">
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full bg-white border border-[var(--line)] flex items-center justify-center overflow-hidden">

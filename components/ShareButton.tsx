@@ -42,7 +42,7 @@ export function ShareButton({ score }: { score: number }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1.5 w-44 card rounded-lg overflow-hidden z-20 shadow-lg">
+          <div className="absolute right-0 top-full mt-1.5 w-44 card rounded-lg overflow-hidden z-20 shadow-lg">
             <a
               href={`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`}
               target="_blank"

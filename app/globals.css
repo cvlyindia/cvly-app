@@ -121,6 +121,13 @@ a:focus-visible, button:focus-visible {
 .mesh-drift-2 { animation: meshDrift2 32s ease-in-out infinite; }
 .mesh-drift-3 { animation: meshDrift3 38s ease-in-out infinite; }
 
+@media (max-width: 640px) {
+  /* Large blur radius + continuous animation is a real GPU cost — on mid-range
+     Android hardware this can cause visible scroll jank. Keep the ambient look
+     (blobs stay visible, static) but drop the ongoing animation cost on mobile. */
+  .mesh-drift-1, .mesh-drift-2, .mesh-drift-3 { animation: none; }
+}
+
 
 @keyframes taskCheckPop {
   0% { transform: scale(0); opacity: 0; }
