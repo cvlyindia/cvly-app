@@ -1,11 +1,13 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import { GoogleIcon, LinkedinIcon } from '@/components/SocialIcons';
+
+const RESEND_COOLDOWN_SECONDS = 60; // matches Supabase's own default per-email OTP cooldown
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -13,6 +15,13 @@ function LoginForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'linkedin_oidc' | null>(null);
 
   const next = searchParams.get('next');
@@ -34,8 +43,8 @@ function LoginForm() {
     // On success, Supabase redirects the browser away immediately — no further action needed here.
   }
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function sendMagicLink() {
+    if (cooldown > 0 || loading || !email) return;
     setError('');
     setLoading(true);
     const supabase = createClient();
@@ -50,7 +59,13 @@ function LoginForm() {
       setError(error.message);
     } else {
       setSent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     }
+  }
+
+  function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    sendMagicLink();
   }
 
   return (
@@ -58,7 +73,18 @@ function LoginForm() {
       {sent ? (
         <div className="card rounded-2xl p-7 text-center">
           <p className="font-semibold mb-2">Check your email</p>
-          <p className="text-sm text-[var(--muted)]">We sent a link to {email}. Click it to sign in — no password needed.</p>
+          <p className="text-sm text-[var(--muted)] mb-4">We sent a link to {email}. Click it to sign in — no password needed.</p>
+          {cooldown > 0 ? (
+            <p className="text-xs text-[var(--muted-soft)]">Didn&apos;t get it? You can resend in {cooldown}s</p>
+          ) : (
+            <button
+              onClick={sendMagicLink}
+              disabled={loading}
+              className="text-xs font-medium text-[var(--accent-ink)] hover:underline disabled:opacity-50"
+            >
+              {loading ? 'Sending…' : 'Resend link'}
+            </button>
+          )}
         </div>
       ) : (
         <div className="card rounded-2xl p-7">
