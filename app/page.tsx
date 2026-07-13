@@ -20,6 +20,7 @@ import { InstagramIcon, FacebookIcon, LinkedinIcon, XIcon } from '@/components/S
 import { PAYWALL_ENABLED } from '@/lib/featureFlags';
 import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
 import { SaveResultPrompt } from '@/components/SaveResultPrompt';
+import { AmbientBackground } from '@/components/AmbientBackground';
 import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
 
@@ -702,7 +703,8 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
+    <main className="min-h-screen">
+      <AmbientBackground />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

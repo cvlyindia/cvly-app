@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { popPendingScan } from '@/lib/pendingScan';
+import { AmbientBackground } from '@/components/AmbientBackground';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { NewCheckButton } from '@/components/NewCheckButton';
@@ -233,8 +234,7 @@ export default function DashboardPage() {
   return (
     <DashboardShell activePage="dashboard" pageTitle="Dashboard" userEmail={email} credits={credits} onCreditsChange={(updater) => setCredits((c) => (c ? { ...c, ...updater(c) } : c))} onScanSaved={refreshScans} onSignOut={handleSignOut}>
       <div className="relative">
-      <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
-      <div className="float-slower absolute top-96 left-[2%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-40 pointer-events-none" />
+      <AmbientBackground mode="absolute" />
 
       <div className="relative">
         {scans === null ? (
