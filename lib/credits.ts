@@ -91,16 +91,22 @@ export async function checkCredits(supabase: SupabaseClient, userId: string, act
  */
 export async function spendCredits(supabase: SupabaseClient, userId: string, action: CreditAction) {
   const cost = ACTION_COSTS[action];
-  const { data: row } = await supabase
-    .from('user_credits')
-    .select('credits_remaining')
-    .eq('user_id', userId)
-    .maybeSingle();
+  const { error } = await supabase.rpc('decrement_credits', { p_user_id: userId, p_cost: cost });
 
-  if (!row) return;
+  if (error) {
+    // Fallback for the window before migration 013 has been run, or if the RPC
+    // is ever unavailable — same select-then-update as before, just not the default path.
+    const { data: row } = await supabase
+      .from('user_credits')
+      .select('credits_remaining')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-  await supabase
-    .from('user_credits')
-    .update({ credits_remaining: Math.max(0, row.credits_remaining - cost) })
-    .eq('user_id', userId);
+    if (!row) return;
+
+    await supabase
+      .from('user_credits')
+      .update({ credits_remaining: Math.max(0, row.credits_remaining - cost) })
+      .eq('user_id', userId);
+  }
 }

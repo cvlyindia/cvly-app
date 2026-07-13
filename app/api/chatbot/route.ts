@@ -21,7 +21,7 @@ function getClientIp(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { message } = await req.json();
+    const { message, history } = await req.json();
 
     if (!message || typeof message !== 'string' || !message.trim()) {
       return NextResponse.json({ error: 'No message provided' }, { status: 400 });
@@ -51,7 +51,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prompt = `${CVLY_SYSTEM_PROMPT}\n\nUSER QUESTION:\n${message.trim()}\n\nAnswer in 2-4 sentences, plainly, as Cvly's help assistant.`;
+    // Real conversation memory — capped to the last 6 exchanges so a long session
+    // doesn't grow the prompt unbounded. Without this, every follow-up question
+    // ("and how much does that cost?") had zero idea what it was following up on.
+    const recentHistory: { role: string; text: string }[] = Array.isArray(history) ? history.slice(-6) : [];
+    const historyBlock = recentHistory.length
+      ? `\n\nCONVERSATION SO FAR:\n${recentHistory.map((m) => `${m.role === 'user' ? 'User' : 'You'}: ${m.text}`).join('\n')}`
+      : '';
+
+    const prompt = `${CVLY_SYSTEM_PROMPT}${historyBlock}\n\nUSER'S NEW MESSAGE:\n${message.trim()}\n\nAnswer in 2-4 sentences, plainly, as Cvly's help assistant. Use the conversation above for context if there's a follow-up question — don't ignore what was already said.`;
     const answer = await generateWithFallback(prompt, { maxTokens: 300 });
 
     // Log usage only after a successful call — a failed AI call shouldn't count against the limit.

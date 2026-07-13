@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { MessageCircle, X, Send, ArrowRight } from 'lucide-react';
+import { MessageCircle, X, Send, ArrowRight, Mail } from 'lucide-react';
 import { PRESET_QUESTIONS } from '@/lib/chatbotFacts';
 
 const SUPPORT_EMAIL = 'support@cvly.in';
+const HUMAN_PRESET_QUESTION = 'How do I talk to a real person?';
 
 type Message = { role: 'bot' | 'user'; text: string };
 
@@ -32,6 +33,7 @@ export function ChatbotButton() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPresets, setShowPresets] = useState(true);
+  const [showHumanOption, setShowHumanOption] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function ChatbotButton() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages, loading, showHumanOption]);
 
   function toggleOpen() {
     setOpen((o) => !o);
@@ -54,6 +56,10 @@ export function ChatbotButton() {
   function askPreset(q: string, a: string) {
     setMessages((prev) => [...prev, { role: 'user', text: q }, { role: 'bot', text: a }]);
     setShowPresets(false);
+    // Only surface the human/email option when someone explicitly asked for it —
+    // not shown by default, since a chat widget that constantly points at its own
+    // exit undermines confidence in the bot before it's even tried.
+    if (q === HUMAN_PRESET_QUESTION) setShowHumanOption(true);
   }
 
   async function sendMessage() {
@@ -61,22 +67,31 @@ export function ChatbotButton() {
     if (!text || loading) return;
     setInput('');
     setShowPresets(false);
-    setMessages((prev) => [...prev, { role: 'user', text }]);
+    const nextMessages = [...messages, { role: 'user' as const, text }];
+    setMessages(nextMessages);
     setLoading(true);
 
     try {
       const res = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+        // Real conversation memory — send recent history so follow-up questions
+        // ("and how much does that cost?") actually have something to follow up on.
+        body: JSON.stringify({ message: text, history: nextMessages.slice(-7, -1) }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      if (typeof data.answer === 'string' && data.answer.includes(SUPPORT_EMAIL)) {
+        setShowHumanOption(true);
+      }
       setMessages((prev) => [...prev, { role: 'bot', text: data.answer }]);
     } catch (err) {
+      // The AI genuinely couldn't help here — this is exactly the moment a human
+      // option earns its place, not before.
+      setShowHumanOption(true);
       setMessages((prev) => [
         ...prev,
-        { role: 'bot', text: err instanceof Error ? err.message : "Something went wrong — try the email option below instead." },
+        { role: 'bot', text: err instanceof Error ? err.message : "Something went wrong on my end — you can reach a real person below." },
       ]);
     } finally {
       setLoading(false);
@@ -151,12 +166,14 @@ export function ChatbotButton() {
               </div>
             )}
 
-            <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Question about Cvly')}`}
-              className="flex items-center justify-center gap-2 mt-2 py-2.5 rounded-xl border border-[var(--line)] text-xs font-medium text-[var(--good)] hover:bg-[var(--good-bg)] transition"
-            >
-              Email a real person: {SUPPORT_EMAIL}
-            </a>
+            {showHumanOption && (
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Question about Cvly')}`}
+                className="msg-in flex items-center justify-center gap-2 mt-2 py-2.5 rounded-xl border border-[var(--line)] text-xs font-medium text-[var(--good)] hover:bg-[var(--good-bg)] transition"
+              >
+                <Mail size={13} /> Email a real person: {SUPPORT_EMAIL}
+              </a>
+            )}
           </div>
 
           <div className="p-3 border-t border-[var(--line)] flex items-center gap-2">
