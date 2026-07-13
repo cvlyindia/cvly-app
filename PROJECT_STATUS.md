@@ -28,6 +28,8 @@ repo: cvlyindia/cvly-app.
   no auth at all
 - Daily credits: Free 10/day, Pro 100/day (Rs99/mo), Enterprise 1000/day (Rs999/mo)
 - Listen-to-results (Web Speech API), share buttons, social links, all zero-cost/zero-dependency
+- Google + LinkedIn sign-in buttons on the login page (code is live; needs the provider secrets
+  pasted into Supabase's dashboard to actually work end to end — see Pending section below)
 
 ## Known architecture tradeoff — read this before touching the scanner
 
@@ -64,14 +66,18 @@ whether they were already applied.
 
 ## Pending manual setup — waiting on Anurag, not on Claude
 
-- **Razorpay**: business KYC in progress (this is the long pole — start it early)
-- **Resend**: for transactional email (fixes Supabase's 2-emails/hour magic-link limit)
-- **Cloudflare + support@cvly.in**: DNS migration from GoDaddy to Cloudflare, then Email
-  Routing for support@cvly.in, then Gmail "send mail as" using Resend's SMTP once that exists
-- **Google OAuth**: Google Auth Platform app + client ID/secret, then paste into Supabase
-- **LinkedIn OAuth**: LinkedIn Developer app (OIDC product) + client ID/secret, then Supabase
+- **Cloudflare + DNS**: done by Anurag — needs a final "site loads correctly" confirmation
+- **Resend**: account created, API key obtained — still needs wiring into Supabase's SMTP settings (see instructions given in chat)
+- **Google OAuth**: app created, Client ID/Secret obtained — still needs pasting into Supabase → Authentication → Providers → Google, AND the code-side buttons are live (app/login/page.tsx)
+- **LinkedIn OAuth**: app created, Client ID/Secret obtained — still needs pasting into Supabase → Authentication → Providers → LinkedIn (OIDC), code-side buttons are live
+- **Razorpay**: deliberately deferred, not started
+- **Cloudflare Email Routing for support@cvly.in**: not yet confirmed done
 - Supabase project ref for OAuth callback URLs: `qsiecjkkmzvwypyqskkr`
   (`https://qsiecjkkmzvwypyqskkr.supabase.co/auth/v1/callback`)
 - WhatsApp number used in components/ShareButton.tsx's share-to-WhatsApp option — unconfirmed
 - Phone/OTP sign-in: deliberately not pursued — no genuinely free option exists in India
   (DLT registration + per-SMS cost either way)
+
+**Security note for whoever picks this up next**: real Google/LinkedIn/Resend credentials were
+pasted directly into a claude.ai chat during setup. Recommended to rotate/regenerate all three
+once confirmed working, since chat history isn't a secure place to store live secrets long-term.
