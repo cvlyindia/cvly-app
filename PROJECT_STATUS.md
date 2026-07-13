@@ -30,6 +30,22 @@ repo: cvlyindia/cvly-app.
 - Listen-to-results (Web Speech API), share buttons, social links, all zero-cost/zero-dependency
 - Google + LinkedIn sign-in buttons on the login page (code is live; needs the provider secrets
   pasted into Supabase's dashboard to actually work end to end — see Pending section below)
+- Real favicon (was serving the generic default icon this whole time — fixed and verified)
+- /admin dashboard — real users, real security (server-side auth + allowlist gate before any
+  data fetch, verified with a real 307-redirect test). Needs SUPABASE_SERVICE_ROLE_KEY and
+  ADMIN_EMAILS set in Vercel to actually show data.
+- Login page resend cooldown (60s, matches Supabase's own default, disables the resend button
+  with a live countdown instead of allowing spam-clicks)
+
+## Important: git push access is NOT automatic across chats
+
+This session's sandbox has a GitHub Personal Access Token already configured in its git
+remote — that's the actual mechanism that lets code changes get pushed directly to GitHub,
+not a general "Claude has GitHub access" capability. A brand-new chat starts with a
+completely empty sandbox and has no way to inherit this. If a new chat says it can't push to
+GitHub, that's not a bug — it genuinely doesn't have the credential. For real "just message
+me and I'll push the fix" workflows going forward, Claude Code is the correct tool (keeps
+persistent git credentials across sessions, not re-established per chat).
 
 ## Known architecture tradeoff — read this before touching the scanner
 
@@ -70,6 +86,8 @@ whether they were already applied.
 - **Resend**: account created, API key obtained — still needs wiring into Supabase's SMTP settings (see instructions given in chat)
 - **Google OAuth**: app created, Client ID/Secret obtained — still needs pasting into Supabase → Authentication → Providers → Google, AND the code-side buttons are live (app/login/page.tsx)
 - **LinkedIn OAuth**: app created, Client ID/Secret obtained — still needs pasting into Supabase → Authentication → Providers → LinkedIn (OIDC), code-side buttons are live
+- **Admin dashboard**: needs SUPABASE_SERVICE_ROLE_KEY (Supabase -> Project Settings -> API
+  -> service_role key) and ADMIN_EMAILS (comma-separated allowed emails) added in Vercel
 - **Razorpay**: deliberately deferred, not started
 - **Cloudflare Email Routing for support@cvly.in**: not yet confirmed done
 - Supabase project ref for OAuth callback URLs: `qsiecjkkmzvwypyqskkr`
