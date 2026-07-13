@@ -8,8 +8,20 @@ export interface ScoreResult {
   improvements: string[];
 }
 
-export async function scoreResume(resumeText: string, jobDescription: string): Promise<ScoreResult> {
-  const prompt = `You are an ATS (Applicant Tracking System) resume analyzer. Compare the resume below against the job description and return ONLY valid JSON, no markdown, no backticks, no preamble.
+export interface InvalidInputResult {
+  invalid: true;
+  reason: string;
+}
+
+export async function scoreResume(resumeText: string, jobDescription: string): Promise<ScoreResult | InvalidInputResult> {
+  const prompt = `You are an ATS (Applicant Tracking System) resume analyzer.
+
+FIRST — check whether what's below is actually usable. The "resume" should read like an actual person's work history, education, or skills. The "job description" should read like an actual job posting. Real resumes can be messy, informal, short, or a student's first resume with barely any experience — all of that is completely fine and still valid. What's NOT valid: random/gibberish text, lorem ipsum, a completely unrelated document (a recipe, a poem, song lyrics, someone testing with keyboard mashing), or content that's clearly not attempting to be a resume or job posting at all.
+
+If either one is genuinely not usable, respond with ONLY this JSON, nothing else:
+{ "invalid": true, "reason": "<one warm, gently funny sentence, talking directly to the person, telling them what you actually got instead of a resume/JD and inviting them to try again — never mocking, never cold, like a friend raising an eyebrow, not a robot rejecting a form>" }
+
+Otherwise, compare the resume against the job description and return ONLY valid JSON, no markdown, no backticks, no preamble, in exactly this shape:
 
 RESUME:
 ${resumeText}
@@ -17,7 +29,6 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}
 
-Return JSON in exactly this shape:
 {
   "score": <number 0-100, how well the resume matches the JD for ATS purposes>,
   "matchedKeywords": [<list of important keywords from the JD that ARE present in the resume>],

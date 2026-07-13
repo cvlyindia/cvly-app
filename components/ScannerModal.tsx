@@ -198,6 +198,11 @@ export function ScannerModal({
         return;
       }
       if (data.error) throw new Error(data.error);
+      if (data.invalid) {
+        setError(data.reason || "That doesn't look like a resume and job description — mind trying again with the real thing?");
+        onCreditsChange((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
+        return;
+      }
       setResult(data);
       setActiveTab('score');
       onCreditsChange((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
@@ -402,7 +407,7 @@ export function ScannerModal({
                   <>
                     <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition bg-white">
                       <Upload size={14} /> Upload PDF / DOCX
-                      <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+                      <input type="file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/jpeg,image/png" onChange={handleFileUpload} className="hidden" />
                     </label>
                     <p className="text-xs text-[var(--muted-soft)] mt-3">{dragActive ? 'Drop your resume here' : 'or drag a file in'}</p>
                   </>

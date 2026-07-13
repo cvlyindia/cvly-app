@@ -1,4 +1,5 @@
 import mammoth from 'mammoth';
+import { extractTextFromImage } from './aiProviders';
 
 export interface ExtractionResult {
   text: string;
@@ -29,5 +30,13 @@ export async function extractTextFromFile(file: File): Promise<ExtractionResult>
     return { text: buffer.toString('utf-8'), buffer, fileType: file.type };
   }
 
-  throw new Error('Unsupported file type. Please upload a PDF, DOCX, or TXT file.');
+  if (file.type === 'image/jpeg' || file.type === 'image/png') {
+    const text = await extractTextFromImage(buffer, file.type);
+    if (text === 'NOT_A_RESUME' || text.length < 40) {
+      throw new Error("That photo doesn't look like it has readable resume text in it — try a clearer photo, or upload the actual file instead.");
+    }
+    return { text, buffer, fileType: file.type };
+  }
+
+  throw new Error('Unsupported file type. Please upload a PDF, DOCX, TXT, or a clear photo (JPG/PNG) of your resume.');
 }

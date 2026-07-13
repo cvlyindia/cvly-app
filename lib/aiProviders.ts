@@ -6,6 +6,23 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 // Alias auto-points to current gen, avoids breakage when Google retires a specific version.
 const geminiModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
+/**
+ * Transcribes a photographed or scanned resume image to text using Gemini's vision
+ * capability. Deliberately Gemini-only, not routed through the Groq/OpenRouter/Cerebras
+ * fallback chain — those free-tier text models don't reliably support image input the
+ * same way, and a fallback that silently can't actually read the image would be worse
+ * than a clear, honest failure telling the person to try a different format.
+ */
+export async function extractTextFromImage(buffer: Buffer, mimeType: string): Promise<string> {
+  const result = await geminiModel.generateContent([
+    { inlineData: { data: buffer.toString('base64'), mimeType } },
+    {
+      text: 'This is a photo or scan of a resume. Transcribe every word of text exactly as written, preserving the original structure (line breaks between sections, bullet points). Return ONLY the transcribed text — no commentary, no markdown formatting, no "here is the transcription" preamble. If the image genuinely does not contain a readable resume, respond with exactly: NOT_A_RESUME',
+    },
+  ]);
+  return result.response.text().trim();
+}
+
 interface FallbackProvider {
   name: string;
   apiKey: string | undefined;

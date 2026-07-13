@@ -9,7 +9,7 @@ import type { User } from '@supabase/supabase-js';
 import {
   Target, KeyRound, PenLine, Mail, MessagesSquare, ShieldCheck,
   Upload, Check, ChevronDown, ArrowRight, Loader2, Heart, Sparkles, Lock, Trash2,
-  Search, ChevronLeft, ChevronRight, Shuffle, FileScan, AlertTriangle, Copy,
+  Search, ChevronLeft, ChevronRight, Shuffle, FileScan, AlertTriangle, Copy, Menu, X,
 } from 'lucide-react';
 import { ScoreRing } from '@/components/ScoreRing';
 import { SkeletonLines, DownloadBar } from '@/components/ScannerShared';
@@ -313,6 +313,7 @@ export default function Home() {
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
 
@@ -567,6 +568,12 @@ export default function Home() {
         return;
       }
       if (data.error) throw new Error(data.error);
+      if (data.invalid) {
+        setError(data.reason || "That doesn't look like a resume and job description — mind trying again with the real thing?");
+        setToolOpen(true);
+        setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
+        return;
+      }
       setResult(data);
       setActiveTab('score');
       setToolOpen(true);
@@ -758,9 +765,50 @@ export default function Home() {
                 </button>
               </>
             )}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[var(--surface)] transition -mr-1"
+            >
+              <Menu size={20} />
+            </button>
           </div>
         </div>
       </header>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-[var(--ink)]/40" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute right-0 top-0 bottom-0 w-72 bg-white flex flex-col p-6">
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close menu"
+              className="self-end w-9 h-9 rounded-full hover:bg-[var(--surface)] flex items-center justify-center mb-4"
+            >
+              <X size={18} />
+            </button>
+            <nav className="flex flex-col gap-1">
+              <a href="#how" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">How it works</a>
+              <a href="#compare" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">Compare</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">FAQ</a>
+              <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">Pricing</Link>
+              <div className="h-px bg-[var(--line)] my-3" />
+              {user ? (
+                <>
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">Dashboard</Link>
+                  <Link href="/history" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">History</Link>
+                  {credits && (
+                    <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-mono text-[var(--muted)]">{credits.remaining} credits</Link>
+                  )}
+                  <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-3 py-3 rounded-lg text-sm font-medium text-left text-[var(--bad)] hover:bg-[var(--bad-bg)] transition">Sign out</button>
+                </>
+              ) : (
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-semibold text-[var(--accent-ink)] hover:bg-[var(--accent-soft)]/30 transition">Sign in</Link>
+              )}
+            </nav>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <section id="main-content" className="max-w-6xl mx-auto px-6 pt-24 pb-16 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
@@ -1114,7 +1162,7 @@ export default function Home() {
                       <>
                         <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--line)] text-sm font-medium cursor-pointer hover:bg-[var(--surface)] transition bg-white">
                           <Upload size={14} /> Upload PDF / DOCX
-                          <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileUpload} className="hidden" />
+                          <input type="file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/jpeg,image/png" onChange={handleFileUpload} className="hidden" />
                         </label>
                         <p className="text-xs text-[var(--muted-soft)] mt-3">{dragActive ? 'Drop your resume here' : 'or drag a file in'}</p>
                       </>
