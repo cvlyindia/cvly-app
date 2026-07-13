@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import { GoogleIcon, LinkedinIcon } from '@/components/SocialIcons';
@@ -144,13 +145,22 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2 justify-center mb-10">
+        <Link href="/" className="flex items-center gap-2 justify-center mb-10 group">
           <Image src="/logo.png" alt="Cvly" width={30} height={30} className="rounded-lg" />
-          <span className="text-lg font-semibold tracking-tight">Cvly</span>
-        </div>
+          <span className="text-lg font-semibold tracking-tight group-hover:text-[var(--accent-ink)] transition">Cvly</span>
+        </Link>
         <Suspense fallback={<div className="card rounded-2xl p-7 flex justify-center"><Loader2 size={18} className="animate-spin text-[var(--muted)]" /></div>}>
           <LoginForm />
         </Suspense>
+        <Link href="/" className="block text-center text-xs text-[var(--muted-soft)] hover:text-[var(--muted)] transition mt-5">
+          ← Back to home
+        </Link>
+        <p className="text-center text-[11px] text-[var(--muted-soft)] mt-6 leading-relaxed">
+          By continuing, you agree to Cvly&apos;s{' '}
+          <Link href="/terms" className="underline hover:text-[var(--muted)] transition">Terms</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="underline hover:text-[var(--muted)] transition">Privacy Policy</Link>.
+        </p>
       </div>
     </main>
   );
