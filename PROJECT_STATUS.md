@@ -73,12 +73,15 @@ whether they were already applied.
 ## NOT yet built — Phase 3/4 from the roadmap
 
 - 3.2: "We don't fabricate numbers" isn't explicitly marketed anywhere, even though it's true
-- 3.3: No real anonymous-user rate limiting on the main scan tool (only the chatbot has this)
+- 3.3: Anonymous rate limiting on score/rewrite/cover-letter/interview-prep — FIXED (was
+  completely unmetered before, now a real per-IP daily budget via lib/anonymousLimit.ts)
 - 4.1: Zero automated tests exist — every check in this whole build has been manual
 - 4.2: No error monitoring (Sentry or similar) — production is currently a black box
 - 4.3: No delete confirmation dialogs anywhere
-- 4.4: No password-login fallback — magic-link only
+- 4.4: No password-login fallback — magic-link + Google + LinkedIn only
 - 4.5: Gemini model is an unpinned `gemini-flash-latest` alias
+- No real revenue path yet — Razorpay deferred, PAYWALL_ENABLED=false, so Pro/Enterprise
+  aren't purchasable. This is the top business-level (not code-level) risk right now.
 
 ## Pending manual setup — waiting on Anurag, not on Claude
 
