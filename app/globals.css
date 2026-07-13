@@ -71,6 +71,8 @@ a:focus-visible, button:focus-visible {
 .fade-up-1 { animation-delay: 0.06s; }
 .fade-up-2 { animation-delay: 0.12s; }
 .fade-up-3 { animation-delay: 0.18s; }
+.fade-up-4 { animation-delay: 0.24s; }
+.fade-up-5 { animation-delay: 0.3s; }
 
 @keyframes ringFill {
   from { stroke-dashoffset: var(--ring-circ); }

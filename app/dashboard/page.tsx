@@ -234,6 +234,7 @@ export default function DashboardPage() {
     <DashboardShell activePage="dashboard" pageTitle="Dashboard" userEmail={email} credits={credits} onCreditsChange={(updater) => setCredits((c) => (c ? { ...c, ...updater(c) } : c))} onScanSaved={refreshScans} onSignOut={handleSignOut}>
       <div className="relative">
       <div className="float-slow absolute top-20 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
+      <div className="float-slower absolute top-96 left-[2%] w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-40 pointer-events-none" />
 
       <div className="relative">
         {scans === null ? (
@@ -270,8 +271,8 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Hero: coach framing, real goal progress instead of decorative sparkline */}
-            <p className="text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
-            <div className="flex items-end gap-4 mb-3">
+            <p className="fade-up text-sm text-[var(--muted)] mb-2">{greeting()}{firstName ? `, ${firstName}` : ''}</p>
+            <div className="fade-up fade-up-1 flex items-end gap-4 mb-3">
               <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">{animatedScore}</span>
               {stats.delta !== 0 && (
                 <span className={`text-sm font-semibold mb-2 ${stats.delta > 0 ? 'text-[var(--good)]' : 'text-[var(--bad)]'}`}>
@@ -279,8 +280,8 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <p className="text-lg text-[var(--ink)]/80 mb-1">{line}</p>
-            <p className="text-sm text-[var(--muted)] mb-6">Your resume match, out of 100.</p>
+            <p className="fade-up fade-up-1 text-lg text-[var(--ink)]/80 mb-1">{line}</p>
+            <p className="fade-up fade-up-1 text-sm text-[var(--muted)] mb-6">Your resume match, out of 100.</p>
 
             {/* Career goal — real, user-set, not fabricated */}
             {editingGoal ? (
@@ -306,7 +307,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             ) : targetScore ? (
-              <div className="card rounded-2xl p-5 mb-8">
+              <div className="fade-up fade-up-2 card rounded-2xl p-5 mb-8">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide">{targetRole || 'Your target'}</p>
                   <button onClick={() => { setGoalInput({ role: targetRole, score: String(targetScore) }); setEditingGoal(true); }} aria-label="Edit target" className="text-[var(--muted-soft)] hover:text-[var(--ink)]">
@@ -329,7 +330,7 @@ export default function DashboardPage() {
             ) : (
               <button
                 onClick={() => { setGoalInput({ role: '', score: '90' }); setEditingGoal(true); }}
-                className="card card-hover-lift rounded-2xl p-5 mb-8 flex items-center gap-3 text-left w-full"
+                className="fade-up fade-up-2 card card-hover-lift rounded-2xl p-5 mb-8 flex items-center gap-3 text-left w-full"
               >
                 <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
                   <Trophy size={16} className="text-[var(--accent-ink)]" />
@@ -343,7 +344,7 @@ export default function DashboardPage() {
 
             {/* Credits & plan */}
             {credits && (
-              <div className="card rounded-2xl p-5 mb-6">
+              <div className="fade-up fade-up-3 card rounded-2xl p-5 mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Zap size={14} className="text-[var(--accent-ink)]" />
@@ -387,7 +388,7 @@ export default function DashboardPage() {
 
             {/* Today's Mission — biggest card, real data, no fabricated point-estimate */}
             {missionKeywords.length > 0 && (
-              <div className="rounded-2xl p-7 mb-6 bg-[var(--ink)] text-white">
+              <div className="fade-up fade-up-3 rounded-2xl p-7 mb-6 bg-[var(--ink)] text-white">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Let&apos;s strengthen this first</p>
                   <span className="text-[11px] text-white/50">~2 min</span>
@@ -424,7 +425,7 @@ export default function DashboardPage() {
             )}
 
             {/* Career signals — real resume score, plus LinkedIn/Portfolio review */}
-            <div className="card rounded-2xl p-6 mb-6">
+            <div className="fade-up fade-up-3 card rounded-2xl p-6 mb-6">
               <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-4">What we&apos;re tracking for you</p>
               <div className="grid grid-cols-3 gap-4 mb-3">
                 <div>
@@ -466,7 +467,7 @@ export default function DashboardPage() {
             )}
 
             {/* Consistency — coaching framing */}
-            <div className="card rounded-2xl p-6 mb-6">
+            <div className="fade-up fade-up-4 card rounded-2xl p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">You&apos;re building momentum</p>
@@ -492,7 +493,7 @@ export default function DashboardPage() {
 
             {/* Skills recruiters keep expecting */}
             {stats.topMissing.length > 0 && (
-              <div className="card rounded-2xl p-6 mb-6">
+              <div className="fade-up fade-up-4 card rounded-2xl p-6 mb-6">
                 <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-1">Skills recruiters consistently expect</p>
                 <p className="text-sm text-[var(--muted)] mb-4">Missing across more than one check.</p>
                 <div className="flex flex-wrap gap-2">
@@ -506,7 +507,7 @@ export default function DashboardPage() {
             )}
 
             {/* Latest check — scannable, not prose */}
-            <div className="card rounded-2xl p-7 mb-8">
+            <div className="fade-up fade-up-5 card rounded-2xl p-7 mb-8">
               <p className="text-xs font-medium text-[var(--muted)] uppercase tracking-wide mb-5">Where you stand right now</p>
               <div className="flex items-start gap-6 flex-wrap mb-5">
                 <ScoreRing score={latest.score} size={92} />
