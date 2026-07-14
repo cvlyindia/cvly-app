@@ -87,14 +87,13 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
 - 3.3: Anonymous rate limiting — FIXED (was completely unmetered before, now a real per-IP
   daily budget via lib/anonymousLimit.ts). Reopened once, narrowly, when image/photo resume
   upload was added later and its Gemini Vision call wasn't covered — found and closed too.
-- 4.1: Automated tests — STARTED. Vitest set up, 21 real tests covering the credit system
-  and anonymous rate limiter (lib/credits.ts, lib/anonymousLimit.ts) — the code directly
-  protecting real money, per the roadmap's own priority order. Verified these aren't
-  decorative: deliberately introduced 3 realistic bugs (an off-by-one in the credit check,
-  removing the floor-at-zero protection, an off-by-one in the anonymous budget check) and
-  confirmed each one was caught before reverting. `npm test` to run. Still needs: coverage
-  for the AI routes themselves, the format-check module, and eventually a CI gate running
-  this on every push (see Phase II).
+- 4.1: Automated tests — 40 real tests now (Vitest). Covers lib/credits.ts and
+  lib/anonymousLimit.ts (the money-protecting logic) plus lib/formatCheck.ts (Cvly's real
+  technical differentiator — structural DOCX/PDF inspection). Verified meaningful, not
+  decorative: deliberately broke the source code 4 separate times across both sessions
+  (credit boundary check, the floor-at-zero protection, the anonymous budget boundary, the
+  table-detection regex) and confirmed each was caught before reverting. `npm test` to run.
+  Still needs: the AI routes themselves, a CI gate running this on every push (Phase II).
 - 4.2: No error monitoring (Sentry or similar) — production is currently a black box
 - 4.3: No delete confirmation dialogs anywhere
 - 4.4: No password-login fallback — magic-link + Google + LinkedIn only
