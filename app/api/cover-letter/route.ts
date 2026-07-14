@@ -1,6 +1,7 @@
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { generateCoverLetter } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { checkCredits, spendCredits } from '@/lib/credits';
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ letter });
   } catch (err: unknown) {
+    Sentry.captureException(err);
     const message = err instanceof Error ? err.message : 'Cover letter generation failed';
     return NextResponse.json({ error: message }, { status: 500 });
   }

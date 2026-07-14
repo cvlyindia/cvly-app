@@ -1,6 +1,7 @@
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { createHash } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { generateWithFallback } from '@/lib/aiProviders';
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ answer: answer.trim() });
   } catch (err: unknown) {
+    Sentry.captureException(err);
     const message = err instanceof Error ? err.message : 'Something went wrong';
     return NextResponse.json({ error: message }, { status: 500 });
   }

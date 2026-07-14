@@ -1,6 +1,7 @@
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { extractTextFromFile } from '@/lib/parseResume';
 import { runFormatCheck } from '@/lib/formatCheck';
 import { createClient } from '@/lib/supabase/server';
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ text: extraction.text, formatCheck });
   } catch (err: unknown) {
+    Sentry.captureException(err);
     const message = err instanceof Error ? err.message : 'Failed to extract text';
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { reviewPortfolio } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { checkCredits, spendCredits } from '@/lib/credits';
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err: unknown) {
+    Sentry.captureException(err);
     const message = err instanceof Error ? err.message : 'Review failed';
     return NextResponse.json({ error: message }, { status: 500 });
   }

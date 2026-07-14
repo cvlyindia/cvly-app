@@ -101,7 +101,18 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
   lib/resumeTemplate.ts and the internals of lib/importJob.ts (lower-risk, presentational/
   scraping logic, not money or security paths), and no UI/component-level tests exist yet.
   No CI gate running this automatically on every push yet (Phase II).
-- 4.2: No error monitoring (Sentry or similar) — production is currently a black box
+- 4.2: Error monitoring — DONE (code side). @sentry/nextjs installed and wired into all
+  four runtimes (client, server, edge, instrumentation), plus app/global-error.tsx for
+  React rendering crashes. Critically, every one of the 9 API routes explicitly calls
+  Sentry.captureException() inside its catch block — automatic instrumentation alone
+  would NOT have caught these, since every route already catches its own errors and
+  returns a handled JSON response rather than letting them bubble up uncaught. Verified
+  the dev server boots cleanly with the integration in place and the full 112-test suite
+  still passes with the real @sentry/nextjs import in every route file. Still needs
+  Anurag: create a free Sentry account + Next.js project, then set NEXT_PUBLIC_SENTRY_DSN,
+  SENTRY_ORG, SENTRY_PROJECT, SENTRY_AUTH_TOKEN in Vercel (see .env.local.example for
+  where to find each one) — without these, Sentry.init() is a safe no-op and nothing is
+  actually being reported yet.
 - 4.3: No delete confirmation dialogs anywhere
 - 4.4: No password-login fallback — magic-link + Google + LinkedIn only
 - 4.5: Gemini model is an unpinned `gemini-flash-latest` alias

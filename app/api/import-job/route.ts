@@ -1,6 +1,7 @@
 export const maxDuration = 15;
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { importJobFromUrl } from '@/lib/importJob';
 
 export async function POST(req: NextRequest) {
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
     const result = await importJobFromUrl(url);
     return NextResponse.json(result);
   } catch (err: unknown) {
+    Sentry.captureException(err);
     const message = err instanceof Error ? err.message : 'Could not import from that link';
     return NextResponse.json({ error: message }, { status: 400 });
   }
