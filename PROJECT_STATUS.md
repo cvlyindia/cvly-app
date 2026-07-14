@@ -70,6 +70,17 @@ All 10 files in supabase/migrations/ need to have been run in Supabase's SQL edi
 order, 001 through 010. Migrations 008 and 009 are guarded to be safe to re-run if unsure
 whether they were already applied.
 
+## Current focus
+
+Closing out the original Phase 1-4 roadmap before starting anything new. The one item still
+open: **Phase 3.1, the Chrome extension** — built, handoff mechanism re-verified working after
+all subsequent homepage changes, privacy policy and Web Store listing copy now written. Still
+needs: real multi-site testing on an actual device (Naukri/LinkedIn/Indeed), a Chrome Web Store
+developer account, and submission. See chrome-extension/README.md for the exact checklist.
+
+Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, later chapter
+(revenue, reliability, growth, product depth, operations), not a renumbering of Phase 1-4.
+
 ## NOT yet built — Phase 3/4 from the roadmap
 
 - 3.2: "We don't fabricate numbers" isn't explicitly marketed anywhere, even though it's true

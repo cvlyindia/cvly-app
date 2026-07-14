@@ -1,5 +1,12 @@
-# Cvly — Roadmap to Best-in-Market
+# Cvly — Phase II: Roadmap to Best-in-Market
 *Written as a company would actually sequence it — July 2026*
+
+**This is Phase II — a new chapter, not a continuation of the original Phase 1-4 numbering.**
+Phase 1-4 was the foundation build: credibility, table-stakes features, the moat items, and
+technical hardening. That chapter isn't fully closed yet — **Phase 3.1 (the Chrome extension)
+is still open**, built but never confirmed tested on a real device or submitted to the Chrome
+Web Store. That gets finished first. Phase II starts once Phase 1-4 is genuinely done, not
+before — sequencing that matters as much as the content below.
 
 Everything audited and fixed so far (Phases 1-4, the technical/design/mobile passes) got
 Cvly to a genuinely solid, trustworthy foundation. This is what comes next — not a wishlist,

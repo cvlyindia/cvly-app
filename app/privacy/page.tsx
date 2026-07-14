@@ -42,6 +42,10 @@ export default function PrivacyPage() {
             <p>If you&apos;re signed in, you can delete any saved check from your <Link href="/history" className="text-[var(--accent-ink)] underline">history page</Link> at any time. Deleting your account entirely — email <a href="mailto:support@cvly.in?subject=Delete my Cvly account" className="text-[var(--accent-ink)] underline">support@cvly.in</a> and we&apos;ll remove everything tied to it.</p>
           </section>
           <section>
+            <h2 className="font-semibold text-base mb-2">The Cvly Chrome extension</h2>
+            <p>The extension only reads a page when you click its icon — it doesn&apos;t run in the background, and it doesn&apos;t watch your browsing. When you click it, it looks at the current tab to find a job description, entirely inside your own browser. Nothing is sent anywhere at that point. Only when you click &quot;Open in Cvly&quot; does the extracted text get passed along, the same way any link with information in it works — straight to cvly.in, nowhere else. The extension has no server of its own and collects nothing for us to store.</p>
+          </section>
+          <section>
             <h2 className="font-semibold text-base mb-2">Contact</h2>
             <p>Questions about this — reach out through the contact details on cvly.in.</p>
           </section>
