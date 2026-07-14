@@ -87,18 +87,17 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
 - 3.3: Anonymous rate limiting — FIXED (was completely unmetered before, now a real per-IP
   daily budget via lib/anonymousLimit.ts). Reopened once, narrowly, when image/photo resume
   upload was added later and its Gemini Vision call wasn't covered — found and closed too.
-- 4.1: Automated tests — 62 real tests now (Vitest). Covers lib/credits.ts and
-  lib/anonymousLimit.ts (the money-protecting logic), lib/formatCheck.ts (Cvly's real
-  technical differentiator), lib/ai.ts (prompt construction + response parsing, including
-  the truncated-JSON salvage recovery), and now a real integration-test layer for the score
-  route itself — verifying the orchestration/wiring, not logic already covered elsewhere
-  (credit checks happen before the AI call, credits are spent only on real success, never
-  on failure, anonymous vs logged-in branch correctly). Verified meaningful 5 separate
-  times across sessions by deliberately breaking real code and confirming the right test
-  failed before reverting — most recently a realistic missing-`return` bug that would have
-  let an out-of-credits request silently fall through to a real, billed AI call. `npm test`
-  to run. Still needs: the same route-test pattern applied to the other 7 AI routes, a CI
-  gate running this on every push (Phase II).
+- 4.1: Automated tests — 71 real tests now (Vitest). Covers lib/credits.ts,
+  lib/anonymousLimit.ts, lib/formatCheck.ts, lib/ai.ts, and route-level integration tests
+  for both /api/score and /api/extract-text — the latter specifically locking in the
+  image-OCR rate-limiting fix from a few sessions back against regression. Verified
+  meaningful 6 separate times across sessions by deliberately breaking real code (most
+  recently: simulating a realistic MIME-type-drops-out-of-the-protected-set regression,
+  which correctly failed only the jpeg-specific tests while the png tests stayed green,
+  showing the coverage is precise, not just broadly sensitive) and confirming the right
+  test caught it before reverting. `npm test` to run. Still needs: the same route-test
+  pattern applied to the remaining 6 AI routes, a CI gate running this on every push
+  (Phase II).
 - 4.2: No error monitoring (Sentry or similar) — production is currently a black box
 - 4.3: No delete confirmation dialogs anywhere
 - 4.4: No password-login fallback — magic-link + Google + LinkedIn only
