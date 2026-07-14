@@ -5,6 +5,14 @@ const preview = document.getElementById('preview');
 const statusEl = document.getElementById('status');
 const openBtn = document.getElementById('openBtn');
 const teaser = document.getElementById('teaser');
+const scoreBtn = document.getElementById('scoreBtn');
+const scoreResult = document.getElementById('scoreResult');
+const scoreRingFill = document.getElementById('scoreRingFill');
+const scoreNumber = document.getElementById('scoreNumber');
+const scoreSummary = document.getElementById('scoreSummary');
+
+const CVLY_ORIGIN = 'https://cvly.in';
+const SCORE_RING_CIRCUMFERENCE = 201;
 
 let extractedText = '';
 
@@ -103,12 +111,59 @@ function runLoadingSequence() {
   return () => clearInterval(interval);
 }
 
+// Checks login state and whether a resume is on file to score against. Deliberately
+// fails silently (returns null) on ANY problem — network error, not logged in, CORS
+// issue, whatever — since this is a bonus capability layered on top of extraction,
+// which already works and must keep working even if this check can't complete.
+async function checkExtensionContext() {
+  try {
+    const res = await fetch(`${CVLY_ORIGIN}/api/extension/context`, { credentials: 'include' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.loggedIn && data.resumeText) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function scoreInstantly(resumeText, jobDescription) {
+  const res = await fetch(`${CVLY_ORIGIN}/api/score`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resumeText, jobDescription }),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || 'Scoring failed');
+  return data;
+}
+
+function renderScoreResult(result) {
+  const score = Math.max(0, Math.min(100, result.score ?? 0));
+  scoreNumber.textContent = String(score);
+  scoreSummary.textContent = result.summary || '';
+  scoreResult.classList.add('show');
+  // Animate the ring fill on a slight delay so the transition is actually visible,
+  // rather than snapping straight to its final value on the same frame it appears.
+  scoreRingFill.style.transition = 'none';
+  scoreRingFill.style.strokeDashoffset = String(SCORE_RING_CIRCUMFERENCE);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scoreRingFill.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+      scoreRingFill.style.strokeDashoffset = String(SCORE_RING_CIRCUMFERENCE * (1 - score / 100));
+    });
+  });
+}
+
 extractBtn.addEventListener('click', async () => {
   statusEl.className = 'status';
   preview.className = 'preview';
   preview.style.display = 'none';
   openBtn.style.display = 'none';
   teaser.classList.remove('show');
+  scoreBtn.style.display = 'none';
+  scoreResult.classList.remove('show');
   setLoading(true);
   const stopLoadingSequence = runLoadingSequence();
   const startedAt = Date.now();
@@ -150,6 +205,28 @@ extractBtn.addEventListener('click', async () => {
 
     teaser.classList.add('show');
     openBtn.style.display = 'block';
+
+    // Silent, best-effort check — never blocks or delays showing the proven
+    // "Open in Cvly" path, which is already visible above by this point.
+    checkExtensionContext().then((context) => {
+      if (context) {
+        scoreBtn.style.display = 'flex';
+        scoreBtn.onclick = async () => {
+          scoreBtn.disabled = true;
+          scoreBtn.textContent = 'Scoring…';
+          try {
+            const result = await scoreInstantly(context.resumeText, extractedText);
+            renderScoreResult(result);
+            scoreBtn.style.display = 'none';
+          } catch {
+            showStatus('error', "Couldn't score instantly — you can still open it in Cvly instead.");
+          } finally {
+            scoreBtn.disabled = false;
+            scoreBtn.textContent = '⚡ Score instantly with your last resume';
+          }
+        };
+      }
+    });
   } catch (err) {
     stopLoadingSequence();
     showStatus('error', 'Something went wrong reading this page. You can still paste the description directly into Cvly.');

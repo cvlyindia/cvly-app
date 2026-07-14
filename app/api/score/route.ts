@@ -6,13 +6,24 @@ import { scoreResume } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { checkCredits, spendCredits } from '@/lib/credits';
 import { checkAnonymousLimit, logAnonymousUsage } from '@/lib/anonymousLimit';
+import { getExtensionCorsHeaders } from '@/lib/extensionCors';
+
+export async function OPTIONS(req: NextRequest) {
+  const cors = getExtensionCorsHeaders(req.headers.get('origin'));
+  return new NextResponse(null, { status: cors ? 204 : 403, headers: cors ?? {} });
+}
 
 export async function POST(req: NextRequest) {
+  // Only actually applies extra headers when the request genuinely comes from the
+  // allowlisted extension origin — a normal same-origin request from cvly.in itself
+  // gets an empty headers object here, a complete no-op, unaffected either way.
+  const cors = getExtensionCorsHeaders(req.headers.get('origin')) ?? {};
+
   try {
     const { resumeText, jobDescription } = await req.json();
 
     if (!resumeText || !jobDescription) {
-      return NextResponse.json({ error: 'Resume text and job description are both required' }, { status: 400 });
+      return NextResponse.json({ error: 'Resume text and job description are both required' }, { status: 400, headers: cors });
     }
 
     const supabase = await createClient();
@@ -27,7 +38,7 @@ export async function POST(req: NextRequest) {
       if (!credit.allowed) {
         return NextResponse.json(
           { error: 'out_of_credits', plan: credit.plan, remaining: credit.remaining, resetAt: credit.resetAt },
-          { status: 402 }
+          { status: 402, headers: cors }
         );
       }
     } else {
@@ -35,7 +46,7 @@ export async function POST(req: NextRequest) {
       if (!limit.allowed) {
         return NextResponse.json(
           { error: 'Free daily limit reached for this device. Sign in for your own credits, or try again tomorrow.' },
-          { status: 429 }
+          { status: 429, headers: cors }
         );
       }
       anonIpHash = limit.ipHash;
@@ -49,10 +60,10 @@ export async function POST(req: NextRequest) {
       await logAnonymousUsage(supabase, anonIpHash, 'score');
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: cors });
   } catch (err: unknown) {
     Sentry.captureException(err);
     const message = err instanceof Error ? err.message : 'Scoring failed';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500, headers: cors });
   }
 }

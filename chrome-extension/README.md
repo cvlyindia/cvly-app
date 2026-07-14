@@ -45,6 +45,29 @@ this extension for real, on a real job board. That needs your hands, not mine.
 7. Click "Get job description from this page," check what it extracted, then "Open in Cvly"
    and confirm it lands on cvly.in with the description pre-filled in the tool
 
+## New: instant in-popup scoring (v1.2.0)
+
+If you're logged into Cvly in the same browser, and you have at least one prior scan
+saved, the extension now offers a second option after extracting a job description:
+**"Score instantly with your last resume"** — scores it right in the popup, using
+your most recent resume, without ever leaving the job posting or opening a new tab.
+
+**This needs one manual setup step before it'll work**: the extension calls cvly.in's
+API directly, which requires the specific extension ID to be allowlisted server-side
+(a real security boundary — arbitrary extensions can't be allowed to make authenticated
+requests using your cookies). To set it up:
+
+1. Load the extension (see below), then go to `chrome://extensions`
+2. Find "Cvly — Job Match Checker", copy the ID shown underneath it
+3. Add it as `ALLOWED_EXTENSION_IDS` in Vercel's environment variables (see
+   `.env.local.example` for the exact format)
+4. Redeploy
+
+**If this isn't set up, or if anything about the in-popup scoring fails for any
+reason**, the extension falls back to the original "Open in Cvly" flow automatically
+and silently — this is a bonus capability layered on top of what already works, not
+a replacement for it.
+
 ## Known limitations, stated plainly
 
 - Sites that require login to view the job description (some LinkedIn postings behind a
