@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DashboardShell } from '@/components/DashboardShell';
 import { Plus, Loader2, Trash2, ExternalLink, X } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 type Status = 'saved' | 'applied' | 'interview' | 'offer';
 
@@ -31,6 +32,7 @@ export default function TrackerPage() {
   const [email, setEmail] = useState('');
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [jobs, setJobs] = useState<Job[] | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ company: '', role: '', jobUrl: '', notes: '' });
   const [saving, setSaving] = useState(false);
@@ -98,8 +100,18 @@ export default function TrackerPage() {
   }
 
   async function deleteJob(id: string) {
+    const removed = jobs?.find((j) => j.id === id) ?? null;
     setJobs((prev) => prev?.filter((j) => j.id !== id) ?? null);
-    fetch(`/api/tracker/${id}`, { method: 'DELETE' }).catch(() => {});
+    try {
+      const res = await fetch(`/api/tracker/${id}`, { method: 'DELETE' });
+      if (!res.ok && removed) {
+        // The delete didn't actually happen server-side — put it back rather than
+        // leaving the UI showing it gone when it's still really there.
+        setJobs((prev) => (prev ? [...prev, removed] : prev));
+      }
+    } catch {
+      if (removed) setJobs((prev) => (prev ? [...prev, removed] : prev));
+    }
   }
 
   if (checkingAuth) {
@@ -195,7 +207,7 @@ export default function TrackerPage() {
                     <div key={job.id} className="card rounded-xl p-4">
                       <div className="flex items-start justify-between gap-2 mb-1.5">
                         <p className="text-sm font-semibold leading-snug">{job.role}</p>
-                        <button onClick={() => deleteJob(job.id)} aria-label="Remove" className="text-[var(--muted-soft)] hover:text-[var(--bad)] shrink-0">
+                        <button onClick={() => setConfirmDeleteId(job.id)} aria-label="Remove" className="text-[var(--muted-soft)] hover:text-[var(--bad)] shrink-0">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -226,6 +238,25 @@ export default function TrackerPage() {
           })}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Remove this application?"
+        message={
+          confirmDeleteId
+            ? (() => {
+                const job = jobs?.find((j) => j.id === confirmDeleteId);
+                return job
+                  ? `This removes your saved application for ${job.role} at ${job.company}, along with any notes you've added. This can't be undone.`
+                  : "This can't be undone.";
+              })()
+            : ''
+        }
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) deleteJob(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </DashboardShell>
   );
 }

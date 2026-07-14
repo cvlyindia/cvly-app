@@ -8,6 +8,7 @@ import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { createClient } from '@/lib/supabase/client';
 import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 type StructuredResume = {
   name: string;
@@ -42,6 +43,7 @@ export default function HistoryPage() {
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [scans, setScans] = useState<Scan[] | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -200,7 +202,7 @@ export default function HistoryPage() {
                         <ChevronDown size={15} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                       </button>
                       <button
-                        onClick={() => handleDelete(s.id)}
+                        onClick={() => setConfirmDeleteId(s.id)}
                         disabled={deletingId === s.id}
                         className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--muted)] hover:text-[var(--bad)] hover:bg-[var(--bad-bg)] transition disabled:opacity-40 shrink-0"
                         aria-label="Delete"
@@ -286,6 +288,20 @@ export default function HistoryPage() {
           )}
         </>
       )}
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Delete this check?"
+        message={
+          confirmDeleteId
+            ? `This removes your score of ${scans?.find((s) => s.id === confirmDeleteId)?.score ?? '—'} and everything saved with it, for good. This can't be undone.`
+            : ''
+        }
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) handleDelete(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </DashboardShell>
   );
 }

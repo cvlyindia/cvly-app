@@ -113,7 +113,15 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
   SENTRY_ORG, SENTRY_PROJECT, SENTRY_AUTH_TOKEN in Vercel (see .env.local.example for
   where to find each one) — without these, Sentry.init() is a safe no-op and nothing is
   actually being reported yet.
-- 4.3: No delete confirmation dialogs anywhere
+- 4.3: DONE. Real confirmation dialogs on the only two one-click deletes that existed
+  (History's saved checks, Tracker's saved applications) — Settings already had no
+  self-serve delete button at all (handled honestly via email instead). Built one shared
+  ConfirmDialog component rather than two one-off implementations, with specific,
+  contextual messages (shows the actual score, or actual company/role, not a generic
+  "are you sure?"). Also fixed a related issue found while in there: Tracker's delete
+  did a fire-and-forget request with silently swallowed failures — a failed delete would
+  leave the UI showing something gone that was still actually in the database. Now
+  restores it if the request genuinely fails.
 - 4.4: No password-login fallback — magic-link + Google + LinkedIn only
 - 4.5: Gemini model is an unpinned `gemini-flash-latest` alias
 - No real revenue path yet — Razorpay deferred, PAYWALL_ENABLED=false, so Pro/Enterprise
