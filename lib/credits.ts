@@ -13,6 +13,7 @@ export const ACTION_COSTS = {
   interview: 3, // heavier Gemini call — larger output, longer generation
   linkedin: 1,
   portfolio: 1,
+  imageUpload: 1, // real Gemini Vision call for OCR-transcribing a photographed resume
 } as const;
 
 export type CreditAction = keyof typeof ACTION_COSTS;
