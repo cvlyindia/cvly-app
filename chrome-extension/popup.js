@@ -71,6 +71,35 @@ function extractJobDescriptionFromPage() {
   return { text: best.slice(0, 6000), source: 'text' };
 }
 
+// Also injected into the page via chrome.scripting.executeScript — same self-contained
+// constraint as extractJobDescriptionFromPage above. LinkedIn's DOM is React-rendered
+// with class names that shift between deployments, so rather than chase specific
+// selectors (fragile, breaks silently), this takes the same broad, honest approach as
+// the job-description fallback: grab the main content area's visible text as a whole.
+function extractLinkedInProfileFromPage() {
+  function clean(text) {
+    return (text || '').replace(/\s+/g, ' ').trim();
+  }
+
+  const main = document.querySelector('main') || document.body;
+  const text = clean(main.innerText);
+
+  if (text.length < 150) {
+    return { text: '', source: 'failed' };
+  }
+
+  return { text: text.slice(0, 6000), source: 'text' };
+}
+
+function isLinkedInProfileUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname.endsWith('linkedin.com') && u.pathname.startsWith('/in/');
+  } catch {
+    return false;
+  }
+}
+
 function showStatus(kind, message) {
   statusEl.className = `status ${kind}`;
   statusEl.textContent = kind === 'good' ? '' : message;
@@ -120,8 +149,7 @@ async function checkExtensionContext() {
     const res = await fetch(`${CVLY_ORIGIN}/api/extension/context`, { credentials: 'include' });
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.loggedIn && data.resumeText) return data;
-    return null;
+    return data.loggedIn ? data : null;
   } catch {
     return null;
   }
@@ -156,15 +184,9 @@ function renderScoreResult(result) {
   });
 }
 
-extractBtn.addEventListener('click', async () => {
-  statusEl.className = 'status';
-  preview.className = 'preview';
-  preview.style.display = 'none';
-  openBtn.style.display = 'none';
-  teaser.classList.remove('show');
-  scoreBtn.style.display = 'none';
-  scoreResult.classList.remove('show');
-  setLoading(true);
+let pageMode = 'job'; // 'job' | 'linkedin', detected on popup open
+
+async function handleJobExtraction() {
   const stopLoadingSequence = runLoadingSequence();
   const startedAt = Date.now();
 
@@ -204,12 +226,18 @@ extractBtn.addEventListener('click', async () => {
     }
 
     teaser.classList.add('show');
+    openBtn.textContent = 'Open in Cvly →';
+    openBtn.onclick = () => {
+      if (!extractedText) return;
+      chrome.tabs.create({ url: `${CVLY_ORIGIN}/?jd=${encodeURIComponent(extractedText)}` });
+    };
     openBtn.style.display = 'block';
 
     // Silent, best-effort check — never blocks or delays showing the proven
     // "Open in Cvly" path, which is already visible above by this point.
     checkExtensionContext().then((context) => {
-      if (context) {
+      if (context && context.resumeText) {
+        scoreBtn.textContent = '⚡ Score instantly with your last resume';
         scoreBtn.style.display = 'flex';
         scoreBtn.onclick = async () => {
           scoreBtn.disabled = true;
@@ -230,13 +258,110 @@ extractBtn.addEventListener('click', async () => {
   } catch (err) {
     stopLoadingSequence();
     showStatus('error', 'Something went wrong reading this page. You can still paste the description directly into Cvly.');
-  } finally {
-    setLoading(false);
   }
+}
+
+async function handleLinkedInExtraction() {
+  const stopLoadingSequence = runLoadingSequence();
+  const startedAt = Date.now();
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.id) throw new Error('Could not find the active tab.');
+
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: extractLinkedInProfileFromPage,
+    });
+
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < MIN_LOADING_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS - elapsed));
+    }
+    stopLoadingSequence();
+
+    if (!result || !result.text) {
+      showStatus('error', "Couldn't read this profile — scroll down a little so more of it has loaded, then try again.");
+      return;
+    }
+
+    extractedText = result.text;
+    preview.textContent = extractedText;
+    preview.style.display = 'block';
+    void preview.offsetWidth;
+    preview.classList.add('show');
+    showStatus('warn', "Grabbed everything visible on the page — scroll down first and re-extract if you want Experience and Skills included too.");
+
+    const context = await checkExtensionContext();
+    if (context) {
+      scoreBtn.textContent = '⚡ Review this profile instantly';
+      scoreBtn.style.display = 'flex';
+      scoreBtn.onclick = async () => {
+        scoreBtn.disabled = true;
+        scoreBtn.textContent = 'Reviewing…';
+        try {
+          const res = await fetch(`${CVLY_ORIGIN}/api/linkedin-review`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileText: extractedText }),
+          });
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || 'Review failed');
+          renderScoreResult(data);
+          scoreBtn.style.display = 'none';
+        } catch {
+          showStatus('error', "Couldn't review instantly — you can still paste this into Cvly directly.");
+        } finally {
+          scoreBtn.disabled = false;
+          scoreBtn.textContent = '⚡ Review this profile instantly';
+        }
+      };
+    } else {
+      // LinkedIn review always requires a signed-in account — no anonymous path exists
+      // for it on the website either, so this isn't a narrower restriction than usual.
+      openBtn.textContent = 'Sign in to Cvly →';
+      openBtn.onclick = () => chrome.tabs.create({ url: `${CVLY_ORIGIN}/login` });
+      openBtn.style.display = 'block';
+    }
+  } catch (err) {
+    stopLoadingSequence();
+    showStatus('error', 'Something went wrong reading this page.');
+  }
+}
+
+extractBtn.addEventListener('click', async () => {
+  statusEl.className = 'status';
+  preview.className = 'preview';
+  preview.style.display = 'none';
+  openBtn.style.display = 'none';
+  teaser.classList.remove('show');
+  scoreBtn.style.display = 'none';
+  scoreResult.classList.remove('show');
+  setLoading(true);
+
+  if (pageMode === 'linkedin') {
+    await handleLinkedInExtraction();
+  } else {
+    await handleJobExtraction();
+  }
+
+  setLoading(false);
 });
 
-openBtn.addEventListener('click', () => {
-  if (!extractedText) return;
-  const url = `https://cvly.in/?jd=${encodeURIComponent(extractedText)}`;
-  chrome.tabs.create({ url });
-});
+// Detect page type as soon as the popup opens, so the right mode is ready before
+// the user even clicks anything — not decided reactively after the fact.
+(async () => {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url && isLinkedInProfileUrl(tab.url)) {
+      pageMode = 'linkedin';
+      document.getElementById('subText').textContent =
+        "Read this LinkedIn profile, then get instant feedback on it from Cvly — free.";
+      extractLabel.textContent = 'Read this profile';
+    }
+  } catch {
+    // Falls back to job-posting mode, already the default — no page detected is a
+    // safe, unremarkable outcome, not an error.
+  }
+})();

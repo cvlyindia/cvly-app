@@ -45,6 +45,21 @@ this extension for real, on a real job board. That needs your hands, not mine.
 7. Click "Get job description from this page," check what it extracted, then "Open in Cvly"
    and confirm it lands on cvly.in with the description pre-filled in the tool
 
+## New: LinkedIn profile review, detected automatically (v1.2.0)
+
+The extension now detects when you're on a LinkedIn profile page (any `linkedin.com/in/...`
+URL) and switches modes automatically — instead of "get job description," it offers
+"read this profile," then an instant review using the same in-popup flow as job scoring.
+
+Since LinkedIn review always requires a signed-in account (no anonymous path exists for
+it on the website either), if you're not logged in when reviewing a profile, the button
+becomes "Sign in to Cvly →" instead of failing silently.
+
+**Honest limitation**: LinkedIn's page is React-rendered and lazy-loads sections as you
+scroll — this grabs whatever's actually visible in the DOM at the moment you click, not
+guaranteed to include Experience or Skills if you haven't scrolled down to them yet. The
+extension says so directly rather than pretending it captured everything.
+
 ## New: instant in-popup scoring (v1.2.0)
 
 If you're logged into Cvly in the same browser, and you have at least one prior scan
