@@ -37,9 +37,15 @@ function extractJobDescriptionFromPage() {
         const nodes = Array.isArray(graph) ? graph : [graph];
         for (const node of nodes) {
           if (node && node['@type'] === 'JobPosting' && node.description) {
-            const div = document.createElement('div');
-            div.innerHTML = node.description;
-            const text = clean(div.textContent);
+            // node.description comes from the job site's own structured data — completely
+            // untrusted, and potentially attacker-controlled if that site is malicious or
+            // compromised. Using innerHTML here would actually parse it, and embedded
+            // content like <img src=x onerror="..."> executes even on a detached element.
+            // DOMParser.parseFromString creates a genuinely inert document — no resource
+            // loads, no script execution — which is what "strip tags, get plain text"
+            // actually needed, not innerHTML's much broader (and unsafe) behavior.
+            const parsedDoc = new DOMParser().parseFromString(node.description, 'text/html');
+            const text = clean(parsedDoc.body.textContent);
             if (text.length > 100) return { text: text.slice(0, 6000), source: 'structured' };
           }
         }
