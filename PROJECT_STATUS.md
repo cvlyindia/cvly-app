@@ -122,7 +122,14 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
   did a fire-and-forget request with silently swallowed failures — a failed delete would
   leave the UI showing something gone that was still actually in the database. Now
   restores it if the request genuinely fails.
-- 4.4: No password-login fallback — magic-link + Google + LinkedIn only
+- 4.4: DONE. Real password fallback, added without disrupting the passwordless-first
+  positioning. Settings has a new "Backup password" section (any user, however they
+  signed in, can opt into setting one via supabase.auth.updateUser) — also fixed the
+  Account card there, which hardcoded "Signed in with magic link" even for Google/
+  LinkedIn users; now shows the real provider. Login page has a "Have a password set?
+  Use it instead" toggle below the magic-link form — stays secondary/opt-in, magic link
+  is still the default. Verified Supabase's Email provider supports password auth
+  natively alongside magic link with zero extra dashboard configuration needed.
 - 4.5: Gemini model is an unpinned `gemini-flash-latest` alias
 - No real revenue path yet — Razorpay deferred, PAYWALL_ENABLED=false, so Pro/Enterprise
   aren't purchasable. This is the top business-level (not code-level) risk right now.

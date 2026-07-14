@@ -24,6 +24,8 @@ function LoginForm() {
     return () => clearTimeout(id);
   }, [cooldown]);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'linkedin_oidc' | null>(null);
+  const [usePassword, setUsePassword] = useState(false);
+  const [password, setPassword] = useState('');
 
   const next = searchParams.get('next');
 
@@ -64,9 +66,27 @@ function LoginForm() {
     }
   }
 
+  async function handlePasswordLogin() {
+    if (loading || !email || !password) return;
+    setError('');
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      setError('Incorrect email or password — or you haven\'t set a password yet. Try the magic link instead, or set one from Settings once you\'re in.');
+    } else {
+      window.location.href = next || '/dashboard';
+    }
+  }
+
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    sendMagicLink();
+    if (usePassword) {
+      handlePasswordLogin();
+    } else {
+      sendMagicLink();
+    }
   }
 
   return (
@@ -126,13 +146,30 @@ function LoginForm() {
               placeholder="you@example.com"
               className="w-full p-3 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
             />
+            {usePassword && (
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full p-3 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
+              />
+            )}
             {error && <p className="text-xs text-[var(--bad)] mb-3">{error}</p>}
             <button
               type="submit"
               disabled={loading || oauthLoading !== null}
               className="btn-accent w-full py-3 rounded-full font-medium text-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
-              {loading ? <><Loader2 size={15} className="animate-spin" /> Sending…</> : 'Send login link'}
+              {loading ? <><Loader2 size={15} className="animate-spin" /> {usePassword ? 'Signing in…' : 'Sending…'}</> : usePassword ? 'Sign in' : 'Send login link'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setUsePassword((v) => !v); setError(''); }}
+              className="w-full text-center text-xs text-[var(--muted-soft)] hover:text-[var(--muted)] transition mt-3"
+            >
+              {usePassword ? '← Use a magic link instead' : 'Have a password set? Use it instead'}
             </button>
           </form>
         </div>

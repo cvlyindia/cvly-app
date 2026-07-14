@@ -12,7 +12,12 @@ export default function SettingsPage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [email, setEmail] = useState('');
+  const [provider, setProvider] = useState('email');
   const [credits, setCredits] = useState<{ remaining: number; plan: string; resetAt: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordStatus, setPasswordStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -22,6 +27,7 @@ export default function SettingsPage() {
         return;
       }
       setEmail(data.user.email ?? '');
+      setProvider(data.user.app_metadata?.provider ?? 'email');
       setCheckingAuth(false);
       fetch('/api/credits')
         .then((res) => res.json())
@@ -30,6 +36,30 @@ export default function SettingsPage() {
         });
     });
   }, [router]);
+
+  async function handleSetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordError('');
+    if (newPassword.length < 8) {
+      setPasswordError('Use at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Those two passwords don\'t match.');
+      return;
+    }
+    setPasswordStatus('saving');
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setPasswordError(error.message);
+      setPasswordStatus('error');
+    } else {
+      setPasswordStatus('saved');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  }
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -57,9 +87,45 @@ export default function SettingsPage() {
             </div>
             <div>
               <p className="text-sm font-medium">{email}</p>
-              <p className="text-xs text-[var(--muted)]">Signed in with magic link — no password to manage</p>
+              <p className="text-xs text-[var(--muted)]">
+                {provider === 'google' ? 'Signed in with Google' : provider === 'linkedin_oidc' ? 'Signed in with LinkedIn' : 'Signed in with magic link'}
+              </p>
             </div>
           </div>
+        </div>
+
+        {/* Backup password — a fallback if email delivery or your sign-in provider is ever unavailable */}
+        <div className="card rounded-2xl p-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-2">Backup password</p>
+          <p className="text-sm text-[var(--muted)] mb-4 leading-relaxed">
+            Optional — but if the magic-link email or {provider === 'google' ? 'Google' : provider === 'linkedin_oidc' ? 'LinkedIn' : 'your sign-in method'} is ever unavailable, a password gets you back in without waiting on either.
+          </p>
+          <form onSubmit={handleSetPassword} className="space-y-2.5">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password (min. 8 characters)"
+              className="w-full p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
+            />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm password"
+              className="w-full p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
+            />
+            {passwordError && <p className="text-xs text-[var(--bad)]">{passwordError}</p>}
+            {passwordStatus === 'saved' && <p className="text-xs text-[var(--good)]">Password set — you can now sign in with {email} and this password anytime.</p>}
+            <button
+              type="submit"
+              disabled={passwordStatus === 'saving' || !newPassword || !confirmPassword}
+              className="px-4 py-2 rounded-full bg-[var(--ink)] text-white text-xs font-semibold hover:opacity-90 transition disabled:opacity-40 inline-flex items-center gap-1.5"
+            >
+              {passwordStatus === 'saving' && <Loader2 size={12} className="animate-spin" />}
+              Set password
+            </button>
+          </form>
         </div>
 
         {/* Plan & credits */}
