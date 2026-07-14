@@ -4,6 +4,7 @@ const spinner = document.getElementById('spinner');
 const preview = document.getElementById('preview');
 const statusEl = document.getElementById('status');
 const openBtn = document.getElementById('openBtn');
+const teaser = document.getElementById('teaser');
 
 let extractedText = '';
 
@@ -64,7 +65,19 @@ function extractJobDescriptionFromPage() {
 
 function showStatus(kind, message) {
   statusEl.className = `status ${kind}`;
-  statusEl.textContent = message;
+  statusEl.textContent = kind === 'good' ? '' : message;
+  if (kind === 'good') {
+    const check = document.createElement('span');
+    check.className = 'check-icon';
+    check.textContent = '✓ ';
+    statusEl.appendChild(check);
+    statusEl.appendChild(document.createTextNode(message));
+  }
+  // Force reflow so the pop-in animation retriggers even if this status kind
+  // was already shown once — toggling a class off/on doesn't replay a CSS
+  // animation without the browser recomputing styles in between.
+  void statusEl.offsetWidth;
+  statusEl.classList.add('show');
 }
 
 function setLoading(loading) {
@@ -73,11 +86,32 @@ function setLoading(loading) {
   extractLabel.textContent = loading ? 'Reading this page…' : 'Get job description from this page';
 }
 
+// A brief, paced sequence of loading messages — real extraction is often near-instant,
+// but flashing straight from "click" to "done" reads as jarring, not fast. This gives
+// the moment room to feel like something intelligent is actually happening, the same
+// reasoning behind the typing indicator on the main site's chat widget.
+const LOADING_STAGES = ['Reading this page…', 'Looking for the job details…', 'Almost there…'];
+const MIN_LOADING_MS = 850;
+
+function runLoadingSequence() {
+  let stage = 0;
+  extractLabel.textContent = LOADING_STAGES[0];
+  const interval = setInterval(() => {
+    stage = (stage + 1) % LOADING_STAGES.length;
+    extractLabel.textContent = LOADING_STAGES[stage];
+  }, 380);
+  return () => clearInterval(interval);
+}
+
 extractBtn.addEventListener('click', async () => {
   statusEl.className = 'status';
+  preview.className = 'preview';
   preview.style.display = 'none';
   openBtn.style.display = 'none';
+  teaser.classList.remove('show');
   setLoading(true);
+  const stopLoadingSequence = runLoadingSequence();
+  const startedAt = Date.now();
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -88,6 +122,15 @@ extractBtn.addEventListener('click', async () => {
       func: extractJobDescriptionFromPage,
     });
 
+    // Real extraction is often near-instant — pausing briefly here so the loading
+    // sequence gets to actually play out reads as more trustworthy than an instant,
+    // jarring flash from click to result.
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < MIN_LOADING_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS - elapsed));
+    }
+    stopLoadingSequence();
+
     if (!result || !result.text) {
       showStatus('error', "Couldn't find a job description on this page — try copying it manually into Cvly instead.");
       return;
@@ -96,6 +139,8 @@ extractBtn.addEventListener('click', async () => {
     extractedText = result.text;
     preview.textContent = extractedText;
     preview.style.display = 'block';
+    void preview.offsetWidth;
+    preview.classList.add('show');
 
     if (result.source === 'structured') {
       showStatus('good', 'Found it — this looks like a clean extraction.');
@@ -103,8 +148,10 @@ extractBtn.addEventListener('click', async () => {
       showStatus('warn', "Grabbed the largest text block on the page — double check it's actually the job description before checking your resume.");
     }
 
+    teaser.classList.add('show');
     openBtn.style.display = 'block';
   } catch (err) {
+    stopLoadingSequence();
     showStatus('error', 'Something went wrong reading this page. You can still paste the description directly into Cvly.');
   } finally {
     setLoading(false);
