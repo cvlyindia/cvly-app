@@ -58,6 +58,7 @@ const FALLBACK_PROVIDERS: FallbackProvider[] = [
 
 interface GenerateOptions {
   maxTokens?: number;
+  temperature?: number;
 }
 
 /**
@@ -69,12 +70,13 @@ interface GenerateOptions {
  */
 export async function generateWithFallback(prompt: string, options?: GenerateOptions): Promise<string> {
   const maxTokens = options?.maxTokens ?? 8192;
+  const temperature = options?.temperature;
   const errors: string[] = [];
 
   try {
     const result = await geminiModel.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens },
+      generationConfig: { maxOutputTokens: maxTokens, ...(temperature !== undefined ? { temperature } : {}) },
     });
     const text = result.response.text();
     if (text && text.trim()) return text;
@@ -92,6 +94,7 @@ export async function generateWithFallback(prompt: string, options?: GenerateOpt
         model: provider.model,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: maxTokens,
+        ...(temperature !== undefined ? { temperature } : {}),
       });
       const text = completion.choices[0]?.message?.content;
       if (text && text.trim()) return text;

@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       : '';
 
     const prompt = `${CVLY_SYSTEM_PROMPT}${historyBlock}\n\nUSER'S NEW MESSAGE:\n${message.trim()}\n\nAnswer in 2-4 sentences, plainly, as Cvly's help assistant. Use the conversation above for context if there's a follow-up question — don't ignore what was already said.`;
-    const answer = await generateWithFallback(prompt, { maxTokens: 300 });
+    const answer = await generateWithFallback(prompt, { maxTokens: 300, temperature: 0.3 });
 
     // Log usage only after a successful call — a failed AI call shouldn't count against the limit.
     await supabase.from('chatbot_usage').insert({ ip_hash: ipHash });
