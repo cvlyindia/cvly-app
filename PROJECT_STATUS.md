@@ -84,8 +84,9 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
 ## NOT yet built — Phase 3/4 from the roadmap
 
 - 3.2: "We don't fabricate numbers" isn't explicitly marketed anywhere, even though it's true
-- 3.3: Anonymous rate limiting on score/rewrite/cover-letter/interview-prep — FIXED (was
-  completely unmetered before, now a real per-IP daily budget via lib/anonymousLimit.ts)
+- 3.3: Anonymous rate limiting — FIXED (was completely unmetered before, now a real per-IP
+  daily budget via lib/anonymousLimit.ts). Reopened once, narrowly, when image/photo resume
+  upload was added later and its Gemini Vision call wasn't covered — found and closed too.
 - 4.1: Zero automated tests exist — every check in this whole build has been manual
 - 4.2: No error monitoring (Sentry or similar) — production is currently a black box
 - 4.3: No delete confirmation dialogs anywhere
