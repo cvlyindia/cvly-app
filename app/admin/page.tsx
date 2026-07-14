@@ -3,15 +3,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-function isAdminEmail(email: string | undefined | null): boolean {
-  if (!email) return false;
-  const allowlist = (process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return allowlist.includes(email.toLowerCase());
-}
+import { isAdminEmail } from '@/lib/adminAuth';
+import { TestSentryButton } from '@/components/TestSentryButton';
 
 function countRecentSignups(users: { created_at: string }[], windowMs: number): number {
   const cutoff = Date.now() - windowMs;
@@ -101,6 +94,8 @@ export default async function AdminPage() {
             <p className="text-xs text-[var(--muted)] mt-1">Total scans</p>
           </div>
         </div>
+
+        <TestSentryButton />
 
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)] mb-4">All users</h2>
         <div className="card rounded-2xl overflow-hidden mb-10 overflow-x-auto">
