@@ -87,16 +87,18 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
 - 3.3: Anonymous rate limiting — FIXED (was completely unmetered before, now a real per-IP
   daily budget via lib/anonymousLimit.ts). Reopened once, narrowly, when image/photo resume
   upload was added later and its Gemini Vision call wasn't covered — found and closed too.
-- 4.1: Automated tests — 55 real tests now (Vitest). Covers lib/credits.ts and
+- 4.1: Automated tests — 62 real tests now (Vitest). Covers lib/credits.ts and
   lib/anonymousLimit.ts (the money-protecting logic), lib/formatCheck.ts (Cvly's real
-  technical differentiator), and lib/ai.ts (prompt construction + response parsing for
-  all 6 AI functions, including the previously-untested truncated-JSON salvage recovery
-  in generateInterviewPrep). Verified meaningful, not decorative: deliberately broke the
-  source code 5 separate times across three sessions (credit boundary check, the
-  floor-at-zero protection, the anonymous budget boundary, the table-detection regex, the
-  JSON salvage bracket closure) and confirmed each was caught before reverting. `npm test`
-  to run. Still needs: the actual API route handlers (auth/credit-check wiring), a CI gate
-  running this on every push (Phase II).
+  technical differentiator), lib/ai.ts (prompt construction + response parsing, including
+  the truncated-JSON salvage recovery), and now a real integration-test layer for the score
+  route itself — verifying the orchestration/wiring, not logic already covered elsewhere
+  (credit checks happen before the AI call, credits are spent only on real success, never
+  on failure, anonymous vs logged-in branch correctly). Verified meaningful 5 separate
+  times across sessions by deliberately breaking real code and confirming the right test
+  failed before reverting — most recently a realistic missing-`return` bug that would have
+  let an out-of-credits request silently fall through to a real, billed AI call. `npm test`
+  to run. Still needs: the same route-test pattern applied to the other 7 AI routes, a CI
+  gate running this on every push (Phase II).
 - 4.2: No error monitoring (Sentry or similar) — production is currently a black box
 - 4.3: No delete confirmation dialogs anywhere
 - 4.4: No password-login fallback — magic-link + Google + LinkedIn only
