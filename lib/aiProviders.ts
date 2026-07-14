@@ -3,8 +3,15 @@ import OpenAI from 'openai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-// Alias auto-points to current gen, avoids breakage when Google retires a specific version.
-const geminiModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+// Pinned to an explicit, stable model — NOT the 'gemini-flash-latest' alias this used
+// to be. Google's own docs describe that alias as pointing to "an experimental model
+// which will typically not be suitable for production use," and it has already silently
+// repointed at least once during this build (per Google's changelog, it moved to
+// gemini-3.5-flash on May 19, 2026) with zero code change on our end — the exact risk
+// this pin exists to remove. gemini-3.5-flash is the current GA/stable release as of
+// this pin; when Google ships a newer stable generation, update this one string
+// deliberately rather than being moved automatically and finding out from a support email.
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
 /**
  * Transcribes a photographed or scanned resume image to text using Gemini's vision

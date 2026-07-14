@@ -130,7 +130,13 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
   Use it instead" toggle below the magic-link form — stays secondary/opt-in, magic link
   is still the default. Verified Supabase's Email provider supports password auth
   natively alongside magic link with zero extra dashboard configuration needed.
-- 4.5: Gemini model is an unpinned `gemini-flash-latest` alias
+- 4.5: DONE. Pinned to gemini-3.5-flash, replacing the gemini-flash-latest alias.
+  Verified this wasn't a theoretical risk before fixing it: per Google's own changelog,
+  this exact alias silently repointed to gemini-3.5-flash on May 19, 2026, with zero
+  code change on our end — confirming the alias had already changed underneath this
+  build at least once already. Single point of change (lib/aiProviders.ts), shared by
+  both text generation and the image-OCR vision calls. **Phase 4 (1 through 5) is now
+  fully complete.**
 - No real revenue path yet — Razorpay deferred, PAYWALL_ENABLED=false, so Pro/Enterprise
   aren't purchasable. This is the top business-level (not code-level) risk right now.
 
