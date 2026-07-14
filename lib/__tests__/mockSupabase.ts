@@ -6,6 +6,7 @@
 export interface MockResponse {
   data: unknown;
   error: unknown;
+  count?: number | null;
 }
 
 export function createMockSupabase(responses: MockResponse[]) {

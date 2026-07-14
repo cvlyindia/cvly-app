@@ -87,17 +87,20 @@ Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, 
 - 3.3: Anonymous rate limiting — FIXED (was completely unmetered before, now a real per-IP
   daily budget via lib/anonymousLimit.ts). Reopened once, narrowly, when image/photo resume
   upload was added later and its Gemini Vision call wasn't covered — found and closed too.
-- 4.1: Automated tests — 71 real tests now (Vitest). Covers lib/credits.ts,
-  lib/anonymousLimit.ts, lib/formatCheck.ts, lib/ai.ts, and route-level integration tests
-  for both /api/score and /api/extract-text — the latter specifically locking in the
-  image-OCR rate-limiting fix from a few sessions back against regression. Verified
-  meaningful 6 separate times across sessions by deliberately breaking real code (most
-  recently: simulating a realistic MIME-type-drops-out-of-the-protected-set regression,
-  which correctly failed only the jpeg-specific tests while the png tests stayed green,
-  showing the coverage is precise, not just broadly sensitive) and confirming the right
-  test caught it before reverting. `npm test` to run. Still needs: the same route-test
-  pattern applied to the remaining 6 AI routes, a CI gate running this on every push
-  (Phase II).
+- 4.1: Automated tests — 112 real tests across 13 files (Vitest). Full coverage now:
+  lib/credits.ts and lib/anonymousLimit.ts (money-protecting logic), lib/formatCheck.ts
+  (Cvly's real technical differentiator), lib/ai.ts (all 6 AI functions' prompt/parsing
+  logic, including the truncated-JSON salvage recovery), and route-level integration tests
+  for all 9 API routes (score, rewrite, cover-letter, interview-prep, linkedin-review,
+  portfolio-review, chatbot, import-job, extract-text) — verifying the orchestration/wiring
+  itself, not just the logic within each piece. Verified meaningful 8 separate times by
+  deliberately breaking real code (a missing `return` that would have let an out-of-credits
+  request reach a real billed AI call; a MIME type silently dropping out of a protected
+  set; a removed auth check; a removed temperature setting; among others) and confirming
+  the right test caught each one before reverting. `npm test` to run. Not covered:
+  lib/resumeTemplate.ts and the internals of lib/importJob.ts (lower-risk, presentational/
+  scraping logic, not money or security paths), and no UI/component-level tests exist yet.
+  No CI gate running this automatically on every push yet (Phase II).
 - 4.2: No error monitoring (Sentry or similar) — production is currently a black box
 - 4.3: No delete confirmation dialogs anywhere
 - 4.4: No password-login fallback — magic-link + Google + LinkedIn only
