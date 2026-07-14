@@ -25,6 +25,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@media (max-width: 640px) {
+  /* iOS Safari auto-zooms the whole page when focusing any input/textarea under
+     16px font-size — a famous, well-documented bug, not a rendering quirk. Every
+     text input in this app uses text-sm (14px) for visual consistency with the
+     rest of the design, so rather than changing 18+ individual elements (and
+     leaving any future input unprotected), this forces 16px specifically on
+     mobile at the point of actually typing — doesn't affect desktop or Android,
+     which don't have this bug, and doesn't change how anything looks, only
+     what happens the instant you tap in. */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 .font-mono { font-family: var(--font-mono), monospace; }
 
 ::selection { background: var(--accent); color: white; }

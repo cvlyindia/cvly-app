@@ -103,9 +103,10 @@ export function ChatbotButton() {
       <button
         onClick={toggleOpen}
         aria-label={open ? 'Close chat' : 'Open chat with Cvly assistant'}
-        className={`fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-[var(--accent)] shadow-lg flex items-center justify-center hover:scale-105 transition-transform text-white ${
+        className={`fixed right-5 z-40 w-14 h-14 rounded-full bg-[var(--accent)] shadow-lg flex items-center justify-center hover:scale-105 transition-transform text-white ${
           showPulse && !hasOpenedOnce ? 'launcher-pulse' : ''
         }`}
+        style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         {open ? <X size={24} /> : <MessageCircle size={24} />}
         {!open && (
@@ -128,7 +129,7 @@ export function ChatbotButton() {
             </div>
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-3">
             {messages.map((m, i) => (
               <div key={i} className={`msg-in flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div

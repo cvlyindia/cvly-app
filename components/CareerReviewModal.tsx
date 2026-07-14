@@ -66,7 +66,7 @@ export function CareerReviewModal({ type, onClose, onSaved }: { type: ReviewType
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-6">
       <div className="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto bg-white">
+      <div className="relative card rounded-none sm:rounded-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto overscroll-contain bg-white">
         <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
           <span className="text-sm font-semibold">{copy.title}</span>
           <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full bg-[var(--surface)] hover:bg-[var(--line)] flex items-center justify-center transition">
