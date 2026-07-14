@@ -1018,6 +1018,34 @@ export default function Home() {
       {/* Sample report */}
       <SampleReport />
 
+      {/* The two things we don't fake */}
+      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-[var(--line)]">
+        <Reveal>
+          <h2 className="text-3xl font-semibold tracking-tight text-center mb-3">Two things we refuse to fake.</h2>
+          <p className="text-center text-[var(--muted)] mb-14 text-sm max-w-lg mx-auto">Every AI resume tool claims to be accurate. Most of that is just an AI&apos;s opinion, stated confidently. Here&apos;s specifically where we don&apos;t do that.</p>
+        </Reveal>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Reveal>
+            <div className="rounded-2xl p-7 border border-[var(--line)] h-full">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center mb-4">
+                <Check size={18} className="text-[var(--accent-ink)]" />
+              </div>
+              <h3 className="text-base font-semibold mb-2">We never invent your achievements.</h3>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">Every rewrite, cover letter, and interview answer runs against one hard rule, enforced in the instructions behind every single generation: never invent a company, a title, a number, or a metric that isn&apos;t already in your resume. If your resume is thin on a section, the output stays honest and thin there too — it doesn&apos;t get padded with numbers that sound plausible but aren&apos;t yours.</p>
+            </div>
+          </Reveal>
+          <Reveal delayMs={80}>
+            <div className="rounded-2xl p-7 border border-[var(--line)] h-full">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center mb-4">
+                <FileScan size={18} className="text-[var(--accent-ink)]" />
+              </div>
+              <h3 className="text-base font-semibold mb-2">We actually open your file.</h3>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">Most tools just ask an AI &quot;does this look ATS-friendly?&quot; and repeat whatever it guesses. Cvly&apos;s Parse Safety check opens the real file structure — tables, columns, text boxes, headers and footers — the same things that actually break parsing in systems like Workday, Greenhouse, and Taleo. That&apos;s a structural check, not an opinion.</p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Comparison */}
       <section id="compare" className="max-w-5xl mx-auto px-6 py-20 scroll-mt-16">
         <Reveal>
