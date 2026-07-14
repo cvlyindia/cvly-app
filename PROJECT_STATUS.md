@@ -72,18 +72,24 @@ whether they were already applied.
 
 ## Current focus
 
-Closing out the original Phase 1-4 roadmap before starting anything new. The one item still
-open: **Phase 3.1, the Chrome extension** — built, handoff mechanism re-verified working after
-all subsequent homepage changes, privacy policy and Web Store listing copy now written. Still
-needs: real multi-site testing on an actual device (Naukri/LinkedIn/Indeed), a Chrome Web Store
-developer account, and submission. See chrome-extension/README.md for the exact checklist.
+Phase 1-4 is now fully closed except one remaining item on 3.1. **Phase 3.1, the Chrome
+extension**, has come a long way since first built: tested for real by Anurag (confirmed
+working on real job sites), got a genuine animation/polish pass (v1.1.0), then a real
+feature addition (v1.2.0) — in-popup ATS scoring using the user's last resume, and
+automatic LinkedIn profile detection with instant in-popup review, both reusing the
+website's existing API routes via new CORS support rather than duplicating any logic.
+Still needs: a final real-device pass confirming the new cross-origin scoring/review
+features actually work in live Chrome (the one thing this sandbox can't verify), a
+Chrome Web Store developer account, and submission. See chrome-extension/README.md.
 
 Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, later chapter
 (revenue, reliability, growth, product depth, operations), not a renumbering of Phase 1-4.
 
-## NOT yet built — Phase 3/4 from the roadmap
+## Phase 3/4 from the roadmap — all done
 
-- 3.2: "We don't fabricate numbers" isn't explicitly marketed anywhere, even though it's true
+- 3.2: DONE. "Two things we refuse to fake" — a dedicated homepage section explicitly
+  marketing the no-fabrication discipline and the real structural DOCX/PDF inspection,
+  replacing what used to be one buried bullet in a data-privacy list.
 - 3.3: Anonymous rate limiting — FIXED (was completely unmetered before, now a real per-IP
   daily budget via lib/anonymousLimit.ts). Reopened once, narrowly, when image/photo resume
   upload was added later and its Gemini Vision call wasn't covered — found and closed too.
