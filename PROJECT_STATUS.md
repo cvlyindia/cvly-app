@@ -4,6 +4,42 @@ Last updated: July 2026. This file exists so any future session — a new chat, 
 or anyone else picking this up — has a real written reference instead of needing this whole
 conversation history re-explained. Update it when something material changes.
 
+## CRITICAL BUG FIXED — PDF upload was completely broken in production
+
+Anurag reported PDF/photo resume upload failing. Root cause: pdf-parse silently did a
+MAJOR version rewrite (v1 -> v2) at some point in this build's history — from a small,
+simple wrapper to a completely different package that bundles the entire pdfjs-dist
+engine with a class-based API. The old code's `.default` unwrap logic silently returned
+something non-callable, so EVERY PDF upload failed with "pdfParse is not a function".
+
+Fixed properly, not just patched:
+1. First tried pinning back to the old, simple pdf-parse v1.x API this code was written
+   for — confirmed it works on realistic (LibreOffice-generated) PDFs, but then found a
+   real compatibility gap: it failed to parse legitimately-generated modern PDFs (tested
+   with pdf-lib) due to its ancient, bundled 2018-era pdf.js engine not supporting some
+   flate/compression stream. Rejected this fix — too fragile for a production resume tool.
+2. Properly adopted pdf-parse v2's real API instead (`new PDFParse({ data: buffer })`,
+   `.getText()`), which uses a current, actively-maintained pdf.js engine and correctly
+   parsed everything v1 failed on.
+3. Hit — and properly fixed, not worked around — a well-documented Next.js/Vercel
+   bundling issue this library is known for: `import 'pdf-parse/worker'` before importing
+   PDFParse, plus `serverExternalPackages: ["pdf-parse"]` in next.config.ts. Both are
+   pdf-parse's own documented fix for this exact scenario. Verified fixed via the actual
+   running Next.js dev server hitting the real route, not just an isolated script.
+
+New lib/__tests__/parseResume.test.ts: real, non-mocked tests using genuinely generated
+PDF/DOCX buffers (pdf-lib, docx). This is the test class that would have caught the
+original bug — the existing route tests mock extractTextFromFile entirely and never
+touch the real parsing libraries, which is exactly why 112 passing tests didn't catch a
+completely broken PDF pipeline. 119 tests total now.
+
+**Honest limitation**: could not complete a full `next build` in this sandbox due to a
+pre-existing, unrelated network restriction (Google Fonts fetch blocked here) that has
+affected every build attempt this entire session — confirmed the failure happens only at
+the font-fetch step, after bundling succeeds. Dev-server-level testing via the real
+Turbopack-compiled route (not an isolated script) is strong evidence, but real Vercel
+deployment is the final confirmation needed.
+
 ## What Cvly is
 
 AI-powered resume/ATS tool. cvly.in. Next.js 16 + TypeScript + Tailwind v4 + Supabase +

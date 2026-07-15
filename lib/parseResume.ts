@@ -12,11 +12,19 @@ export async function extractTextFromFile(file: File): Promise<ExtractionResult>
   const buffer = Buffer.from(await file.arrayBuffer());
 
   if (file.type === 'application/pdf') {
-    // pdf-parse is CommonJS; dynamic import avoids build-time issues
-    const pdfParseModule = await import('pdf-parse');
-    const pdfParse = (pdfParseModule as unknown as { default?: typeof pdfParseModule }).default ?? pdfParseModule;
-    const data = await (pdfParse as unknown as (b: Buffer) => Promise<{ text: string; numpages: number }>)(buffer);
-    return { text: data.text, buffer, fileType: file.type, pdfPageCount: data.numpages };
+    // Must be imported before PDFParse itself — pdf-parse's own troubleshooting docs
+    // for Next.js/serverless environments (Vercel included) call this out specifically:
+    // without it, the bundler can't resolve the worker file at runtime.
+    await import('pdf-parse/worker');
+    const { PDFParse } = await import('pdf-parse');
+    const parser = new PDFParse({ data: buffer });
+    try {
+      const result = await parser.getText();
+      const text = result.pages.map((p) => p.text).join('\n\n');
+      return { text, buffer, fileType: file.type, pdfPageCount: result.total };
+    } finally {
+      await parser.destroy();
+    }
   }
 
   if (

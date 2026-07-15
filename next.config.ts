@@ -2,7 +2,11 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // pdf-parse (v2) bundles pdfjs-dist internally, which uses dynamic worker-file
+  // resolution that Next.js's bundler can't statically analyze correctly. Marking it
+  // external tells Next.js to load it from node_modules at runtime instead of trying
+  // to bundle it — this is pdf-parse's own documented fix for Next.js/Vercel.
+  serverExternalPackages: ["pdf-parse"],
 };
 
 export default withSentryConfig(nextConfig, {
