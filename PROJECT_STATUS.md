@@ -118,6 +118,15 @@ Still needs: a final real-device pass confirming the new cross-origin scoring/re
 features actually work in live Chrome (the one thing this sandbox can't verify), a
 Chrome Web Store developer account, and submission. See chrome-extension/README.md.
 
+**Phase 6 (Reliability) started** — half of it (Sentry, tests, model pinning) was
+already done earlier under the old Phase 4 numbering; ROADMAP.md corrected to reflect
+that rather than leave it looking undone. Newly added: a real CI pipeline
+(.github/workflows/ci.yml — type-check, lint, test on every push/PR to main) and
+RUNBOOK.md, a one-page incident response guide specific to Cvly's actual stack, not
+generic filler. Two genuinely open items need Anurag directly: verifying a Supabase
+backup actually restores (needs dashboard access), and setting up UptimeRobot (needs
+an external account).
+
 Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, later chapter
 (revenue, reliability, growth, product depth, operations), not a renumbering of Phase 1-4.
 

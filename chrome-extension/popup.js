@@ -50,7 +50,7 @@ function extractJobDescriptionFromPage() {
           }
         }
       }
-    } catch (e) {
+    } catch {
       continue;
     }
   }
@@ -261,7 +261,7 @@ async function handleJobExtraction() {
         };
       }
     });
-  } catch (err) {
+  } catch {
     stopLoadingSequence();
     showStatus('error', 'Something went wrong reading this page. You can still paste the description directly into Cvly.');
   }
@@ -330,7 +330,7 @@ async function handleLinkedInExtraction() {
       openBtn.onclick = () => chrome.tabs.create({ url: `${CVLY_ORIGIN}/login` });
       openBtn.style.display = 'block';
     }
-  } catch (err) {
+  } catch {
     stopLoadingSequence();
     showStatus('error', 'Something went wrong reading this page.');
   }

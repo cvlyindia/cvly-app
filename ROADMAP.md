@@ -36,18 +36,24 @@ with no offsetting income.
 The unglamorous list. This is what separates "impressive project" from "company an investor
 would actually trust with more users."
 
-- **Sentry** — error monitoring. Production is currently a black box; this is the single
-  highest-leverage half-day of work left on the list
-- **Automated tests**, starting with the credit system and rate-limiting logic specifically
-  — that's the code directly protecting real money, not the code most fun to test
+- ~~**Sentry** — error monitoring~~ DONE (Phase 4.2). Code-side wired into all four
+  runtimes plus explicit capture in every route's catch block. Anurag confirmed the
+  live pipeline works via the admin test-error button.
+- ~~**Automated tests**, starting with the credit system and rate-limiting~~ DONE
+  (Phase 4.1). 119 tests across 15 files — credits, rate-limiting, format-check,
+  all AI parsing, every API route's orchestration, and the real PDF/DOCX parsing
+  pipeline (added after a real production bug there).
+- ~~**Pin the Gemini model**~~ DONE (Phase 4.5). Pinned to `gemini-3.5-flash`,
+  confirmed via Google's own changelog that the old alias had already silently
+  repointed once during this build.
 - **CI/CD** — a GitHub Action running `tsc` + `eslint` + tests before anything merges,
-  so a bad deploy gets caught before it's live, not after
-- **Pin the Gemini model** once Google publishes a stable version identifier instead of
-  the current unpinned `gemini-flash-latest` alias
+  so a bad deploy gets caught before it's live, not after. **Still open.**
 - **Verify the database backup actually restores** — Supabase does automatic backups on
-  paid tiers, but "a backup exists" and "a backup works" are different claims until tested
+  paid tiers, but "a backup exists" and "a backup works" are different claims until
+  tested. **Still open — needs Anurag, requires actual Supabase dashboard access.**
 - Basic uptime monitoring (UptimeRobot's free tier is enough to start) and a one-page
-  incident response runbook — doesn't need to be sophisticated, needs to exist
+  incident response runbook. **Runbook: buildable now. Monitoring: needs Anurag to
+  create the account.**
 
 ## Phase 7 — Growth & Distribution (become known, not just good)
 
