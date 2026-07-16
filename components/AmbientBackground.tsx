@@ -2,6 +2,8 @@ export function AmbientBackground({ mode = 'fixed' }: { mode?: 'fixed' | 'absolu
   const positionClass = mode === 'fixed' ? 'fixed' : 'absolute';
   return (
     <div className={`${positionClass} inset-0 -z-10 overflow-hidden pointer-events-none`}>
+      {/* Fine grain texture — the subtle tooth that reads as 'premium/designed' */}
+      <div className="grain-overlay" />
       {/* Subtle technical grid texture — reads as 'advanced product', not decorative */}
       <div
         className="absolute inset-0 opacity-[0.4]"

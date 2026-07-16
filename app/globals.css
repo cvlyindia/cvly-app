@@ -14,19 +14,21 @@
   --line-strong: #DAD4E4;
   --surface: #F8F5FB;
 
-  /* Accent spectrum */
-  --accent: #F0472B;
-  --accent-ink: #C4331C;
-  --accent-soft: #FEECE7;
-  --accent-2: #E5407E;      /* magenta midpoint */
-  --accent-3: #8B5CF6;      /* violet endpoint */
+  /* Accent spectrum — anchored on the TRUE logo orange (#FF741E, sampled from the
+     actual logo mark), flowing orange -> coral -> magenta -> violet so the whole
+     palette reads as an extension of the brand, not a departure from it. */
+  --accent: #FF6A1A;
+  --accent-ink: #D4520C;
+  --accent-soft: #FFEDE0;
+  --accent-2: #F43F7A;      /* magenta midpoint */
+  --accent-3: #9B5DE5;      /* violet endpoint */
   --cyan: #06B6D4;          /* electric counterpoint */
   --cyan-soft: #E3F7FB;
 
   /* The signature gradients — used for buttons, rings, accent lines, glows */
-  --grad-prism: linear-gradient(100deg, #F0472B 0%, #E5407E 52%, #8B5CF6 100%);
-  --grad-prism-soft: linear-gradient(100deg, #FEECE7 0%, #FBE7F0 52%, #F1EBFE 100%);
-  --grad-glow: linear-gradient(135deg, rgba(240,71,43,0.35), rgba(139,92,246,0.35));
+  --grad-prism: linear-gradient(100deg, #FF7A1E 0%, #F43F7A 52%, #9B5DE5 100%);
+  --grad-prism-soft: linear-gradient(100deg, #FFEDE0 0%, #FDE6EF 52%, #F3ECFC 100%);
+  --grad-glow: linear-gradient(135deg, rgba(255,122,30,0.4), rgba(155,93,229,0.35));
 
   --good: #0E8F5E;
   --good-bg: #E6F7EF;
@@ -258,6 +260,106 @@ details > summary::-webkit-details-marker { display: none; }
   box-shadow: 0 10px 28px rgba(139,92,246,0.36), 0 3px 10px rgba(229,64,126,0.24);
 }
 .btn-accent:active { transform: scale(0.98); }
+
+/* ============================================================
+   WOW-FACTOR SYSTEM — depth, glow, floating product panels.
+   Inspired by Sentry's cinematic hero, executed for a LIGHT
+   background (harder, more distinctive than the usual dark).
+   ============================================================ */
+
+/* Fine grain/noise texture — the subtle tooth that makes premium
+   backgrounds read as "designed" rather than flat. SVG feTurbulence,
+   no image asset needed. Applied at very low opacity. */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* Floating glass panel — the satellite cards around the hero. Soft, real
+   colored shadow + a faint gradient wash + backdrop blur for depth. */
+.glass-panel {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow:
+    0 12px 40px rgba(155,93,229,0.14),
+    0 4px 12px rgba(255,106,26,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* A soft gradient glow halo placed behind a hero element */
+.glow-halo {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(44px);
+  opacity: 0.55;
+  pointer-events: none;
+  background: var(--grad-glow);
+}
+
+/* Independent float paths at different speeds — staggered so the
+   cluster never moves as one rigid block (the key to "alive"). */
+@keyframes floatA { 0%,100% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(0,-14px) rotate(-1deg); } }
+@keyframes floatB { 0%,100% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(-10px,10px) rotate(1.5deg); } }
+@keyframes floatC { 0%,100% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(11px,-8px) rotate(-1.5deg); } }
+.float-a { animation: floatA 7s ease-in-out infinite; }
+.float-b { animation: floatB 9s ease-in-out infinite; }
+.float-c { animation: floatC 8s ease-in-out infinite; }
+
+/* Scanning beam — a gradient line that sweeps down, evoking the tool
+   actively "reading" a resume. The literal visual metaphor for the product. */
+@keyframes scanSweep {
+  0% { transform: translateY(-10%); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+.scan-beam {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  box-shadow: 0 0 12px 1px rgba(255,106,26,0.5);
+  animation: scanSweep 3.2s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+
+/* Animated conic glow ring — slow rotating gradient behind the score,
+   makes the centerpiece feel powered/active. */
+@keyframes spinGlow { to { transform: rotate(360deg); } }
+.conic-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--cyan), var(--accent));
+  filter: blur(14px);
+  opacity: 0.4;
+  animation: spinGlow 8s linear infinite;
+  pointer-events: none;
+}
+
+/* Tiny drifting particles — sparse, ambient "data motes" */
+@keyframes moteDrift {
+  0% { transform: translate(0,0); opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.7; }
+  100% { transform: translate(var(--mx,20px), var(--my,-40px)); opacity: 0; }
+}
+.mote { position: absolute; border-radius: 9999px; animation: moteDrift 6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .float-a, .float-b, .float-c, .scan-beam, .conic-glow, .mote { animation: none; }
+}
+
+/* On small screens, drop backdrop-blur (GPU cost) and simplify the cluster */
+@media (max-width: 640px) {
+  .glass-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.92); }
+  .conic-glow, .scan-beam { animation-duration: 5s; }
+}
 
 /* Gradient text for headline moments */
 .text-prism {

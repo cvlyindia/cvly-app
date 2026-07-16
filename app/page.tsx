@@ -844,11 +844,43 @@ export default function Home() {
         </div>
 
         <div className="relative">
-          {/* Ambient floating accents — subtle, restrained, not neon */}
-          <div className="float-slow absolute -top-8 -right-6 w-24 h-24 rounded-full bg-[var(--accent-soft)] blur-2xl opacity-70 pointer-events-none" />
-          <div className="float-slower absolute -bottom-10 -left-8 w-32 h-32 rounded-full bg-[var(--good-bg)] blur-3xl opacity-60 pointer-events-none" />
+          {/* Layered gradient glow halos for depth */}
+          <div className="glow-halo float-slow" style={{ top: '-3rem', right: '-2rem', width: '16rem', height: '16rem' }} />
+          <div className="glow-halo float-slower" style={{ bottom: '-4rem', left: '-3rem', width: '18rem', height: '18rem', background: 'linear-gradient(135deg, rgba(244,63,122,0.3), rgba(6,182,212,0.25))' }} />
 
-          <div className="fade-up fade-up-1 float-card card rounded-2xl p-7 relative">
+          {/* Drifting data motes — sparse ambient particles */}
+          <div className="mote hidden sm:block" style={{ top: '10%', left: '8%', width: 6, height: 6, background: 'var(--accent)', ['--mx' as string]: '30px', ['--my' as string]: '-50px', animationDelay: '0s' }} />
+          <div className="mote hidden sm:block" style={{ top: '60%', right: '4%', width: 5, height: 5, background: 'var(--accent-2)', ['--mx' as string]: '-24px', ['--my' as string]: '-44px', animationDelay: '1.4s' }} />
+          <div className="mote hidden sm:block" style={{ bottom: '12%', left: '20%', width: 4, height: 4, background: 'var(--accent-3)', ['--mx' as string]: '20px', ['--my' as string]: '-38px', animationDelay: '2.6s' }} />
+
+          {/* Satellite panel — Parse Safety, floats top-right at depth */}
+          <div className="glass-panel float-c hidden md:block absolute -top-10 -right-4 z-20 rounded-2xl px-4 py-3 w-[188px]">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF7A1E, #F43F7A)' }}>
+                <FileScan size={13} className="text-white" />
+              </span>
+              <span className="text-[11px] font-semibold">Parse Safety</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[22px] font-bold tabular-nums text-prism leading-none">98</span>
+              <span className="text-[10px] text-[var(--muted)] leading-tight">no tables,<br/>clean columns</span>
+            </div>
+          </div>
+
+          {/* Satellite panel — Match rate, floats bottom-left at depth */}
+          <div className="glass-panel float-b hidden md:block absolute -bottom-8 -left-6 z-20 rounded-2xl px-4 py-3 w-[172px]">
+            <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Keyword match</p>
+            <div className="h-1.5 rounded-full bg-[var(--line)] overflow-hidden mb-2">
+              <div className="h-full rounded-full bar-grow" style={{ width: '82%', background: 'var(--grad-prism)' }} />
+            </div>
+            <p className="text-[10px] text-[var(--muted)]"><span className="font-bold text-[var(--ink)]">82%</span> of role keywords found</p>
+          </div>
+
+          {/* Main product card — now with conic glow + scan beam */}
+          <div className="fade-up fade-up-1 float-a relative z-10">
+            <div className="conic-glow" />
+            <div className="card rounded-2xl p-7 relative overflow-hidden">
+              <div className="scan-beam" style={{ top: 0 }} />
             <div key={exampleIndex} className="card-swap">
               <div className="flex items-center gap-5 mb-6 pb-6 border-b border-[var(--line)]">
                 <ScoreRing score={EXAMPLES[exampleIndex].score} size={96} />
@@ -904,6 +936,7 @@ export default function Home() {
                 />
               ))}
             </div>
+          </div>
           </div>
         </div>
       </section>
