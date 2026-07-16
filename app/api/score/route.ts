@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkCredits, spendCredits } from '@/lib/credits';
 import { checkAnonymousLimit, logAnonymousUsage } from '@/lib/anonymousLimit';
 import { getExtensionCorsHeaders } from '@/lib/extensionCors';
+import { sendCapiEvent, getClientIpForCapi } from '@/lib/metaCapi';
 
 export async function OPTIONS(req: NextRequest) {
   const cors = getExtensionCorsHeaders(req.headers.get('origin'));
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   const cors = getExtensionCorsHeaders(req.headers.get('origin')) ?? {};
 
   try {
-    const { resumeText, jobDescription } = await req.json();
+    const { resumeText, jobDescription, leadEventId } = await req.json();
 
     if (!resumeText || !jobDescription) {
       return NextResponse.json({ error: 'Resume text and job description are both required' }, { status: 400, headers: cors });
@@ -58,6 +59,20 @@ export async function POST(req: NextRequest) {
       await spendCredits(supabase, user.id, 'score');
     } else if (anonIpHash) {
       await logAnonymousUsage(supabase, anonIpHash, 'score');
+    }
+
+    if (leadEventId && !('invalid' in result)) {
+      sendCapiEvent({
+        eventName: 'Lead',
+        eventId: leadEventId,
+        eventSourceUrl: req.headers.get('referer') ?? undefined,
+        user: {
+          email: user?.email ?? undefined,
+          userId: user?.id,
+          ip: getClientIpForCapi(req),
+          userAgent: req.headers.get('user-agent') ?? undefined,
+        },
+      }).catch(() => {});
     }
 
     return NextResponse.json(result, { headers: cors });

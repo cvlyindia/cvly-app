@@ -23,6 +23,7 @@ import { SaveResultPrompt } from '@/components/SaveResultPrompt';
 import { AmbientBackground } from '@/components/AmbientBackground';
 import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
+import { trackPixelEvent } from '@/lib/metaPixelClient';
 
 type ScoreResult = {
   score: number;
@@ -556,10 +557,11 @@ export default function Home() {
     setScanId(null);
     setPracticedIds(new Set());
     try {
+      const leadEventId = crypto.randomUUID();
       const res = await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeText, jobDescription }),
+        body: JSON.stringify({ resumeText, jobDescription, leadEventId }),
       });
       const data = await res.json();
       if (data.error === 'out_of_credits') {
@@ -578,6 +580,7 @@ export default function Home() {
       setActiveTab('score');
       setToolOpen(true);
       setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
+      trackPixelEvent('Lead', leadEventId);
 
       fetch('/api/save-scan', {
         method: 'POST',

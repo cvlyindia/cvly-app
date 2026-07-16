@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ChatbotButton } from "@/components/ChatbotButton";
+import { MetaPixel } from "@/components/MetaPixel";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -64,6 +65,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${mono.variable}`}>
         {children}
         <ChatbotButton />
+        <MetaPixel />
       </body>
     </html>
   );

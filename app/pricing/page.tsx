@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Check, ArrowRight, Loader2, Sparkles, Building2, Zap } from 'lucide-react';
+import { UpgradeToProButton } from '@/components/UpgradeToProButton';
 
 const FREE_FEATURES = [
   'ATS match score',
@@ -180,7 +181,6 @@ export default function PricingPage() {
           <div className="card-prism-border rounded-2xl p-6 relative fade-up fade-up-2" style={{ boxShadow: '0 12px 36px rgba(229,64,126,0.12)' }}>
             <div className="flex items-center justify-between mb-1">
               <p className="font-semibold">Pro</p>
-              <span className="text-[10px] font-bold text-[var(--muted)] bg-[var(--line)] px-2 py-0.5 rounded-full">COMING SOON</span>
             </div>
             <div className="flex items-baseline gap-1 mb-1">
               <p className="text-3xl font-bold tracking-tight">₹{proPrice}</p>
@@ -197,7 +197,7 @@ export default function PricingPage() {
                 </div>
               ))}
             </div>
-            <WaitlistForm plan="pro" />
+            <UpgradeToProButton cycle={billing} />
           </div>
 
           {/* Enterprise */}

@@ -238,5 +238,36 @@ as $$
 $$;
 
 -- ============================================================
--- Done. 7 tables, all RLS policies, all indexes, 1 function.
+-- 9. Real billing: subscriptions + webhook idempotency (Phase 5)
+-- ============================================================
+create table if not exists subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  razorpay_subscription_id text not null unique,
+  razorpay_plan_id text not null,
+  plan text not null check (plan in ('pro', 'enterprise')),
+  status text not null default 'created' check (status in
+    ('created', 'authenticated', 'active', 'pending', 'halted', 'cancelled', 'completed', 'expired')),
+  current_start timestamptz,
+  current_end timestamptz,
+  purchase_event_sent boolean not null default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table subscriptions enable row level security;
+
+drop policy if exists "Users can view their own subscription" on subscriptions;
+create policy "Users can view their own subscription" on subscriptions for select using (auth.uid() = user_id);
+
+create index if not exists subscriptions_user_id_idx on subscriptions (user_id);
+create index if not exists subscriptions_razorpay_id_idx on subscriptions (razorpay_subscription_id);
+
+create table if not exists webhook_events (
+  id text primary key,
+  event_type text not null,
+  processed_at timestamptz default now()
+);
+
+-- ============================================================
+-- Done. 9 tables, all RLS policies, all indexes, 1 function.
 -- ============================================================

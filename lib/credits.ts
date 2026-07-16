@@ -1,4 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
+import { sendCapiEvent } from './metaCapi';
 
 export const PLAN_LIMITS: Record<string, number> = {
   free: 10,
@@ -43,6 +44,18 @@ async function getOrCreateCredits(supabase: SupabaseClient, userId: string) {
       .insert({ user_id: userId })
       .select('*')
       .single();
+
+    // Fires exactly once per real user, right at the one moment that reliably
+    // means "this is a brand new Cvly account" — not threaded through email/IP
+    // since checkCredits is called from many existing routes and this keeps
+    // that surface unchanged. external_id (hashed user ID) alone is enough
+    // for this event to still count as a valid CAPI signal.
+    sendCapiEvent({
+      eventName: 'CompleteRegistration',
+      eventId: `signup_${userId}`,
+      user: { userId },
+    }).catch(() => {});
+
     return created;
   }
 
