@@ -177,7 +177,7 @@ export default function PricingPage() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-2xl p-6 border-2 border-[var(--accent)] bg-white relative fade-up fade-up-2">
+          <div className="card-prism-border rounded-2xl p-6 relative fade-up fade-up-2" style={{ boxShadow: '0 12px 36px rgba(229,64,126,0.12)' }}>
             <div className="flex items-center justify-between mb-1">
               <p className="font-semibold">Pro</p>
               <span className="text-[10px] font-bold text-[var(--muted)] bg-[var(--line)] px-2 py-0.5 rounded-full">COMING SOON</span>

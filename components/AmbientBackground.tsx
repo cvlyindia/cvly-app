@@ -14,12 +14,14 @@ export function AmbientBackground({ mode = 'fixed' }: { mode?: 'fixed' | 'absolu
         }}
       />
 
-      {/* Slow-drifting gradient mesh — each blob moves on its own independent path/timing
-          so the composition never repeats mechanically. This is the actual technique behind
-          Stripe/Linear-style 'alive' backgrounds — restrained motion, not GIFs. */}
-      <div className="mesh-drift-1 absolute top-[-10%] left-[10%] w-[36rem] h-[36rem] rounded-full bg-[var(--accent-soft)] blur-[100px] opacity-40" />
-      <div className="mesh-drift-2 absolute top-[20%] right-[5%] w-[30rem] h-[30rem] rounded-full bg-[var(--good-bg)] blur-[100px] opacity-30" />
-      <div className="mesh-drift-3 absolute bottom-[-15%] left-[30%] w-[40rem] h-[40rem] rounded-full bg-[var(--accent-soft)] blur-[110px] opacity-25" />
+      {/* Slow-drifting prism mesh — each bloom is a different point on the coral->magenta
+          ->violet->cyan spectrum, moving on its own independent path/timing so the
+          composition never repeats mechanically. This is the actual technique behind
+          Stripe/Linear-style 'alive' backgrounds — restrained motion, real color, not GIFs. */}
+      <div className="mesh-drift-1 absolute top-[-10%] left-[8%] w-[36rem] h-[36rem] rounded-full blur-[100px] opacity-40" style={{ background: 'radial-gradient(circle, #FF6B4A, transparent 70%)' }} />
+      <div className="mesh-drift-2 absolute top-[16%] right-[4%] w-[32rem] h-[32rem] rounded-full blur-[100px] opacity-35" style={{ background: 'radial-gradient(circle, #E5407E, transparent 70%)' }} />
+      <div className="mesh-drift-3 absolute bottom-[-15%] left-[26%] w-[42rem] h-[42rem] rounded-full blur-[110px] opacity-30" style={{ background: 'radial-gradient(circle, #8B5CF6, transparent 70%)' }} />
+      <div className="mesh-drift-1 absolute bottom-[5%] right-[18%] w-[26rem] h-[26rem] rounded-full blur-[100px] opacity-25" style={{ background: 'radial-gradient(circle, #06B6D4, transparent 70%)' }} />
     </div>
   );
 }

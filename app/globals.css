@@ -1,22 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #FFFFFF;
-  --ink: #0B0B0C;
-  --muted: #68686E;
-  --muted-soft: #9A9AA0;
-  --line: #E9E9EB;
-  --line-strong: #D8D8DB;
-  --surface: #FAFAFA;
-  --accent: #E85D2C;
-  --accent-ink: #C24A20;
-  --accent-soft: #FDEEE7;
-  --good: #16794F;
-  --good-bg: #EAF6F0;
+  /* Prism palette — light, energetic, premium. The brand coral is no longer a lone
+     flat accent (the AI-generated "single bright accent" tell); it now anchors a
+     considered coral -> magenta -> violet spectrum, with electric cyan as a vivid
+     counterpoint. Background carries a barely-there warm tint so it reads as
+     intentional off-white, not clinical pale. */
+  --bg: #FDFBFA;
+  --ink: #14121A;
+  --muted: #605C6B;
+  --muted-soft: #938E9E;
+  --line: #ECE8F0;
+  --line-strong: #DAD4E4;
+  --surface: #F8F5FB;
+
+  /* Accent spectrum */
+  --accent: #F0472B;
+  --accent-ink: #C4331C;
+  --accent-soft: #FEECE7;
+  --accent-2: #E5407E;      /* magenta midpoint */
+  --accent-3: #8B5CF6;      /* violet endpoint */
+  --cyan: #06B6D4;          /* electric counterpoint */
+  --cyan-soft: #E3F7FB;
+
+  /* The signature gradients — used for buttons, rings, accent lines, glows */
+  --grad-prism: linear-gradient(100deg, #F0472B 0%, #E5407E 52%, #8B5CF6 100%);
+  --grad-prism-soft: linear-gradient(100deg, #FEECE7 0%, #FBE7F0 52%, #F1EBFE 100%);
+  --grad-glow: linear-gradient(135deg, rgba(240,71,43,0.35), rgba(139,92,246,0.35));
+
+  --good: #0E8F5E;
+  --good-bg: #E6F7EF;
   --warn: #92600A;
   --warn-bg: #FBF2E2;
-  --bad: #B4232E;
-  --bad-bg: #FBEAEB;
+  --bad: #C21D3A;
+  --bad-bg: #FCEAED;
 }
 
 body {
@@ -199,36 +216,81 @@ a:focus-visible, button:focus-visible {
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 
-/* Restrained card: near-invisible border, shadow appears only on hover */
+/* Card: clean surface, warm border, colored glow on hover (not gray) */
 .card {
-  background: var(--bg);
+  background: #FFFFFF;
   border: 1px solid var(--line);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.2s ease;
 }
 .card:hover {
   border-color: var(--line-strong);
-  box-shadow: 0 8px 24px rgba(11,11,12,0.06);
+  box-shadow: 0 10px 30px rgba(139,92,246,0.08), 0 3px 10px rgba(240,71,43,0.05);
 }
 .card-hover-lift {
   transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1);
 }
 .card-hover-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 32px rgba(11,11,12,0.09);
+  border-color: transparent;
+  box-shadow: 0 18px 40px rgba(139,92,246,0.14), 0 6px 16px rgba(240,71,43,0.08);
 }
 
 .btn-primary {
   background: var(--ink);
   color: white;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
-.btn-primary:hover { background: #262628; }
+.btn-primary:hover { background: #2A2536; box-shadow: 0 8px 20px rgba(20,18,26,0.18); }
 .btn-primary:active { transform: scale(0.98); }
 
+/* The signature: prism-gradient button with a soft colored glow. The gradient is
+   oversized and shifts on hover so the color feels alive, not static. */
 .btn-accent {
-  background: var(--accent);
+  background: var(--grad-prism);
+  background-size: 150% 150%;
+  background-position: 0% 50%;
   color: white;
-  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 6px 18px rgba(229,64,126,0.28), 0 2px 6px rgba(240,71,43,0.2);
+  transition: background-position 0.5s ease, box-shadow 0.25s ease, transform 0.1s ease;
 }
-.btn-accent:hover { background: var(--accent-ink); }
+.btn-accent:hover {
+  background-position: 100% 50%;
+  box-shadow: 0 10px 28px rgba(139,92,246,0.36), 0 3px 10px rgba(229,64,126,0.24);
+}
 .btn-accent:active { transform: scale(0.98); }
+
+/* Gradient text for headline moments */
+.text-prism {
+  background: var(--grad-prism);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Thin gradient accent rule — the "spectrum bar" signature motif */
+.rule-prism {
+  height: 3px;
+  border-radius: 3px;
+  background: var(--grad-prism);
+}
+
+/* Gradient-border card for featured surfaces — border is the prism, via masking */
+.card-prism-border {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.card-prism-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--grad-prism);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}

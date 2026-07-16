@@ -814,7 +814,7 @@ export default function Home() {
       <section id="main-content" className="max-w-6xl mx-auto px-6 pt-24 pb-16 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
         <div>
           <h1 className="fade-up text-[2.75rem] md:text-6xl font-semibold tracking-[-0.03em] leading-[1.05] mb-7">
-            The interview isn&apos;t<br />the hard part.<br /><span className="text-[var(--accent-ink)]">Getting one is.</span>
+            The interview isn&apos;t<br />the hard part.<br /><span className="text-prism">Getting one is.</span>
           </h1>
           <p className="fade-up fade-up-1 text-[var(--muted)] text-lg leading-relaxed mb-3 max-w-md">
             You&apos;ve applied. You&apos;ve waited. Nothing. It&apos;s rarely your experience. It&apos;s that your resume never made it past the first read.
@@ -1026,18 +1026,18 @@ export default function Home() {
         </Reveal>
         <div className="grid sm:grid-cols-2 gap-5">
           <Reveal>
-            <div className="rounded-2xl p-7 border border-[var(--line)] h-full">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center mb-4">
-                <Check size={18} className="text-[var(--accent-ink)]" />
+            <div className="card card-hover-lift rounded-2xl p-7 h-full">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #F0472B, #E5407E)', boxShadow: '0 6px 16px rgba(229,64,126,0.28)' }}>
+                <Check size={19} className="text-white" />
               </div>
               <h3 className="text-base font-semibold mb-2">We never invent your achievements.</h3>
               <p className="text-sm text-[var(--muted)] leading-relaxed">Every rewrite, cover letter, and interview answer runs against one hard rule, enforced in the instructions behind every single generation: never invent a company, a title, a number, or a metric that isn&apos;t already in your resume. If your resume is thin on a section, the output stays honest and thin there too — it doesn&apos;t get padded with numbers that sound plausible but aren&apos;t yours.</p>
             </div>
           </Reveal>
           <Reveal delayMs={80}>
-            <div className="rounded-2xl p-7 border border-[var(--line)] h-full">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center mb-4">
-                <FileScan size={18} className="text-[var(--accent-ink)]" />
+            <div className="card card-hover-lift rounded-2xl p-7 h-full">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #E5407E, #8B5CF6)', boxShadow: '0 6px 16px rgba(139,92,246,0.28)' }}>
+                <FileScan size={19} className="text-white" />
               </div>
               <h3 className="text-base font-semibold mb-2">We actually open your file.</h3>
               <p className="text-sm text-[var(--muted)] leading-relaxed">Most tools just ask an AI &quot;does this look ATS-friendly?&quot; and repeat whatever it guesses. Cvly&apos;s Parse Safety check opens the real file structure — tables, columns, text boxes, headers and footers — the same things that actually break parsing in systems like Workday, Greenhouse, and Taleo. That&apos;s a structural check, not an opinion.</p>

@@ -12,8 +12,8 @@ export function ScoreRing({ score, size = 128 }: { score: number; size?: number 
   return (
     <div className="relative flex flex-col items-center shrink-0">
       <div
-        className="absolute rounded-full blur-xl opacity-[0.18] pointer-events-none"
-        style={{ background: color, inset: -size * 0.08 }}
+        className="absolute rounded-full blur-2xl opacity-[0.28] pointer-events-none"
+        style={{ background: color, inset: -size * 0.1 }}
       />
       <svg
         width={size} height={size} viewBox={`0 0 ${size} ${size}`}
