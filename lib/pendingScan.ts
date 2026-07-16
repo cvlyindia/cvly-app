@@ -8,6 +8,10 @@ export interface PendingScan {
   missingKeywords: string[];
   summary: string;
   improvements: string[];
+  // Set when this stash came from clicking a gated tool (Rewrite/Cover/Interview)
+  // while signed out, so the dashboard can send them straight back into that tool
+  // after signing in, instead of just dropping them on their saved score.
+  intendedTab?: 'rewrite' | 'cover' | 'interview';
 }
 
 export function stashPendingScan(scan: PendingScan) {

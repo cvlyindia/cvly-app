@@ -5,7 +5,6 @@ import * as Sentry from '@sentry/nextjs';
 import { generateCoverLetter } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { checkCredits, spendCredits } from '@/lib/credits';
-import { checkAnonymousLimit, logAnonymousUsage } from '@/lib/anonymousLimit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,33 +17,20 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    let anonIpHash: string | null = null;
-    if (user) {
-      const credit = await checkCredits(supabase, user.id, 'cover');
-      if (!credit.allowed) {
-        return NextResponse.json(
-          { error: 'out_of_credits', plan: credit.plan, remaining: credit.remaining, resetAt: credit.resetAt },
-          { status: 402 }
-        );
-      }
-    } else {
-      const limit = await checkAnonymousLimit(supabase, req, 'cover');
-      if (!limit.allowed) {
-        return NextResponse.json(
-          { error: 'Free daily limit reached for this device. Sign in for your own credits, or try again tomorrow.' },
-          { status: 429 }
-        );
-      }
-      anonIpHash = limit.ipHash;
+    if (!user) {
+      return NextResponse.json({ error: 'not_logged_in' }, { status: 401 });
+    }
+
+    const credit = await checkCredits(supabase, user.id, 'cover');
+    if (!credit.allowed) {
+      return NextResponse.json(
+        { error: 'out_of_credits', plan: credit.plan, remaining: credit.remaining, resetAt: credit.resetAt },
+        { status: 402 }
+      );
     }
 
     const letter = await generateCoverLetter(resumeText, jobDescription);
-
-    if (user) {
-      await spendCredits(supabase, user.id, 'cover');
-    } else if (anonIpHash) {
-      await logAnonymousUsage(supabase, anonIpHash, 'cover');
-    }
+    await spendCredits(supabase, user.id, 'cover');
 
     return NextResponse.json({ letter });
   } catch (err: unknown) {

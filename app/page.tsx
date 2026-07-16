@@ -24,6 +24,7 @@ import { AmbientBackground } from '@/components/AmbientBackground';
 import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
 import { trackPixelEvent } from '@/lib/metaPixelClient';
+import { stashPendingScan } from '@/lib/pendingScan';
 
 type ScoreResult = {
   score: number;
@@ -187,7 +188,7 @@ const TRUST_POINTS = [
 ];
 
 const FAQS = [
-  { q: 'Is this actually free?', a: 'Yes. While we\'re in beta, every tool here — scoring, rewriting, cover letters, interview prep — is free. No card on file.' },
+  { q: 'Is this actually free?', a: 'Yes — no card, ever, for any of it. Your match score is free to see with no account at all. A free account (still no card) unlocks the rewrite, cover letter, and interview prep — the tools that actually fix what the score found.' },
   { q: 'What happens to my resume?', a: 'Your resume is used only to generate your results. If you sign in, your results save to your private history. If you don\'t, nothing is stored.' },
   { q: 'What can I upload?', a: 'PDF, DOCX, or plain text. Upload keeps your resume exactly as it is — nothing to accidentally edit or retype.' },
   { q: 'Will it make things up?', a: 'No. Rewrites and cover letters only reframe what\'s actually on your resume. Nothing is invented — no fake numbers, no fake companies.' },
@@ -387,7 +388,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const resumeId = new URLSearchParams(window.location.search).get('resume');
+    const params = new URLSearchParams(window.location.search);
+    const resumeId = params.get('resume');
+    const intendedTab = params.get('tab');
     if (!resumeId) return;
 
     fetch(`/api/scans/${resumeId}`)
@@ -430,8 +433,26 @@ export default function Home() {
         }
         setToolOpen(true);
         window.history.replaceState(null, '', window.location.pathname);
+
+        // They were sent here specifically because they clicked a gated tool
+        // while signed out. Now that they're back with a real account, actually
+        // deliver what they asked for instead of just showing their score again.
+        const alreadyHasContent =
+          (intendedTab === 'rewrite' && scan.rewritten_resume) ||
+          (intendedTab === 'cover' && scan.cover_letter) ||
+          (intendedTab === 'interview' && scan.interview_questions);
+        if (
+          (intendedTab === 'rewrite' || intendedTab === 'cover' || intendedTab === 'interview') &&
+          !alreadyHasContent
+        ) {
+          handleTabAction(intendedTab);
+        }
       })
       .catch(() => {});
+    // Deliberately mount-only: handleTabAction is recreated every render and isn't
+    // memoized, so including it would make this effect re-run far more often than
+    // the one-time URL-param handling it's meant for.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -602,6 +623,27 @@ export default function Home() {
     if (tab === 'rewrite' && rewritten) return;
     if (tab === 'cover' && coverLetter) return;
     if (tab === 'interview' && categories.length) return;
+
+    if (!user) {
+      // Score stays free to try anonymously; the tools that actually fix what
+      // it found require a free account. Stash what they were looking at so
+      // signing in drops them right back into the tool they wanted, not just
+      // their score again.
+      if (result) {
+        stashPendingScan({
+          resumeText,
+          jobDescription,
+          score: result.score,
+          matchedKeywords: result.matchedKeywords,
+          missingKeywords: result.missingKeywords,
+          summary: result.summary,
+          improvements: result.improvements,
+          intendedTab: tab,
+        });
+      }
+      window.location.href = '/login?next=/dashboard';
+      return;
+    }
 
     setTabLoading(true);
     setError('');
@@ -833,7 +875,7 @@ export default function Home() {
           </button>
           <div className="fade-up fade-up-2 flex items-center gap-5 mt-8 text-sm text-[var(--muted)]">
             <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No card</span>
-            <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No signup wall</span>
+            <span className="flex items-center gap-1.5"><Check size={14} className="text-[var(--good)]" /> No signup wall to try it</span>
           </div>
 
           {result && (
@@ -1275,9 +1317,16 @@ export default function Home() {
                   </button>
                 </div>
                 {credits && (
-                  <p className="text-center text-xs text-[var(--muted-soft)] mt-4">
-                    {credits.remaining} credits left · <a href="/pricing" className="text-[var(--accent-ink)] hover:underline">Buy more</a>
-                  </p>
+                  credits.plan === 'free' && credits.remaining <= 2 ? (
+                    <div className="flex items-center justify-center gap-2 mt-4 px-4 py-2.5 rounded-full bg-[var(--warn-bg)] text-[var(--warn)] text-xs font-medium">
+                      {credits.remaining === 0 ? "Out of credits for today" : `Only ${credits.remaining} credit${credits.remaining === 1 ? '' : 's'} left today`}
+                      <a href="/pricing" className="underline font-semibold whitespace-nowrap">Upgrade to Pro for 100/day →</a>
+                    </div>
+                  ) : (
+                    <p className="text-center text-xs text-[var(--muted-soft)] mt-4">
+                      {credits.remaining} credits left · <a href="/pricing" className="text-[var(--accent-ink)] hover:underline">Buy more</a>
+                    </p>
+                  )
                 )}
               </div>
             ) : (
@@ -1287,11 +1336,12 @@ export default function Home() {
                 <button
                   key={tab.key}
                   onClick={() => (tab.key === 'score' ? setActiveTab('score') : handleTabAction(tab.key as 'rewrite' | 'cover' | 'interview'))}
-                  className={`flex-1 min-w-[120px] py-4 text-sm font-medium transition ${
+                  className={`flex-1 min-w-[120px] py-4 text-sm font-medium transition flex items-center justify-center gap-1.5 ${
                     activeTab === tab.key ? 'text-[var(--ink)] bg-[var(--surface)] border-b-2 border-[var(--ink)]' : 'text-[var(--muted)] hover:text-[var(--ink)]'
                   }`}
                 >
                   {tab.label}
+                  {!user && tab.key !== 'score' && <Lock size={11} className="text-[var(--muted-soft)]" />}
                 </button>
               ))}
             </div>

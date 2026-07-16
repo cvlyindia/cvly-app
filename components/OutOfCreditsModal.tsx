@@ -1,6 +1,7 @@
 'use client';
 
-import { Zap, ArrowRight } from 'lucide-react';
+import { Zap } from 'lucide-react';
+import { UpgradeToProButton } from '@/components/UpgradeToProButton';
 
 export function OutOfCreditsModal({ plan, resetAt, onClose }: { plan: string; resetAt: string; onClose: () => void }) {
   return (
@@ -18,12 +19,17 @@ export function OutOfCreditsModal({ plan, resetAt, onClose }: { plan: string; re
         </div>
 
         <div className="space-y-2.5 mb-6">
-          <div className="flex items-center justify-between p-3.5 rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30">
-            <div>
-              <p className="text-sm font-semibold">Pro</p>
-              <p className="text-xs text-[var(--muted)]">100 credits every day</p>
+          <div className="p-3.5 rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-semibold">Pro</p>
+                <p className="text-xs text-[var(--muted)]">100 credits every day</p>
+              </div>
+              <p className="text-sm font-bold">₹99<span className="text-xs font-normal text-[var(--muted)]">/mo</span></p>
             </div>
-            <p className="text-sm font-bold">₹99<span className="text-xs font-normal text-[var(--muted)]">/mo</span></p>
+            {/* Real checkout, right here — the fewer steps between "I need more
+                credits" and actually paying, the more of this moment converts. */}
+            <UpgradeToProButton cycle="monthly" />
           </div>
           <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--line)]">
             <div>
@@ -34,10 +40,10 @@ export function OutOfCreditsModal({ plan, resetAt, onClose }: { plan: string; re
           </div>
         </div>
 
-        <a href="/pricing" className="btn-accent w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-semibold mb-2.5">
-          View plans <ArrowRight size={15} />
+        <a href="/pricing" className="w-full block text-center text-xs text-[var(--muted)] hover:text-[var(--ink)] transition py-1 mb-1">
+          Compare plans, or pay yearly (save 16%)
         </a>
-        <button onClick={onClose} className="w-full text-center text-xs text-[var(--muted)] hover:text-[var(--ink)] transition py-1">
+        <button onClick={onClose} className="w-full text-center text-xs text-[var(--muted-soft)] hover:text-[var(--ink)] transition py-1">
           Maybe later
         </button>
       </div>

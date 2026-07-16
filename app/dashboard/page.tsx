@@ -86,7 +86,10 @@ export default function DashboardPage() {
         })
           .then((res) => res.json())
           .then((d) => {
-            if (d.id) router.replace(`/?resume=${d.id}`);
+            if (d.id) {
+              const tabParam = pending.intendedTab ? `&tab=${pending.intendedTab}` : '';
+              router.replace(`/?resume=${d.id}${tabParam}`);
+            }
           })
           .catch(() => {});
       }

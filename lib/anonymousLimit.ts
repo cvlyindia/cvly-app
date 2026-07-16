@@ -3,11 +3,12 @@ import { NextRequest } from 'next/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, type CreditAction } from '@/lib/credits';
 
-// Same daily budget as the logged-in free plan (see PLAN_LIMITS.free in lib/credits.ts) —
-// anonymous visitors get a fair amount of real trial usage without a signup wall, while a
-// scripted loop hitting these endpoints hits a real, enforced ceiling instead of running an
-// unbounded bill with zero revenue behind it.
-const ANONYMOUS_DAILY_BUDGET = 10;
+// A deliberately small taste, not the full product: Rewrite, Cover Letter, and
+// Interview Prep now require a free account (see those routes), so this budget only
+// covers Score itself (and image-upload OCR). 3 free scores/day is enough to compare
+// a couple of roles without commitment, not enough to run a whole job search on
+// forever without ever creating an account — that's the actual point of it existing.
+const ANONYMOUS_DAILY_BUDGET = 3;
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export function getClientIp(req: NextRequest): string {

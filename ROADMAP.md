@@ -20,16 +20,36 @@ Spending on growth before revenue exists, for example, is just spending.
 Nothing else on this list matters if this doesn't happen. Right now every user is a cost
 with no offsetting income.
 
-- **Razorpay integration** — UPI Autopay for Pro/Enterprise (both prices are well under the
-  ₹15,000 threshold where it's frictionless and RBI-compliant by default)
-- Real billing lifecycle, not just "charge once": renewal, cancellation, failed-payment
-  retry, the RBI-mandated pre-debit notification
-- Flip `PAYWALL_ENABLED` back on once Pro is actually purchasable
-- Credit top-up packs — already teased as "coming soon" on the pricing page, build it for real
+- ~~**Razorpay integration**~~ DONE (code side). Real Subscriptions API (UPI Autopay,
+  RBI pre-debit notifications and invoicing handled by Razorpay's own product, not built
+  from scratch), webhook handling with real cryptographic signature verification and
+  idempotency, Meta Pixel + Conversions API wired through the same funnel. Built live,
+  no test-mode buffer, verified with real crypto tests including deliberately breaking
+  the signature check to confirm the tests would catch a forged webhook. **Still needs
+  Anurag**: create Plans in Razorpay Dashboard, register the webhook, add env vars,
+  do one real test purchase, then manually flip `PAYWALL_ENABLED`.
+- **The actual conversion funnel** — DONE. This was the real gap: infrastructure existed
+  with no reason for anyone to reach it. Score stays free to try with no account at all;
+  Rewrite/Cover Letter/Interview Prep (the tools that fix what Score finds) now require a
+  free account — no anonymous path for any of the three. Anonymous scoring itself capped
+  to 3/day/device (down from a full 10-credit budget) — enough to compare a couple of
+  roles, not enough to run a whole job search without ever signing in. `OutOfCreditsModal`
+  now embeds real one-click checkout instead of just linking to another page. A low-credit
+  moment (2 or fewer, free plan) now shows a direct, proactive upgrade nudge instead of a
+  quiet counter. Trust-badge and chatbot copy updated to stay honest about what's actually
+  free vs. what needs an account — "no signup wall" now means "no signup wall to try it,"
+  not "everything is anonymous forever."
+- Real billing lifecycle beyond first-charge: renewal, cancellation, failed-payment retry
+  are handled by the webhook; what's NOT built yet is active dunning/win-back messaging
+  for a failed renewal specifically.
+- Credit top-up packs — already teased as "coming soon" on the pricing page, still not built.
 - **One real decision to revisit here**: Tracker/LinkedIn review/Portfolio review were
   deliberately kept free-forever earlier in this build, as a trust-building, competitive-
   advantage call made pre-revenue. Once there's real usage data, revisit whether that's
   still right, or whether a mid-tier makes sense. Don't relitigate it blind — decide with data.
+- **Also worth building soon**: "Priority processing" has been sitting as Pro-tier teaser
+  copy ("in development") since it was first written — a real, qualitative reason to
+  upgrade beyond just more credits, and not yet actually built.
 
 ## Phase 6 — Reliability (earn the right to scale)
 

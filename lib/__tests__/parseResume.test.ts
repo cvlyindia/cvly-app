@@ -61,7 +61,9 @@ describe('extractTextFromFile — real PDF parsing, no mocks', () => {
     expect(result.text).toContain('Software Engineer');
     expect(result.text).toContain('BTech Computer Science');
     expect(result.pdfPageCount).toBe(1);
-  });
+  }, 15000); // pdf.js worker init is measurably slower under full-suite resource
+             // contention than in isolation — 15s gives real headroom without
+             // masking a genuine hang if the parsing logic actually breaks.
 
   it('correctly counts pages on a real multi-page PDF', async () => {
     const pdfDoc = await PDFDocument.create();

@@ -29,34 +29,34 @@ describe('getClientIp', () => {
 
 describe('checkAnonymousLimit — the fix for the biggest cost-exposure risk found in this build', () => {
   it('allows the request when cumulative usage plus the new cost is within the daily budget', async () => {
-    const mock = createMockSupabase([{ data: [{ cost: 3 }, { cost: 2 }], error: null }]); // 5 spent already
+    const mock = createMockSupabase([{ data: [{ cost: 1 }], error: null }]); // 1 spent already
     const req = fakeRequest({ 'x-forwarded-for': '1.2.3.4' });
     const result = await checkAnonymousLimit(mock as unknown as SupabaseClient, req, 'score'); // +1
-    expect(result.allowed).toBe(true); // 5 + 1 = 6, under the 10 budget
+    expect(result.allowed).toBe(true); // 1 + 1 = 2, under the budget of 3
   });
 
-  it('blocks the request once cumulative usage plus the new cost would exceed the daily budget — this is the actual protection', async () => {
-    const mock = createMockSupabase([{ data: [{ cost: 5 }, { cost: 4 }], error: null }]); // 9 spent already
+  it('blocks the request once cumulative usage plus the new cost would exceed the daily budget — this is the actual protection, and the actual point of the budget being small: a genuine taste, not the full product', async () => {
+    const mock = createMockSupabase([{ data: [{ cost: 1 }, { cost: 1 }, { cost: 1 }], error: null }]); // 3 spent already
     const req = fakeRequest({ 'x-forwarded-for': '1.2.3.4' });
-    const result = await checkAnonymousLimit(mock as unknown as SupabaseClient, req, 'interview'); // +3
-    expect(result.allowed).toBe(false); // 9 + 3 = 12, over the 10 budget
+    const result = await checkAnonymousLimit(mock as unknown as SupabaseClient, req, 'score'); // +1
+    expect(result.allowed).toBe(false); // 3 + 1 = 4, over the budget of 3
   });
 
   it('allows exactly at the boundary — spent + cost equal to the budget is still allowed, one more is not', async () => {
-    const mockAtBoundary = createMockSupabase([{ data: [{ cost: 9 }], error: null }]);
+    const mockAtBoundary = createMockSupabase([{ data: [{ cost: 2 }], error: null }]);
     const req = fakeRequest({ 'x-forwarded-for': '1.2.3.4' });
-    const atBoundary = await checkAnonymousLimit(mockAtBoundary as unknown as SupabaseClient, req, 'score'); // +1 = 10
+    const atBoundary = await checkAnonymousLimit(mockAtBoundary as unknown as SupabaseClient, req, 'score'); // +1 = 3
     expect(atBoundary.allowed).toBe(true);
 
-    const mockOverBoundary = createMockSupabase([{ data: [{ cost: 10 }], error: null }]);
-    const overBoundary = await checkAnonymousLimit(mockOverBoundary as unknown as SupabaseClient, req, 'score'); // +1 = 11
+    const mockOverBoundary = createMockSupabase([{ data: [{ cost: 3 }], error: null }]);
+    const overBoundary = await checkAnonymousLimit(mockOverBoundary as unknown as SupabaseClient, req, 'score'); // +1 = 4
     expect(overBoundary.allowed).toBe(false);
   });
 
   it('allows a brand new IP with zero prior usage', async () => {
     const mock = createMockSupabase([{ data: [], error: null }]);
     const req = fakeRequest({ 'x-forwarded-for': '9.9.9.9' });
-    const result = await checkAnonymousLimit(mock as unknown as SupabaseClient, req, 'interview');
+    const result = await checkAnonymousLimit(mock as unknown as SupabaseClient, req, 'score');
     expect(result.allowed).toBe(true);
   });
 
