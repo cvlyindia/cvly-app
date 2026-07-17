@@ -100,9 +100,9 @@ Only after Phase 5 exists, so growth spending has revenue to justify it against.
 
 - **Chrome extension**: real multi-site testing (Naukri, LinkedIn, Indeed) and actual
   Chrome Web Store submission — it's been built and sitting untested since Phase 3.1
-- **Say the depth out loud**: the real structural DOCX inspection, the enforced
-  no-fabrication discipline — both are true and both are still unstated anywhere on the
-  homepage. This is free credibility currently left on the table
+- ~~**Say the depth out loud**~~ DONE. The "Two things we refuse to fake" homepage
+  section already covers this — the real structural DOCX inspection and the enforced
+  no-fabrication discipline, both stated explicitly, not left implicit.
 - **SEO content**: guides targeting real job-search queries, tuned for the Indian market
   specifically (India-specific ATS conventions, salary/notice-period norms) — most
   competitors are US-centric and don't bother with this, which is a real opening
