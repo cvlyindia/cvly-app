@@ -20,14 +20,13 @@ Spending on growth before revenue exists, for example, is just spending.
 Nothing else on this list matters if this doesn't happen. Right now every user is a cost
 with no offsetting income.
 
-- ~~**Razorpay integration**~~ DONE (code side). Real Subscriptions API (UPI Autopay,
-  RBI pre-debit notifications and invoicing handled by Razorpay's own product, not built
-  from scratch), webhook handling with real cryptographic signature verification and
-  idempotency, Meta Pixel + Conversions API wired through the same funnel. Built live,
-  no test-mode buffer, verified with real crypto tests including deliberately breaking
-  the signature check to confirm the tests would catch a forged webhook. **Still needs
-  Anurag**: create Plans in Razorpay Dashboard, register the webhook, add env vars,
-  do one real test purchase, then manually flip `PAYWALL_ENABLED`.
+- ~~**Razorpay integration**~~ FULLY DONE, code AND live. Real Subscriptions API (UPI
+  Autopay, RBI pre-debit notifications and invoicing handled by Razorpay's own product,
+  not built from scratch), webhook handling with real cryptographic signature
+  verification and idempotency, Meta Pixel + Conversions API wired through the same
+  funnel. Anurag completed the dashboard setup (Plans, webhook, env vars), confirmed a
+  real Pro subscription purchase and a real credit top-up both work end to end with
+  actual money, and `PAYWALL_ENABLED` is now `true` in production. Revenue is live.
 - **The actual conversion funnel** — DONE. This was the real gap: infrastructure existed
   with no reason for anyone to reach it. Score stays free to try with no account at all;
   Rewrite/Cover Letter/Interview Prep (the tools that fix what Score finds) now require a
@@ -42,17 +41,19 @@ with no offsetting income.
 - Real billing lifecycle beyond first-charge: renewal, cancellation, failed-payment retry
   are handled by the webhook; what's NOT built yet is active dunning/win-back messaging
   for a failed renewal specifically.
-- ~~Credit top-up packs~~ DONE. The three packs already teased on the pricing page
-  (20/₹49, 60/₹129, 150/₹299) are now real, one-click purchases via Razorpay Orders
-  (not Subscriptions — a separate, one-time-payment product). Security-critical piece:
-  the server validates every request against a fixed whitelist (lib/topups.ts) rather
-  than trusting any price/credit amount the client sends — verified with a real test
-  that deliberately tries to smuggle a tampered price and confirms only the real,
-  server-side values are ever used. Credits are added atomically via a new
-  increment_credits Postgres function, the same pattern as the existing
-  decrement_credits used for spending. **Needs Anurag**: the existing webhook (already
-  registered per the earlier Razorpay setup) needs `order.paid` added to its selected
-  events — it wasn't part of the original 7 events since top-ups didn't exist yet.
+- ~~Credit top-up packs~~ FULLY DONE, code AND live. The three packs already teased on
+  the pricing page (20/₹49, 60/₹129, 150/₹299) are now real, one-click purchases via
+  Razorpay Orders (not Subscriptions — a separate, one-time-payment product).
+  Security-critical piece: the server validates every request against a fixed whitelist
+  (lib/topups.ts) rather than trusting any price/credit amount the client sends —
+  verified with a real test that deliberately tries to smuggle a tampered price and
+  confirms only the real, server-side values are ever used. Credits are added atomically
+  via a new increment_credits Postgres function, the same pattern as the existing
+  decrement_credits used for spending. Anurag's first live test caught a real bug — the
+  webhook was silently failing to actually credit purchases while still reporting
+  success, root-caused to two Supabase calls whose errors were never checked (traced to
+  a missing database migration on the live project) — found, fixed, and confirmed
+  working on a second real payment.
 - **One real decision to revisit here**: Tracker/LinkedIn review/Portfolio review were
   deliberately kept free-forever earlier in this build, as a trust-building, competitive-
   advantage call made pre-revenue. Once there's real usage data, revisit whether that's

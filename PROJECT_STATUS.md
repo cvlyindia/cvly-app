@@ -108,27 +108,29 @@ whether they were already applied.
 
 ## Current focus
 
-Phase 1-4 is now fully closed except one remaining item on 3.1. **Phase 3.1, the Chrome
-extension**, has come a long way since first built: tested for real by Anurag (confirmed
-working on real job sites), got a genuine animation/polish pass (v1.1.0), then a real
-feature addition (v1.2.0) — in-popup ATS scoring using the user's last resume, and
-automatic LinkedIn profile detection with instant in-popup review, both reusing the
-website's existing API routes via new CORS support rather than duplicating any logic.
-Still needs: a final real-device pass confirming the new cross-origin scoring/review
-features actually work in live Chrome (the one thing this sandbox can't verify), a
-Chrome Web Store developer account, and submission. See chrome-extension/README.md.
+**Phase 5 (Revenue) is fully live, not just built.** Real Razorpay Subscriptions (Pro/
+Enterprise via UPI Autopay), real credit top-ups (Razorpay Orders), Meta Pixel + CAPI
+tracking, and a genuine conversion funnel (Score free to try, the tools that fix what
+Score finds require a free account). Anurag completed the dashboard setup, tested both
+purchase paths with real money end to end, and `PAYWALL_ENABLED` is now `true` in
+production. One real bug was found and fixed from that live testing — a top-up webhook
+that silently failed to credit an account while still reporting success, traced to a
+missing database migration on the live project and two unchecked Supabase error results.
 
-**Phase 6 (Reliability) started** — half of it (Sentry, tests, model pinning) was
-already done earlier under the old Phase 4 numbering; ROADMAP.md corrected to reflect
-that rather than leave it looking undone. Newly added: a real CI pipeline
-(.github/workflows/ci.yml — type-check, lint, test on every push/PR to main) and
-RUNBOOK.md, a one-page incident response guide specific to Cvly's actual stack, not
-generic filler. Two genuinely open items need Anurag directly: verifying a Supabase
-backup actually restores (needs dashboard access), and setting up UptimeRobot (needs
-an external account).
+**Phase 3.1, the Chrome extension**: built, polished (v1.1.0), extended with real
+features (v1.2.0 — in-popup scoring, LinkedIn detection). Still needs: a final
+real-device pass on the newest features, a Chrome Web Store developer account, and
+submission — none of that has happened yet.
 
-Once that's closed, next work moves to **ROADMAP.md — Phase II**, a distinct, later chapter
-(revenue, reliability, growth, product depth, operations), not a renumbering of Phase 1-4.
+**Phase 6 (Reliability)**: Sentry, tests, model pinning, and CI are done. Two items
+still need Anurag directly: verifying a Supabase backup actually restores, and setting
+up UptimeRobot.
+
+**Open, not yet decided**: which direction comes next — Phase 7 (Growth & Distribution,
+now actually justified since revenue exists), finishing the Chrome extension launch,
+Phase 8 (Product Depth), or closing the loop on Meta CAPI verification (never explicitly
+confirmed events are landing in Meta Events Manager). See ROADMAP.md for the full detail
+on each.
 
 ## Phase 3/4 from the roadmap — all done
 
