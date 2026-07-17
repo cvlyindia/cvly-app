@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const letter = await generateCoverLetter(resumeText, jobDescription);
+    const letter = await generateCoverLetter(resumeText, jobDescription, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'cover');
 
     return NextResponse.json({ letter });

@@ -62,6 +62,19 @@ describe('POST /api/portfolio-review', () => {
     expect(insertSpy.mock.calls[0][0]).toMatchObject({ user_id: 'user-1', type: 'portfolio', score: 85 });
   });
 
+  it('passes priority=true for Pro, false for free', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockReview.mockResolvedValue({ score: 85, summary: 'Strong.', strengths: [], improvements: [] });
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
+    await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
+    expect(mockReview).toHaveBeenLastCalledWith('a'.repeat(60), true);
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+    await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
+    expect(mockReview).toHaveBeenLastCalledWith('a'.repeat(60), false);
+  });
+
   it('out of credits: blocks with 402 and never calls the AI', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 0, plan: 'free', cost: 1, resetAt: '' });

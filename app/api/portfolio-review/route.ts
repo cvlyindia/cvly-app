@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await reviewPortfolio(portfolioText);
+    const result = await reviewPortfolio(portfolioText, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'portfolio');
 
     await supabase.from('career_reviews').insert({

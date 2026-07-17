@@ -21,7 +21,7 @@ const FREE_FEATURES = [
 const PRO_FEATURES = [
   'Everything in Free',
   '100 credits every day — 10x the free plan',
-  'Priority processing (in development)',
+  'Priority processing — faster results when it matters',
 ];
 
 const ENTERPRISE_FEATURES = [

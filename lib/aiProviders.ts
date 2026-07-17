@@ -66,6 +66,43 @@ const FALLBACK_PROVIDERS: FallbackProvider[] = [
 interface GenerateOptions {
   maxTokens?: number;
   temperature?: number;
+  // Pro/Enterprise only (decided by the calling route, based on the user's actual
+  // plan — never guessed here). When true and a fallback provider is configured,
+  // races Gemini against the fastest available fallback simultaneously and uses
+  // whichever responds successfully first, instead of waiting through Gemini's
+  // full response time before ever trying anything else.
+  //
+  // This is deliberately NOT the default for everyone: Groq/OpenRouter/Cerebras
+  // are free-tier providers with real, shared rate limits across all of Cvly's
+  // traffic. Racing against them on every single free-tier request would burn
+  // through that shared capacity fast, leaving less of it in reserve for the
+  // moment it's actually needed — when Gemini is genuinely down for everyone.
+  // Reserving racing for Pro keeps the free tier's safety net intact while still
+  // giving paying users a real, measurable latency improvement.
+  priority?: boolean;
+}
+
+async function tryGemini(prompt: string, maxTokens: number, temperature?: number): Promise<string> {
+  const result = await geminiModel.generateContent({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { maxOutputTokens: maxTokens, ...(temperature !== undefined ? { temperature } : {}) },
+  });
+  const text = result.response.text();
+  if (text && text.trim()) return text;
+  throw new Error('Gemini: empty response');
+}
+
+async function tryProvider(provider: FallbackProvider, prompt: string, maxTokens: number, temperature?: number): Promise<string> {
+  const client = new OpenAI({ apiKey: provider.apiKey, baseURL: provider.baseURL });
+  const completion = await client.chat.completions.create({
+    model: provider.model,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: maxTokens,
+    ...(temperature !== undefined ? { temperature } : {}),
+  });
+  const text = completion.choices[0]?.message?.content;
+  if (text && text.trim()) return text;
+  throw new Error(`${provider.name}: empty response`);
 }
 
 /**
@@ -74,40 +111,58 @@ interface GenerateOptions {
  * after Gemini speaks the same OpenAI-compatible chat-completions format, so one code path
  * covers all three. Returns the first successful response; throws only if every configured
  * provider fails.
+ *
+ * With `priority: true` (Pro/Enterprise), Gemini and the first available fallback are raced
+ * simultaneously instead of tried one after another — see GenerateOptions.priority for why
+ * this isn't the default for every request.
  */
 export async function generateWithFallback(prompt: string, options?: GenerateOptions): Promise<string> {
   const maxTokens = options?.maxTokens ?? 8192;
   const temperature = options?.temperature;
   const errors: string[] = [];
+  const remainingProviders = [...FALLBACK_PROVIDERS];
 
-  try {
-    const result = await geminiModel.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens, ...(temperature !== undefined ? { temperature } : {}) },
-    });
-    const text = result.response.text();
-    if (text && text.trim()) return text;
-    errors.push('Gemini: empty response');
-  } catch (err) {
-    errors.push(`Gemini: ${err instanceof Error ? err.message : 'unknown error'}`);
+  if (options?.priority) {
+    const raceProviderIndex = remainingProviders.findIndex((p) => p.apiKey);
+    if (raceProviderIndex !== -1) {
+      const raceProvider = remainingProviders[raceProviderIndex];
+      try {
+        return await Promise.any([
+          tryGemini(prompt, maxTokens, temperature),
+          tryProvider(raceProvider, prompt, maxTokens, temperature),
+        ]);
+      } catch (aggregate) {
+        // Both sides of the race failed — record why, then fall through to the
+        // normal sequential chain for whatever providers haven't been tried yet.
+        // Never a dead end just because the fast path didn't pan out.
+        if (aggregate instanceof AggregateError) {
+          for (const e of aggregate.errors) errors.push(e instanceof Error ? e.message : String(e));
+        }
+        remainingProviders.splice(raceProviderIndex, 1); // already tried, don't retry it below
+      }
+    } else {
+      // No fallback configured to race against — priority has nothing to race,
+      // just try Gemini alone same as the non-priority path would.
+      try {
+        return await tryGemini(prompt, maxTokens, temperature);
+      } catch (err) {
+        errors.push(`Gemini: ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
+    }
+  } else {
+    try {
+      return await tryGemini(prompt, maxTokens, temperature);
+    } catch (err) {
+      errors.push(`Gemini: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
   }
 
-  for (const provider of FALLBACK_PROVIDERS) {
+  for (const provider of remainingProviders) {
     if (!provider.apiKey) continue; // not configured — skip silently, this is expected until set up
-
     try {
-      const client = new OpenAI({ apiKey: provider.apiKey, baseURL: provider.baseURL });
-      const completion = await client.chat.completions.create({
-        model: provider.model,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: maxTokens,
-        ...(temperature !== undefined ? { temperature } : {}),
-      });
-      const text = completion.choices[0]?.message?.content;
-      if (text && text.trim()) return text;
-      errors.push(`${provider.name}: empty response`);
+      return await tryProvider(provider, prompt, maxTokens, temperature);
     } catch (err) {
-      errors.push(`${provider.name}: ${err instanceof Error ? err.message : 'unknown error'}`);
+      errors.push(err instanceof Error ? err.message : `${provider.name}: unknown error`);
     }
   }
 

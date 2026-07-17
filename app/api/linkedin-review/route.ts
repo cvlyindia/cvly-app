@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await reviewLinkedInProfile(profileText);
+    const result = await reviewLinkedInProfile(profileText, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'linkedin');
 
     await supabase.from('career_reviews').insert({

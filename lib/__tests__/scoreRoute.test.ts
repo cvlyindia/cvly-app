@@ -59,6 +59,36 @@ describe('POST /api/score — logged-in path', () => {
     expect(mockLogAnonymousUsage).not.toHaveBeenCalled();
   });
 
+  it('passes priority=true for a Pro user — the actual thing that makes Priority Processing real, not just marketing copy', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
+    mockScoreResume.mockResolvedValue({ score: 80, matchedKeywords: [], missingKeywords: [], summary: '', improvements: [] });
+
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+
+    expect(mockScoreResume).toHaveBeenCalledWith('resume', 'jd', true);
+  });
+
+  it('passes priority=true for an Enterprise user too, not just Pro specifically', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 500, plan: 'enterprise', cost: 1, resetAt: '' });
+    mockScoreResume.mockResolvedValue({ score: 80, matchedKeywords: [], missingKeywords: [], summary: '', improvements: [] });
+
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+
+    expect(mockScoreResume).toHaveBeenCalledWith('resume', 'jd', true);
+  });
+
+  it('passes priority=false for a free-plan user — the racing behavior is genuinely Pro-exclusive', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+    mockScoreResume.mockResolvedValue({ score: 80, matchedKeywords: [], missingKeywords: [], summary: '', improvements: [] });
+
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+
+    expect(mockScoreResume).toHaveBeenCalledWith('resume', 'jd', false);
+  });
+
   it('blocks with 402 when out of credits, and — critically — never calls the AI at all', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 0, plan: 'free', cost: 1, resetAt: '2026-01-01' });
@@ -112,6 +142,7 @@ describe('POST /api/score — anonymous path', () => {
     expect(res.status).toBe(200);
     expect(mockLogAnonymousUsage).toHaveBeenCalledWith(expect.anything(), 'abc123', 'score');
     expect(mockSpendCredits).not.toHaveBeenCalled();
+    expect(mockScoreResume).toHaveBeenCalledWith('resume', 'jd', false);
   });
 
   it('blocks with 429 when the anonymous daily budget is exhausted, without calling the AI', async () => {

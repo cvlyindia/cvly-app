@@ -54,6 +54,19 @@ describe('POST /api/interview-prep', () => {
     expect(mockSpendCredits).toHaveBeenCalledWith(expect.anything(), 'user-1', 'interview');
   });
 
+  it('passes priority=true for Pro, false for free — the biggest, slowest generation, where racing matters most', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockGenerate.mockResolvedValue([]);
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 100, plan: 'pro', cost: 3, resetAt: '' });
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', true);
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 10, plan: 'free', cost: 3, resetAt: '' });
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', false);
+  });
+
   it('out of credits: blocks with 402 and never calls the AI (the heaviest, most expensive call to guard)', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 2, plan: 'free', cost: 3, resetAt: '' });

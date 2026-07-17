@@ -13,7 +13,7 @@ export interface InvalidInputResult {
   reason: string;
 }
 
-export async function scoreResume(resumeText: string, jobDescription: string): Promise<ScoreResult | InvalidInputResult> {
+export async function scoreResume(resumeText: string, jobDescription: string, priority?: boolean): Promise<ScoreResult | InvalidInputResult> {
   const prompt = `You are an ATS (Applicant Tracking System) resume analyzer.
 
 FIRST — check whether what's below is actually usable. The "resume" should read like an actual person's work history, education, or skills. The "job description" should read like an actual job posting. Real resumes can be messy, informal, short, or a student's first resume with barely any experience — all of that is completely fine and still valid. What's NOT valid: random/gibberish text, lorem ipsum, a completely unrelated document (a recipe, a poem, song lyrics, someone testing with keyboard mashing), or content that's clearly not attempting to be a resume or job posting at all.
@@ -37,7 +37,7 @@ ${jobDescription}
   "improvements": [<3-5 short, specific, actionable bullet points to improve the resume for this JD>]
 }`;
 
-  const text = await generateWithFallback(prompt);
+  const text = await generateWithFallback(prompt, { priority });
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -65,7 +65,7 @@ export interface StructuredResume {
   skills: string[];
 }
 
-export async function rewriteResume(resumeText: string, jobDescription: string): Promise<StructuredResume> {
+export async function rewriteResume(resumeText: string, jobDescription: string, priority?: boolean): Promise<StructuredResume> {
   const prompt = `You are a resume writer who has gotten hundreds of people past ATS screens and into interviews. Rewrite the resume below for this specific job, following professional resume-writing craft — not generic paraphrasing. Every bullet should read like it was written by someone who does this for a living, not by an AI restating the original.
 
 RULES YOU MUST FOLLOW:
@@ -98,7 +98,7 @@ Return ONLY valid JSON, no markdown, no backticks, no preamble, in exactly this 
   "skills": ["...", "..."]
 }`;
 
-  const text = await generateWithFallback(prompt);
+  const text = await generateWithFallback(prompt, { priority });
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -108,7 +108,7 @@ Return ONLY valid JSON, no markdown, no backticks, no preamble, in exactly this 
   }
 }
 
-export async function generateCoverLetter(resumeText: string, jobDescription: string): Promise<string> {
+export async function generateCoverLetter(resumeText: string, jobDescription: string, priority?: boolean): Promise<string> {
   const prompt = `Write a cover letter for this specific role, based only on what's actually in the resume below. This should read like a real person wrote it in fifteen focused minutes, not like a template with the blanks filled in.
 
 STRUCTURE:
@@ -130,7 +130,7 @@ ${jobDescription}
 
 Return ONLY the letter text, no subject line, no "Dear Hiring Manager" placeholder commentary, no explanation of what you wrote.`;
 
-  return generateWithFallback(prompt);
+  return generateWithFallback(prompt, { priority });
 }
 
 export interface InterviewQuestion {
@@ -144,7 +144,7 @@ export interface InterviewCategory {
   questions: InterviewQuestion[];
 }
 
-export async function generateInterviewPrep(resumeText: string, jobDescription: string): Promise<InterviewCategory[]> {
+export async function generateInterviewPrep(resumeText: string, jobDescription: string, priority?: boolean): Promise<InterviewCategory[]> {
   const prompt = `Based on this resume and job description, generate exactly 100 interview questions the candidate should prepare for, split into exactly these 4 categories with 25 questions each:
 1. "Behavioral" — past behavior, teamwork, conflict, leadership
 2. "Technical & Role-Specific" — skills and tools from this exact JD
@@ -169,7 +169,7 @@ ${resumeText}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  const text = await generateWithFallback(prompt, { maxTokens: 32768 });
+  const text = await generateWithFallback(prompt, { maxTokens: 32768, priority });
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -196,7 +196,7 @@ export interface CareerReviewResult {
   improvements: string[];
 }
 
-export async function reviewLinkedInProfile(profileText: string): Promise<CareerReviewResult> {
+export async function reviewLinkedInProfile(profileText: string, priority?: boolean): Promise<CareerReviewResult> {
   const prompt = `You are a career coach reviewing a LinkedIn profile. The person pasted the text content of their profile below (headline, about section, experience, skills — whatever they included). Give honest, specific, actionable feedback. Do not invent achievements or numbers that aren't in the text. Return ONLY valid JSON, no markdown, no backticks.
 
 PROFILE TEXT:
@@ -210,7 +210,7 @@ Return JSON in exactly this shape:
   "improvements": [<3-5 specific, actionable fixes — e.g. headline clarity, About section hook, quantifying experience bullets, keyword coverage for recruiter search>]
 }`;
 
-  const text = await generateWithFallback(prompt);
+  const text = await generateWithFallback(prompt, { priority });
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {
@@ -220,7 +220,7 @@ Return JSON in exactly this shape:
   }
 }
 
-export async function reviewPortfolio(portfolioText: string): Promise<CareerReviewResult> {
+export async function reviewPortfolio(portfolioText: string, priority?: boolean): Promise<CareerReviewResult> {
   const prompt = `You are a career coach reviewing a portfolio — project descriptions, case studies, or work samples the person pasted below. Give honest, specific, actionable feedback on how well it would land with a hiring manager or recruiter. Do not invent achievements or numbers that aren't in the text. Return ONLY valid JSON, no markdown, no backticks.
 
 PORTFOLIO CONTENT:
@@ -234,7 +234,7 @@ Return JSON in exactly this shape:
   "improvements": [<3-5 specific, actionable fixes — e.g. missing outcomes/metrics, unclear problem statement, no visible process or reasoning, weak project selection>]
 }`;
 
-  const text = await generateWithFallback(prompt);
+  const text = await generateWithFallback(prompt, { priority });
   const cleaned = text.replace(/```json|```/g, '').trim();
 
   try {

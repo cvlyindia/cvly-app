@@ -55,6 +55,19 @@ describe('POST /api/rewrite', () => {
     expect(mockSpendCredits).toHaveBeenCalledWith(expect.anything(), 'user-1', 'rewrite');
   });
 
+  it('passes priority=true for Pro, false for free — Priority Processing is real here too, not just on Score', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockRewrite.mockResolvedValue({ name: 'Jane', contact: '', summary: '', experience: [], education: [], skills: [] });
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    expect(mockRewrite).toHaveBeenLastCalledWith('resume', 'jd', true);
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    expect(mockRewrite).toHaveBeenLastCalledWith('resume', 'jd', false);
+  });
+
   it('out of credits: blocks with 402 and never calls the AI', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 0, plan: 'free', cost: 1, resetAt: '' });

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const questions = await generateInterviewPrep(resumeText, jobDescription);
+    const questions = await generateInterviewPrep(resumeText, jobDescription, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'interview');
 
     return NextResponse.json({ questions });

@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     // usage of a paid AI API, so it gets a real per-IP daily budget instead of being
     // completely unmetered.
     let anonIpHash: string | null = null;
+    let isPro = false;
     if (user) {
       const credit = await checkCredits(supabase, user.id, 'score');
       if (!credit.allowed) {
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
           { status: 402, headers: cors }
         );
       }
+      isPro = credit.plan === 'pro' || credit.plan === 'enterprise';
     } else {
       const limit = await checkAnonymousLimit(supabase, req, 'score');
       if (!limit.allowed) {
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
       anonIpHash = limit.ipHash;
     }
 
-    const result = await scoreResume(resumeText, jobDescription);
+    const result = await scoreResume(resumeText, jobDescription, isPro);
 
     if (user) {
       await spendCredits(supabase, user.id, 'score');

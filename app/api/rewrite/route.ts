@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const rewritten = await rewriteResume(resumeText, jobDescription);
+    const rewritten = await rewriteResume(resumeText, jobDescription, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'rewrite');
 
     return NextResponse.json({ rewritten });

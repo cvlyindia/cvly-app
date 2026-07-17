@@ -47,9 +47,17 @@ with no offsetting income.
   deliberately kept free-forever earlier in this build, as a trust-building, competitive-
   advantage call made pre-revenue. Once there's real usage data, revisit whether that's
   still right, or whether a mid-tier makes sense. Don't relitigate it blind — decide with data.
-- **Also worth building soon**: "Priority processing" has been sitting as Pro-tier teaser
-  copy ("in development") since it was first written — a real, qualitative reason to
-  upgrade beyond just more credits, and not yet actually built.
+- **Also worth building soon**: ~~"Priority processing"~~ DONE. Was sitting as Pro-tier
+  teaser copy ("in development") since it was first written — now real. For Pro/Enterprise,
+  Gemini and the fastest available fallback provider are raced simultaneously and whichever
+  responds successfully first wins, instead of trying them one after another. Free plan
+  keeps the existing sequential behavior. Deliberately not the default for everyone: the
+  fallback providers are free-tier with real, shared rate limits across all of Cvly's
+  traffic — racing on every casual free request would burn through that shared capacity,
+  leaving less in reserve for when Gemini is genuinely down for everyone. Verified with
+  real tests (not mocked away, unlike everywhere else this function is used) proving the
+  race genuinely picks whichever succeeds first in both directions, and that a failed
+  faster side correctly falls back to waiting for the slower side rather than giving up.
 
 ## Phase 6 — Reliability (earn the right to scale)
 

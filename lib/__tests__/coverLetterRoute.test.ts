@@ -57,6 +57,19 @@ describe('POST /api/cover-letter', () => {
     expect(mockSpendCredits).toHaveBeenCalledWith(expect.anything(), 'user-1', 'cover');
   });
 
+  it('passes priority=true for Pro, false for free', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockGenerate.mockResolvedValue('Dear Hiring Team, ...');
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', true);
+
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+    await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', false);
+  });
+
   it('out of credits: blocks with 402 and never calls the AI', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 0, plan: 'free', cost: 1, resetAt: '' });
