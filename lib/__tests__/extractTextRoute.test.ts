@@ -59,7 +59,7 @@ describe('POST /api/extract-text — basic validation', () => {
 describe('POST /api/extract-text — PDF/DOCX/TXT stays completely free (the common case)', () => {
   it('never touches auth, credits, or rate limiting for a non-image file — the actual invariant that keeps this path free', async () => {
     const pdfFile = new File(['fake pdf bytes'], 'resume.pdf', { type: 'application/pdf' });
-    mockExtract.mockResolvedValue({ text: 'Jane Doe resume text', buffer: Buffer.from(''), fileType: 'application/pdf' });
+    mockExtract.mockResolvedValue({ text: 'Jane Doe — Senior Software Engineer with 6 years of backend experience', buffer: Buffer.from(''), fileType: 'application/pdf' });
 
     const res = await POST(fakeRequestWithFile(pdfFile));
 
@@ -75,14 +75,14 @@ describe('POST /api/extract-text — PDF/DOCX/TXT stays completely free (the com
     const docxFile = new File(['fake docx bytes'], 'resume.docx', {
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     });
-    mockExtract.mockResolvedValue({ text: 'resume text', buffer: Buffer.from(''), fileType: docxFile.type });
+    mockExtract.mockResolvedValue({ text: 'Jane Doe — Product Manager with cross-functional leadership experience', buffer: Buffer.from(''), fileType: docxFile.type });
     await POST(fakeRequestWithFile(docxFile));
     expect(mockCreateClient).not.toHaveBeenCalled();
 
     vi.clearAllMocks();
     mockFormatCheck.mockResolvedValue({ score: 100, issues: [], passed: [], checked: false });
     const txtFile = new File(['plain text resume'], 'resume.txt', { type: 'text/plain' });
-    mockExtract.mockResolvedValue({ text: 'resume text', buffer: Buffer.from(''), fileType: 'text/plain' });
+    mockExtract.mockResolvedValue({ text: 'Jane Doe — Product Manager with cross-functional leadership experience', buffer: Buffer.from(''), fileType: 'text/plain' });
     await POST(fakeRequestWithFile(txtFile));
     expect(mockCreateClient).not.toHaveBeenCalled();
   });
@@ -148,3 +148,41 @@ describe('POST /api/extract-text — image uploads get real protection (the fix 
     expect(mockSpendCredits).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/extract-text — scanned/image-only PDF safeguard (the real gap found from a live bug report)', () => {
+  it('rejects with a clear, actionable message when extraction succeeds but returns almost no real text — the actual symptom of a scanned PDF with no text layer', async () => {
+    const pdfFile = new File(['fake pdf bytes'], 'resume.pdf', { type: 'application/pdf' });
+    mockExtract.mockResolvedValue({ text: '   ', buffer: Buffer.from(''), fileType: 'application/pdf' });
+
+    const res = await POST(fakeRequestWithFile(pdfFile));
+    const body = await res.json();
+
+    expect(res.status).toBe(422);
+    expect(body.error).toMatch(/scanned image/i);
+  });
+
+  it('does not falsely trigger on a genuinely short but real resume (e.g. a very brief one)', async () => {
+    const pdfFile = new File(['fake pdf bytes'], 'resume.pdf', { type: 'application/pdf' });
+    // 50+ real characters — should NOT be treated as suspiciously empty
+    mockExtract.mockResolvedValue({ text: 'Jane Doe — Software Engineer with 5 years experience in backend systems', buffer: Buffer.from(''), fileType: 'application/pdf' });
+    mockFormatCheck.mockResolvedValue({ score: 90, issues: [], passed: [], checked: true });
+
+    const res = await POST(fakeRequestWithFile(pdfFile));
+    expect(res.status).toBe(200);
+  });
+
+  it('does not apply this safeguard to image uploads — a short OCR result there is a different, already-handled failure mode', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+    const imgFile = new File(['fake jpeg bytes'], 'resume.jpg', { type: 'image/jpeg' });
+    mockExtract.mockResolvedValue({ text: 'NOT_A_RESUME', buffer: Buffer.from(''), fileType: 'image/jpeg' });
+    mockFormatCheck.mockResolvedValue({ score: 0, issues: [], passed: [], checked: false });
+
+    const res = await POST(fakeRequestWithFile(imgFile));
+    // Short OCR text for images is intentionally NOT caught by the PDF-specific
+    // 422 safeguard — that's a separate path already covered by extractTextFromFile
+    // itself rejecting unreadable photos.
+    expect(res.status).not.toBe(422);
+  });
+});
+

@@ -57,6 +57,24 @@ export async function POST(req: NextRequest) {
     }
 
     const extraction = await extractTextFromFile(file);
+
+    // A scanned PDF (a photo of a resume saved as a PDF, with no real
+    // selectable text layer) parses "successfully" but returns empty or
+    // near-empty text — no exception is thrown, so without this check the
+    // route would return a 200 with nothing usable in it, and the user would
+    // just see a blank result later with no idea why. Give a clear,
+    // actionable answer right here instead.
+    if (!isImage && extraction.text.trim().length < 50) {
+      Sentry.captureMessage('Extraction produced suspiciously little text — likely a scanned/image-only file with no real text layer', {
+        level: 'warning',
+        extra: { fileType: file.type, fileSizeBytes: file.size, extractedLength: extraction.text.trim().length },
+      });
+      return NextResponse.json(
+        { error: 'We couldn\'t find real, selectable text in that file — it may be a scanned image saved as a PDF rather than an actual text document. Try uploading it as a photo instead (JPG/PNG), or re-export the original document as a PDF/DOCX with real text.' },
+        { status: 422 }
+      );
+    }
+
     const formatCheck = await runFormatCheck(
       extraction.fileType,
       extraction.buffer,
@@ -74,7 +92,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ text: extraction.text, formatCheck });
   } catch (err: unknown) {
-    Sentry.captureException(err);
+    Sentry.captureException(err, {
+      extra: { context: 'extract-text' },
+    });
     const message = err instanceof Error ? err.message : 'Failed to extract text';
     return NextResponse.json({ error: message }, { status: 500 });
   }
