@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { MessageCircle, X, Send, ArrowRight, Mail } from 'lucide-react';
+import { MessageCircle, X, Send, ArrowRight, Mail, Volume2, VolumeX } from 'lucide-react';
 import { PRESET_QUESTIONS } from '@/lib/chatbotFacts';
 import { linkifyText } from '@/lib/linkify';
 import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
+import { playReplyChime } from '@/lib/notificationSound';
 
 const SUPPORT_EMAIL = 'support@cvly.in';
 const HUMAN_PRESET_QUESTION = 'How do I talk to a real person?';
@@ -36,7 +37,25 @@ export function ChatbotButton() {
   const [loading, setLoading] = useState(false);
   const [showPresets, setShowPresets] = useState(true);
   const [showHumanOption, setShowHumanOption] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSoundMuted(localStorage.getItem('cvly_chat_muted') === '1');
+  }, []);
+
+  function setSoundMutedPersisted(updater: (m: boolean) => boolean) {
+    setSoundMuted((prev) => {
+      const next = updater(prev);
+      try {
+        localStorage.setItem('cvly_chat_muted', next ? '1' : '0');
+      } catch {
+        // localStorage can throw in rare cases (private browsing, storage full) —
+        // losing the persisted preference isn't worth crashing the page over.
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     // A single, gentle pulse a few seconds after page load — draws the eye once
@@ -88,6 +107,7 @@ export function ChatbotButton() {
         setShowHumanOption(true);
       }
       setMessages((prev) => [...prev, { role: 'bot', text: data.answer as string }]);
+      if (!soundMuted) playReplyChime();
     } catch (err) {
       // The AI genuinely couldn't help here — this is exactly the moment a human
       // option earns its place, not before.
@@ -106,10 +126,10 @@ export function ChatbotButton() {
       <button
         onClick={toggleOpen}
         aria-label={open ? 'Close chat' : 'Open chat with Cvly assistant'}
-        className={`fixed right-5 z-40 w-14 h-14 rounded-full bg-[var(--accent)] shadow-lg flex items-center justify-center hover:scale-105 transition-transform text-white ${
+        className={`fixed right-5 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform text-white ${
           showPulse && !hasOpenedOnce ? 'launcher-pulse' : ''
         }`}
-        style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+        style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))', background: 'var(--grad-prism)', boxShadow: '0 6px 20px rgba(229,64,126,0.35)' }}
       >
         {open ? <X size={24} /> : <MessageCircle size={24} />}
         {!open && (
@@ -119,17 +139,24 @@ export function ChatbotButton() {
 
       {open && (
         <div className="panel-pop fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] sm:w-96 h-[70dvh] sm:h-[520px] max-h-[calc(100dvh-9rem)] card rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white origin-bottom-right">
-          <div className="px-5 py-4 border-b border-[var(--line)] bg-[var(--surface)] flex items-center gap-3">
+          <div className="px-5 py-4 border-b border-[var(--line)] flex items-center gap-3 relative overflow-hidden" style={{ background: 'var(--grad-prism-soft)' }}>
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full bg-white border border-[var(--line)] flex items-center justify-center overflow-hidden">
                 <Image src="/logo.png" alt="" width={22} height={20} />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--good)] border-2 border-[var(--surface)]" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--good)] border-2 border-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold">Cvly Assistant</p>
-              <p className="text-xs text-[var(--muted)]">Usually answers in seconds</p>
+              <p className="text-xs text-[var(--ink)]/60">Usually answers in seconds</p>
             </div>
+            <button
+              onClick={() => setSoundMutedPersisted((m) => !m)}
+              aria-label={soundMuted ? 'Unmute reply sound' : 'Mute reply sound'}
+              className="p-1.5 rounded-lg text-[var(--ink)]/50 hover:text-[var(--ink)] hover:bg-white/50 transition shrink-0"
+            >
+              {soundMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-3">

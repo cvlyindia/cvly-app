@@ -22,6 +22,9 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'confirming' | 'deleting' | 'error'>('idle');
   const [deleteError, setDeleteError] = useState('');
+  const [subscription, setSubscription] = useState<{ razorpay_subscription_id: string; plan: string; status: string; current_end: string | null } | null>(null);
+  const [cancelStatus, setCancelStatus] = useState<'idle' | 'confirming' | 'cancelling' | 'done' | 'error'>('idle');
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -38,8 +41,28 @@ export default function SettingsPage() {
         .then((d) => {
           if (d.loggedIn) setCredits({ remaining: d.remaining, plan: d.plan, resetAt: d.resetAt });
         });
+      fetch('/api/billing/subscription')
+        .then((res) => safeParseJson(res))
+        .then((d) => {
+          if (d?.subscription) setSubscription(d.subscription as typeof subscription);
+        })
+        .catch(() => {});
     });
   }, [router]);
+
+  async function handleCancelSubscription() {
+    setCancelStatus('cancelling');
+    setCancelError('');
+    try {
+      const res = await fetch('/api/billing/cancel-subscription', { method: 'POST' });
+      const data = await safeParseJson(res);
+      if (!data || data.error) throw new Error((data?.error as string) || `request failed with status ${res.status}`);
+      setCancelStatus('done');
+    } catch (err) {
+      setCancelError(friendlyErrorMessage(err));
+      setCancelStatus('error');
+    }
+  }
 
   async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault();
@@ -180,6 +203,48 @@ export default function SettingsPage() {
             <p className="text-sm text-[var(--muted)]">Loading…</p>
           )}
         </div>
+
+        {subscription && subscription.status === 'active' && (
+          <div className="card rounded-2xl p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-4">Subscription</p>
+            {cancelStatus === 'done' ? (
+              <p className="text-sm text-[var(--ink)]/80 leading-relaxed">
+                Cancelled — no further charges. Your Pro access continues until {subscription.current_end ? new Date(subscription.current_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'the end of your current period'}.
+              </p>
+            ) : cancelStatus === 'confirming' || cancelStatus === 'cancelling' || cancelStatus === 'error' ? (
+              <>
+                <p className="text-sm text-[var(--ink)]/80 mb-4 leading-relaxed">
+                  Cancel your Pro subscription? You&apos;ll keep Pro access until {subscription.current_end ? new Date(subscription.current_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'your current period ends'} — no further charges after that.
+                </p>
+                {cancelError && <p className="text-xs text-[var(--bad)] mb-3">{cancelError}</p>}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleCancelSubscription}
+                    disabled={cancelStatus === 'cancelling'}
+                    className="text-sm font-semibold text-white bg-[var(--bad)] px-4 py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {cancelStatus === 'cancelling' ? <><Loader2 size={14} className="animate-spin" /> Cancelling…</> : 'Confirm cancellation'}
+                  </button>
+                  <button onClick={() => { setCancelStatus('idle'); setCancelError(''); }} className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">
+                    Keep my subscription
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-[var(--ink)]/80 mb-1 leading-relaxed">
+                  {subscription.plan === 'pro' ? 'Pro' : subscription.plan} plan, billed automatically via Razorpay.
+                </p>
+                {subscription.current_end && (
+                  <p className="text-xs text-[var(--muted)] mb-4">Next billing date: {new Date(subscription.current_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                )}
+                <button onClick={() => setCancelStatus('confirming')} className="text-sm font-semibold text-[var(--bad)] hover:underline">
+                  Cancel subscription
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Data & privacy */}
         <div className="card rounded-2xl p-6">

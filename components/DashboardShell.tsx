@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown, KanbanSquare,
+  LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown, KanbanSquare, BookOpen, Sparkles,
 } from 'lucide-react';
 import { ScannerModal } from '@/components/ScannerModal';
 import { ScannerContext } from '@/components/ScannerContext';
@@ -63,6 +63,14 @@ export function DashboardShell({
           </Link>
         ))}
       </nav>
+      <div className="px-3 pb-3 space-y-0.5">
+        <Link href="/guides" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)] transition">
+          <BookOpen size={15} /> Guides
+        </Link>
+        <Link href="/changelog" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)] transition">
+          <Sparkles size={15} /> Changelog
+        </Link>
+      </div>
       <div className="px-3 pb-5">
         <button
           onClick={() => setScannerOpen(true)}

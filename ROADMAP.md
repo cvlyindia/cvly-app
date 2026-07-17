@@ -38,9 +38,12 @@ with no offsetting income.
   quiet counter. Trust-badge and chatbot copy updated to stay honest about what's actually
   free vs. what needs an account — "no signup wall" now means "no signup wall to try it,"
   not "everything is anonymous forever."
-- Real billing lifecycle beyond first-charge: renewal, cancellation, failed-payment retry
-  are handled by the webhook; what's NOT built yet is active dunning/win-back messaging
-  for a failed renewal specifically.
+- ~~Real billing lifecycle beyond first-charge~~ Subscription management from the user's
+  side is now real too, not just the webhook side: Settings shows current plan, next
+  billing date, and lets a Pro user actually cancel (at cycle end, not immediately - the
+  existing webhook already handles the downgrade correctly when Razorpay processes it).
+  This was the real substance behind a "navigation feels thin" report - a paying customer
+  had genuinely no way to see or manage their own subscription anywhere in the app.
 - ~~Credit top-up packs~~ FULLY DONE, code AND live. The three packs already teased on
   the pricing page (20/₹49, 60/₹129, 150/₹299) are now real, one-click purchases via
   Razorpay Orders (not Subscriptions — a separate, one-time-payment product).
