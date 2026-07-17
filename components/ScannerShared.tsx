@@ -21,7 +21,7 @@ export function SkeletonLines({ label, sublabel }: { label: string; sublabel?: s
   );
 }
 
-export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy, resumeData, locked }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void; resumeData?: StructuredResume; locked?: boolean }) {
+export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy, resumeData, locked, onLockedClick }: { blocks: ExportBlock[]; baseFilename: string; copyText: string; copied: boolean; onCopy: (text: string) => void; resumeData?: StructuredResume; locked?: boolean; onLockedClick?: () => void }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -30,7 +30,11 @@ export function DownloadBar({ blocks, baseFilename, copyText, copied, onCopy, re
       <div className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--line)]">
         <Lock size={13} className="text-[var(--muted)]" />
         <p className="text-xs text-[var(--muted)] flex-1">Downloading and copying this section needs Pro.</p>
-        <a href="/pricing" className="text-xs font-semibold text-[var(--accent-ink)] hover:underline shrink-0">Upgrade</a>
+        {onLockedClick ? (
+          <button onClick={onLockedClick} className="text-xs font-semibold text-[var(--accent-ink)] hover:underline shrink-0">Upgrade</button>
+        ) : (
+          <a href="/pricing" className="text-xs font-semibold text-[var(--accent-ink)] hover:underline shrink-0">Upgrade</a>
+        )}
       </div>
     );
   }

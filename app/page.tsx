@@ -25,6 +25,8 @@ import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
 import { trackPixelEvent } from '@/lib/metaPixelClient';
 import { stashPendingScan } from '@/lib/pendingScan';
+import { SignInPromptModal } from '@/components/SignInPromptModal';
+import { UpgradePromptModal } from '@/components/UpgradePromptModal';
 
 type ScoreResult = {
   score: number;
@@ -312,6 +314,8 @@ export default function Home() {
   const [revealHint, setRevealHint] = useState(false);
   const [practicedIds, setPracticedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
+  const [signInPromptTab, setSignInPromptTab] = useState<string | null>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
@@ -641,7 +645,7 @@ export default function Home() {
           intendedTab: tab,
         });
       }
-      window.location.href = '/login?next=/dashboard';
+      setSignInPromptTab(tab);
       return;
     }
 
@@ -1432,7 +1436,7 @@ export default function Home() {
                   ) : rewritten ? (
                     <>
                       <div className="flex items-center gap-2 flex-wrap mb-6">
-                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} /></div>
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} /></div>
                         <ListenButton text={structuredResumeToPlainText(rewritten)} />
                       </div>
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
@@ -1487,7 +1491,7 @@ export default function Home() {
                   ) : coverLetter ? (
                     <>
                       <div className="flex items-center gap-2 flex-wrap mb-6">
-                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} /></div>
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} /></div>
                         <ListenButton text={coverLetter} />
                       </div>
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
@@ -1530,7 +1534,7 @@ export default function Home() {
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className="text-xs text-[var(--muted)]">{practicedIds.size} of {totalQuestions} practiced</p>
-                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} />
+                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} />
                               </div>
                             </div>
 
@@ -1564,7 +1568,7 @@ export default function Home() {
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  if (PAYWALL_ENABLED && credits?.plan === 'free') { window.location.href = '/pricing'; return; }
+                                                  if (PAYWALL_ENABLED && credits?.plan === 'free') { setShowUpgradePrompt(true); return; }
                                                   const text = cat.questions.map((q, i) => `${i + 1}. ${q.question}\n   Lead with: ${q.starHint}${q.suggestedAnswer ? `\n   Suggested answer: ${q.suggestedAnswer}` : ''}`).join('\n\n');
                                                   copyContent(`${cat.category}\n\n${text}`);
                                                 }}
@@ -1588,7 +1592,7 @@ export default function Home() {
                                                     {practicedIds.has(q.question) && <Check size={13} className="text-[var(--good)] shrink-0 mt-0.5" />}
                                                     <button
                                                       onClick={() => {
-                                                        if (PAYWALL_ENABLED && credits?.plan === 'free') { window.location.href = '/pricing'; return; }
+                                                        if (PAYWALL_ENABLED && credits?.plan === 'free') { setShowUpgradePrompt(true); return; }
                                                         copyContent(`${q.question}\n\nLead with: ${q.starHint}${q.suggestedAnswer ? `\nSuggested answer: ${q.suggestedAnswer}` : ''}`);
                                                       }}
                                                       aria-label={PAYWALL_ENABLED && credits?.plan === 'free' ? 'Upgrade to copy this question' : 'Copy this question'}
@@ -1729,6 +1733,16 @@ export default function Home() {
         </div>
         {outOfCredits && (
           <OutOfCreditsModal plan={outOfCredits.plan} resetAt={outOfCredits.resetAt} onClose={() => setOutOfCredits(null)} />
+        )}
+        {signInPromptTab && (
+          <SignInPromptModal
+            tab={signInPromptTab}
+            onClose={() => setSignInPromptTab(null)}
+            onContinue={() => { window.location.href = '/login?next=/dashboard'; }}
+          />
+        )}
+        {showUpgradePrompt && (
+          <UpgradePromptModal onClose={() => setShowUpgradePrompt(false)} />
         )}
         </>
       )}
