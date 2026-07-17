@@ -42,13 +42,26 @@ export async function POST(req: NextRequest) {
     // row to 'paid' on success rather than inserting a fresh one, giving a
     // complete record even for orders that were created but never completed.
     const admin = createAdminClient();
-    await admin.from('credit_purchases').insert({
+    const { error: purchaseInsertError } = await admin.from('credit_purchases').insert({
       user_id: user.id,
       razorpay_order_id: order.id,
       credits_purchased: pack.credits,
       amount_paise: amountPaise,
       status: 'created',
     });
+
+    if (purchaseInsertError) {
+      // Fail loudly here rather than silently opening a checkout that can never
+      // actually be credited — if this insert fails (e.g. the credit_purchases
+      // table or its migration hasn't been applied to this database yet), the
+      // webhook's own increment_credits call will hit the exact same problem
+      // later, except invisibly, after someone has already paid real money.
+      Sentry.captureException(new Error(`credit_purchases insert failed: ${purchaseInsertError.message}`), {
+        tags: { context: 'create-order' },
+        extra: { orderId: order.id, userId: user.id },
+      });
+      return NextResponse.json({ error: 'Could not start checkout — please try again in a moment' }, { status: 500 });
+    }
 
     return NextResponse.json({
       orderId: order.id,

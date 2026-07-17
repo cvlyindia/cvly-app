@@ -92,4 +92,15 @@ describe('POST /api/billing/create-order — the security-critical whitelist val
     const res = await POST(fakeRequest({ packId: 'medium' }));
     expect(res.status).toBe(500);
   });
+
+  it('fails loudly, not silently, if the credit_purchases record can\'t be created — e.g. the table/migration is missing. The real bug this replaced: checkout used to succeed anyway, opening a purchase that could never actually be credited.', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockGetRazorpayClient.mockReturnValue({
+      orders: { create: vi.fn().mockResolvedValue({ id: 'order_xyz' }) },
+    } as unknown as ReturnType<typeof getRazorpayClient>);
+    insertSpy.mockResolvedValue({ data: null, error: { message: 'relation "credit_purchases" does not exist' } });
+
+    const res = await POST(fakeRequest({ packId: 'small' }));
+    expect(res.status).toBe(500);
+  });
 });

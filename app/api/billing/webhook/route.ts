@@ -225,12 +225,27 @@ async function handleOrderPaidEvent(
   // actually adds real value to someone's account.
   if (purchase?.status === 'paid') return;
 
-  await supabase
-    .from('credit_purchases')
-    .update({ status: 'paid' })
-    .eq('razorpay_order_id', order.id);
+  // Credit FIRST, mark 'paid' only once that genuinely succeeds — not the other
+  // way around. Marking 'paid' before attempting the increment would leave a
+  // purchase record claiming success even on a payment where the credits never
+  // actually landed, which is exactly backwards for a record whose entire
+  // purpose is knowing whether someone actually got what they paid for.
+  const { error: incrementError } = await supabase.rpc('increment_credits', { p_user_id: userId, p_amount: credits });
+  if (incrementError) {
+    await supabase.from('credit_purchases').update({ status: 'failed' }).eq('razorpay_order_id', order.id);
+    // This is the actual failure mode that matters most here: a real payment
+    // succeeded but the credits never landed. Must be loud, not swallowed —
+    // continuing on to fire a Purchase event below would be actively wrong,
+    // reporting a "successful" purchase to Meta that the user never actually
+    // received anything for.
+    Sentry.captureException(new Error(`increment_credits RPC failed: ${incrementError.message}`), {
+      tags: { context: 'order-paid-webhook' },
+      extra: { orderId: order.id, userId, credits },
+    });
+    return;
+  }
 
-  await supabase.rpc('increment_credits', { p_user_id: userId, p_amount: credits });
+  await supabase.from('credit_purchases').update({ status: 'paid' }).eq('razorpay_order_id', order.id);
 
   const { data: userRow } = await supabase.auth.admin.getUserById(userId);
   const email = userRow?.user?.email;

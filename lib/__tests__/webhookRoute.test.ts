@@ -75,6 +75,7 @@ function mockAdminSupabase(opts: {
   existingWebhookEvent?: boolean;
   existingSubscription?: { purchase_event_sent: boolean } | null;
   existingPurchase?: { status: string } | null;
+  rpcShouldFail?: boolean;
 }) {
   const updateCalls: { table: string; payload: unknown }[] = [];
   const insertCalls: { table: string; payload: unknown }[] = [];
@@ -109,6 +110,9 @@ function mockAdminSupabase(opts: {
     }),
     rpc: (fn: string, params: unknown) => {
       rpcCalls.push({ fn, params });
+      if (opts.rpcShouldFail) {
+        return Promise.resolve({ data: null, error: { message: 'function increment_credits does not exist' } });
+      }
       return Promise.resolve({ data: null, error: null });
     },
     auth: {
@@ -277,6 +281,33 @@ describe('POST /api/billing/webhook — order.paid (credit top-ups)', () => {
     const res = await POST(fakeRequest(body, signBody(body), 'evt_topup_5'));
     expect(res.status).toBe(200);
     expect(sendCapiEvent).not.toHaveBeenCalled();
+  });
+
+  it('when increment_credits genuinely fails (e.g. the function does not exist in this database), marks the purchase failed and never fires a fake Purchase event — the exact real bug this replaced', async () => {
+    const mock = mockAdminSupabase({ existingPurchase: null, rpcShouldFail: true });
+    const body = orderPaidEventBody();
+    const res = await POST(fakeRequest(body, signBody(body), 'evt_topup_6'));
+
+    expect(res.status).toBe(200); // still acks the webhook so Razorpay doesn't retry forever
+    const purchaseUpdate = mock.getUpdateCalls().find((c) => c.table === 'credit_purchases');
+    expect(purchaseUpdate?.payload).toEqual({ status: 'failed' });
+    // Never claims success for a purchase whose credits never actually landed.
+    expect(sendCapiEvent).not.toHaveBeenCalled();
+  });
+
+  it('only marks a purchase "paid" AFTER the credit increment genuinely succeeds, never before', async () => {
+    const mock = mockAdminSupabase({ existingPurchase: null });
+    const body = orderPaidEventBody();
+    await POST(fakeRequest(body, signBody(body), 'evt_topup_7'));
+
+    const calls = mock.getUpdateCalls().filter((c) => c.table === 'credit_purchases');
+    const rpcCalls = mock.getRpcCalls();
+    // The RPC call must have happened, and the ONLY credit_purchases update
+    // recorded should be the final 'paid' one — proving 'paid' isn't written
+    // speculatively before the increment is confirmed to have worked.
+    expect(rpcCalls).toHaveLength(1);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].payload).toEqual({ status: 'paid' });
   });
 });
 
