@@ -355,10 +355,19 @@ details > summary::-webkit-details-marker { display: none; }
   .float-a, .float-b, .float-c, .scan-beam, .conic-glow, .mote { animation: none; }
 }
 
-/* On small screens, drop backdrop-blur (GPU cost) and simplify the cluster */
+/* On small screens, drop the GPU-heavy stuff entirely rather than just slow it down —
+   same discipline already applied to .mesh-drift-* above, for the same reason: large
+   blur radius + continuous animation is a real cost on mid-range Android hardware, and
+   here it's worse, since several of these run simultaneously right in the hero. Keep
+   every element visible (nothing is hidden or removed), just static instead of animated.
+   This is also the fix for position:fixed elements elsewhere on the page (like the
+   chatbot button) intermittently disappearing — that's a known Android Chrome symptom
+   of GPU compositing-layer pressure from exactly this kind of stacked blur+animation. */
 @media (max-width: 640px) {
   .glass-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.92); }
-  .conic-glow, .scan-beam { animation-duration: 5s; }
+  .float-a, .float-b, .float-c, .conic-glow, .mote, .float-slow, .float-slower { animation: none; }
+  .scan-beam { display: none; } /* only makes visual sense mid-sweep, not frozen */
+  .glow-halo { filter: blur(24px); opacity: 0.35; }
 }
 
 /* Gradient text for headline moments */
