@@ -17,6 +17,18 @@ const GUIDES = [
     readTime: '8 min read',
   },
   {
+    href: '/guides/resume-for-freshers-india',
+    title: 'Resume format for freshers: your first job in India',
+    description: 'No work experience isn\'t a gap to hide — it just means the resume needs to lead with different things. Here\'s what actually works.',
+    readTime: '7 min read',
+  },
+  {
+    href: '/guides/employment-gap-resume',
+    title: 'How to explain an employment gap on your resume',
+    description: 'A short, confident line does more work than a long, defensive one. Here\'s how to actually write it.',
+    readTime: '6 min read',
+  },
+  {
     href: '/guides/notice-period-on-resume',
     title: 'How to mention your notice period on a resume',
     description: 'Where it goes, how to phrase it for your actual situation, and why leaving it out usually costs you time, not saves it.',
