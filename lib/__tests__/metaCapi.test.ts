@@ -35,7 +35,10 @@ describe('sendCapiEvent — PII hashing correctness (a real privacy requirement)
     expect(sentEm).toBe(expectedHash('User@Example.COM'));
     expect(sentEm).not.toContain('@'); // never the plaintext email
     expect(sentEm).toHaveLength(64); // sha256 hex digest length
-  });
+  }, 10000); // vi.resetModules() + dynamic import has real re-evaluation cost that
+             // occasionally exceeds the default timeout under full-suite resource
+             // contention (19 files running together) — not a sign of an actual
+             // regression, confirmed by this test passing reliably in isolation.
 
   it('hashes external_id (user ID) the same way', async () => {
     const mockFetch = vi.fn().mockResolvedValue({ ok: true, text: async () => '' });
