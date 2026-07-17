@@ -43,9 +43,33 @@ describe('POST /api/interview-prep', () => {
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 
+  it('requires Pro/Enterprise — a free user with credits available is still blocked, never reaches generation', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 3, resetAt: '' });
+
+    const res = await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(402);
+    expect(body.error).toBe('requires_pro');
+    expect(mockGenerate).not.toHaveBeenCalled();
+    expect(mockSpendCredits).not.toHaveBeenCalled();
+  });
+
+  it('allows Enterprise too, not just Pro specifically', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 500, plan: 'enterprise', cost: 3, resetAt: '' });
+    mockGenerate.mockResolvedValue([]);
+
+    const res = await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+
+    expect(res.status).toBe(200);
+    expect(mockGenerate).toHaveBeenCalled();
+  });
+
   it('uses the correct "interview" action for both the credit check and the spend — not copy-pasted from a sibling route', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
-    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 10, plan: 'free', cost: 3, resetAt: '' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 100, plan: 'pro', cost: 3, resetAt: '' });
     mockGenerate.mockResolvedValue([]);
 
     await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
@@ -54,7 +78,7 @@ describe('POST /api/interview-prep', () => {
     expect(mockSpendCredits).toHaveBeenCalledWith(expect.anything(), 'user-1', 'interview');
   });
 
-  it('passes priority=true for Pro, false for free — the biggest, slowest generation, where racing matters most', async () => {
+  it('passes priority=true for Pro/Enterprise — free is no longer a reachable case here at all, since it is blocked before generation', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockGenerate.mockResolvedValue([]);
 
@@ -62,24 +86,26 @@ describe('POST /api/interview-prep', () => {
     await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
     expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', true);
 
-    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 10, plan: 'free', cost: 3, resetAt: '' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 1000, plan: 'enterprise', cost: 3, resetAt: '' });
     await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
-    expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', false);
+    expect(mockGenerate).toHaveBeenLastCalledWith('resume', 'jd', true);
   });
 
-  it('out of credits: blocks with 402 and never calls the AI (the heaviest, most expensive call to guard)', async () => {
+  it('out of credits: blocks with 402 and never calls the AI, even for a Pro user (the heaviest, most expensive call to guard)', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
-    mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 2, plan: 'free', cost: 3, resetAt: '' });
+    mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 2, plan: 'pro', cost: 3, resetAt: '' });
 
     const res = await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));
+    const body = await res.json();
 
     expect(res.status).toBe(402);
+    expect(body.error).toBe('out_of_credits'); // distinct from requires_pro
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 
   it('never spends a credit if generation fails', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
-    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 10, plan: 'free', cost: 3, resetAt: '' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 100, plan: 'pro', cost: 3, resetAt: '' });
     mockGenerate.mockRejectedValue(new Error('AI failed'));
 
     const res = await POST(fakeRequest({ resumeText: 'resume', jobDescription: 'jd' }));

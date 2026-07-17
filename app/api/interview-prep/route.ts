@@ -29,6 +29,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Interview prep is Pro/Enterprise only — gated at generation, not just download.
+    // This is also what actually stops a free user from ever seeing the real
+    // questions at all (and so copying them via right-click/selection is a
+    // non-issue here — there's nothing generated to copy), rather than generating
+    // the content and only hiding a download button around it.
+    if (credit.plan !== 'pro' && credit.plan !== 'enterprise') {
+      return NextResponse.json({ error: 'requires_pro' }, { status: 402 });
+    }
+
     const questions = await generateInterviewPrep(resumeText, jobDescription, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'interview');
 

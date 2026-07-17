@@ -2,7 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { sendCapiEvent } from './metaCapi';
 
 export const PLAN_LIMITS: Record<string, number> = {
-  free: 10,
+  free: 5,
   pro: 100,
   enterprise: 1000,
 };
@@ -41,7 +41,13 @@ async function getOrCreateCredits(supabase: SupabaseClient, userId: string) {
   if (!existing) {
     const { data: created } = await supabase
       .from('user_credits')
-      .insert({ user_id: userId })
+      // Explicitly set credits_remaining from PLAN_LIMITS rather than relying on
+      // the database column's own default value - that default is a second,
+      // easy-to-forget source of truth for this number, separate from
+      // PLAN_LIMITS, and the two can silently drift out of sync (exactly what
+      // happened when the free-tier limit changed here without a matching
+      // schema update). This is the single place that should ever decide it.
+      .insert({ user_id: userId, credits_remaining: PLAN_LIMITS.free })
       .select('*')
       .single();
 

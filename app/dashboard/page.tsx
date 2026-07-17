@@ -435,7 +435,10 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold tabular-nums">{latest.score}</p>
                   <p className="text-xs text-[var(--muted)] mt-1">Resume match</p>
                 </div>
-                <button onClick={() => setReviewModal('linkedin')} className="text-left hover:opacity-70 transition">
+                <button onClick={() => setReviewModal('linkedin')} className="text-left hover:opacity-70 transition relative">
+                  {credits?.plan === 'free' && (
+                    <span className="absolute -top-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: 'var(--grad-prism)' }}>PRO</span>
+                  )}
                   {linkedinReview ? (
                     <p className="text-2xl font-bold tabular-nums">{linkedinReview.score}</p>
                   ) : (
@@ -443,7 +446,10 @@ export default function DashboardPage() {
                   )}
                   <p className="text-xs text-[var(--muted)] mt-1">LinkedIn</p>
                 </button>
-                <button onClick={() => setReviewModal('portfolio')} className="text-left hover:opacity-70 transition">
+                <button onClick={() => setReviewModal('portfolio')} className="text-left hover:opacity-70 transition relative">
+                  {credits?.plan === 'free' && (
+                    <span className="absolute -top-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: 'var(--grad-prism)' }}>PRO</span>
+                  )}
                   {portfolioReview ? (
                     <p className="text-2xl font-bold tabular-nums">{portfolioReview.score}</p>
                   ) : (

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Loader2, Check, Sparkles } from 'lucide-react';
+import { UpgradePromptModal } from '@/components/UpgradePromptModal';
 
 type ReviewType = 'linkedin' | 'portfolio';
 
@@ -34,6 +35,7 @@ export function CareerReviewModal({ type, onClose, onSaved }: { type: ReviewType
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<ReviewResult | null>(null);
+  const [needsPro, setNeedsPro] = useState(false);
   const copy = COPY[type];
 
   async function handleSubmit() {
@@ -50,6 +52,10 @@ export function CareerReviewModal({ type, onClose, onSaved }: { type: ReviewType
         body: JSON.stringify({ [copy.fieldName]: text }),
       });
       const data = await res.json();
+      if (data.error === 'requires_pro') {
+        setNeedsPro(true);
+        return;
+      }
       if (data.error === 'out_of_credits') {
         throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.`);
       }
@@ -61,6 +67,10 @@ export function CareerReviewModal({ type, onClose, onSaved }: { type: ReviewType
     } finally {
       setLoading(false);
     }
+  }
+
+  if (needsPro) {
+    return <UpgradePromptModal onClose={onClose} />;
   }
 
   return (

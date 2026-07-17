@@ -233,6 +233,13 @@ export function ScannerModal({
     if (tab === 'cover' && coverLetter) return;
     if (tab === 'interview' && categories.length) return;
 
+    // Interview prep is Pro/Enterprise only, checked here so a free user sees
+    // the upgrade prompt immediately rather than a loading spinner that fails.
+    if (tab === 'interview' && credits?.plan !== 'pro' && credits?.plan !== 'enterprise') {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
     setTabLoading(true);
     setError('');
     try {
@@ -470,11 +477,14 @@ export function ScannerModal({
                 <button
                   key={tab.key}
                   onClick={() => (tab.key === 'score' ? setActiveTab('score') : handleTabAction(tab.key as 'rewrite' | 'cover' | 'interview'))}
-                  className={`flex-1 min-w-[120px] py-4 text-sm font-medium transition ${
+                  className={`flex-1 min-w-[120px] py-4 text-sm font-medium transition flex items-center justify-center gap-1.5 ${
                     activeTab === tab.key ? 'text-[var(--ink)] bg-[var(--surface)] border-b-2 border-[var(--ink)]' : 'text-[var(--muted)] hover:text-[var(--ink)]'
                   }`}
                 >
                   {tab.label}
+                  {tab.key === 'interview' && credits?.plan !== 'pro' && credits?.plan !== 'enterprise' && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: 'var(--grad-prism)' }}>PRO</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -561,7 +571,7 @@ export function ScannerModal({
                   ) : rewritten ? (
                     <>
                       <div className="flex items-center gap-2 flex-wrap mb-6">
-                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} /></div>
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} /></div>
                         <ListenButton text={structuredResumeToPlainText(rewritten)} />
                       </div>
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
@@ -616,7 +626,7 @@ export function ScannerModal({
                   ) : coverLetter ? (
                     <>
                       <div className="flex items-center gap-2 flex-wrap mb-6">
-                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} /></div>
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} /></div>
                         <ListenButton text={coverLetter} />
                       </div>
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>

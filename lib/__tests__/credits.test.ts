@@ -8,7 +8,7 @@ const PAST = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
 describe('PLAN_LIMITS and ACTION_COSTS — regression guard', () => {
   it('matches the documented daily credit scheme', () => {
-    expect(PLAN_LIMITS.free).toBe(10);
+    expect(PLAN_LIMITS.free).toBe(5);
     expect(PLAN_LIMITS.pro).toBe(100);
     expect(PLAN_LIMITS.enterprise).toBe(1000);
   });
@@ -71,12 +71,23 @@ describe('checkCredits', () => {
   it('creates a free-tier row for a brand new user with no existing credits', async () => {
     const mock = createMockSupabase([
       { data: null, error: null }, // no existing row
-      { data: { credits_remaining: 10, plan: 'free', credits_reset_at: FUTURE }, error: null }, // after insert
+      { data: { credits_remaining: 5, plan: 'free', credits_reset_at: FUTURE }, error: null }, // after insert
     ]);
     const result = await checkCredits(mock as unknown as SupabaseClient, 'new-user', 'score');
     expect(result.allowed).toBe(true);
-    expect(result.remaining).toBe(10);
+    expect(result.remaining).toBe(5);
     expect(result.plan).toBe('free');
+  });
+
+  it('explicitly requests PLAN_LIMITS.free credits on the insert itself, rather than relying on any database column default — the actual fix for a real bug where the DB default and PLAN_LIMITS could silently drift out of sync', async () => {
+    const mock = createMockSupabase([
+      { data: null, error: null },
+      { data: { credits_remaining: 5, plan: 'free', credits_reset_at: FUTURE }, error: null },
+    ]);
+    await checkCredits(mock as unknown as SupabaseClient, 'new-user', 'score');
+    expect(mock.getInsertCalls()).toContainEqual(
+      expect.objectContaining({ credits_remaining: PLAN_LIMITS.free })
+    );
   });
 
   it('fails open (never blocks a real user) if the credits row genuinely cannot be read after creation', async () => {

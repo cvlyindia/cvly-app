@@ -73,7 +73,7 @@ create policy "Anyone can join the waitlist"
 create table if not exists user_credits (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan text not null default 'free' check (plan in ('free', 'pro', 'enterprise')),
-  credits_remaining int not null default 10,
+  credits_remaining int not null default 5,
   credits_reset_at timestamptz not null default (now() + interval '1 day'),
   created_at timestamptz default now()
 );

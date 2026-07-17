@@ -190,7 +190,7 @@ const TRUST_POINTS = [
 ];
 
 const FAQS = [
-  { q: 'Is this actually free?', a: 'Yes — no card, ever, for any of it. Your match score is free to see with no account at all. A free account (still no card) unlocks the rewrite, cover letter, and interview prep — the tools that actually fix what the score found.' },
+  { q: 'Is this actually free?', a: 'Your match score, rewrite, and cover letter are free with a free account — no card, ever. Interview prep, LinkedIn review, and Portfolio review are Pro features (₹99/month).' },
   { q: 'What happens to my resume?', a: 'Your resume is used only to generate your results. If you sign in, your results save to your private history. If you don\'t, nothing is stored.' },
   { q: 'What can I upload?', a: 'PDF, DOCX, or plain text. Upload keeps your resume exactly as it is — nothing to accidentally edit or retype.' },
   { q: 'Will it make things up?', a: 'No. Rewrites and cover letters only reframe what\'s actually on your resume. Nothing is invented — no fake numbers, no fake companies.' },
@@ -646,6 +646,15 @@ export default function Home() {
         });
       }
       setSignInPromptTab(tab);
+      return;
+    }
+
+    // Interview prep is Pro/Enterprise only, checked here (not just server-side)
+    // so a free user sees the upgrade prompt immediately, not a loading spinner
+    // that fails a moment later.
+    if (tab === 'interview' && credits?.plan !== 'pro' && credits?.plan !== 'enterprise') {
+      setActiveTab('interview');
+      setShowUpgradePrompt(true);
       return;
     }
 
@@ -1346,6 +1355,9 @@ export default function Home() {
                 >
                   {tab.label}
                   {!user && tab.key !== 'score' && <Lock size={11} className="text-[var(--muted-soft)]" />}
+                  {user && tab.key === 'interview' && credits?.plan !== 'pro' && credits?.plan !== 'enterprise' && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: 'var(--grad-prism)' }}>PRO</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -1436,7 +1448,7 @@ export default function Home() {
                   ) : rewritten ? (
                     <>
                       <div className="flex items-center gap-2 flex-wrap mb-6">
-                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} /></div>
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={[]} baseFilename="cvly-rewrite" copyText={structuredResumeToPlainText(rewritten)} copied={copied} onCopy={copyContent} resumeData={rewritten} /></div>
                         <ListenButton text={structuredResumeToPlainText(rewritten)} />
                       </div>
                       <div className="border border-[var(--line)] rounded-xl p-7 bg-white">
@@ -1491,7 +1503,7 @@ export default function Home() {
                   ) : coverLetter ? (
                     <>
                       <div className="flex items-center gap-2 flex-wrap mb-6">
-                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} /></div>
+                        <div className="flex-1 min-w-0"><DownloadBar blocks={coverBlocks()} baseFilename="cvly-cover-letter" copyText={coverLetter} copied={copied} onCopy={copyContent} /></div>
                         <ListenButton text={coverLetter} />
                       </div>
                       <pre className="whitespace-pre-wrap text-sm text-[var(--ink)]/85 font-sans leading-relaxed">{coverLetter}</pre>
@@ -1534,7 +1546,7 @@ export default function Home() {
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className="text-xs text-[var(--muted)]">{practicedIds.size} of {totalQuestions} practiced</p>
-                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} locked={PAYWALL_ENABLED && credits?.plan === 'free'} onLockedClick={() => setShowUpgradePrompt(true)} />
+                                <DownloadBar blocks={interviewBlocks()} baseFilename="cvly-interview-prep" copyText={plainText(interviewBlocks())} copied={copied} onCopy={copyContent} />
                               </div>
                             </div>
 

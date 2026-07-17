@@ -13,16 +13,16 @@ const FREE_FEATURES = [
   'Keyword gap analysis',
   'AI resume rewrite',
   'Cover letter generator',
-  '100 interview questions',
   'Dashboard, history & goal tracking',
   'Application tracker (Kanban board)',
-  'LinkedIn profile review',
-  'Portfolio review',
 ];
 
 const PRO_FEATURES = [
   'Everything in Free',
-  '100 credits every day — 10x the free plan',
+  '100 interview questions, tailored to the role',
+  'LinkedIn profile review',
+  'Portfolio review',
+  '100 credits every day — 20x the free plan',
   'Priority processing — faster results when it matters',
 ];
 
@@ -159,7 +159,7 @@ export default function PricingPage() {
               <span className="text-[10px] font-bold text-white bg-[var(--good)] px-2 py-0.5 rounded-full">ACTIVE NOW</span>
             </div>
             <p className="text-3xl font-bold tracking-tight mb-1">₹0</p>
-            <p className="text-xs text-[var(--muted)] mb-6">10 credits every day, no card</p>
+            <p className="text-xs text-[var(--muted)] mb-6">5 credits every day, no card</p>
             <div className="space-y-2.5 mb-7">
               {FREE_FEATURES.map((f) => (
                 <div key={f} className="flex items-center gap-2.5">

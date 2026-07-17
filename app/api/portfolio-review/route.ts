@@ -29,6 +29,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Portfolio review is Pro/Enterprise only, gated at generation - same pattern
+    // as interview prep and LinkedIn review.
+    if (credit.plan !== 'pro' && credit.plan !== 'enterprise') {
+      return NextResponse.json({ error: 'requires_pro' }, { status: 402 });
+    }
+
     const result = await reviewPortfolio(portfolioText, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'portfolio');
 

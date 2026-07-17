@@ -54,10 +54,21 @@ with no offsetting income.
   success, root-caused to two Supabase calls whose errors were never checked (traced to
   a missing database migration on the live project) — found, fixed, and confirmed
   working on a second real payment.
-- **One real decision to revisit here**: Tracker/LinkedIn review/Portfolio review were
-  deliberately kept free-forever earlier in this build, as a trust-building, competitive-
-  advantage call made pre-revenue. Once there's real usage data, revisit whether that's
-  still right, or whether a mid-tier makes sense. Don't relitigate it blind — decide with data.
+- ~~**One real decision to revisit here**~~ DECIDED. Anurag made the call directly rather
+  than wait for usage data — LinkedIn review and Portfolio review moved from free-forever
+  to Pro-only, alongside Interview Prep (which was already login-gated but not
+  plan-gated). New tier structure: Free/credit-purchase tier gets ATS score, resume
+  rewrite, and cover letter (generate + download, no restriction). Pro gets those plus
+  Interview Prep, LinkedIn review, and Portfolio review. Free daily credits dropped from
+  10 to 5. Gated at generation, not just download — a free user never receives the
+  actual Interview Prep/LinkedIn/Portfolio content from the server at all, which is also
+  what closes a real copy-paste bypass: locking only a download button while the
+  restricted content still renders on the page doesn't actually stop someone from
+  selecting and copying it directly. Found and fixed a related real bug while making
+  this change: new user signup was silently relying on a database column's own default
+  value for starting credits, a second source of truth separate from PLAN_LIMITS that
+  had already drifted out of sync once and would have again — fixed to explicitly set
+  the value from PLAN_LIMITS on every insert.
 - **Also worth building soon**: ~~"Priority processing"~~ DONE. Was sitting as Pro-tier
   teaser copy ("in development") since it was first written — now real. For Pro/Enterprise,
   Gemini and the fastest available fallback provider are raced simultaneously and whichever

@@ -50,9 +50,22 @@ describe('POST /api/portfolio-review', () => {
     expect(mockReview).not.toHaveBeenCalled();
   });
 
-  it('logged in with credits: reviews, spends one portfolio credit, and saves the result with the correct type', async () => {
+  it('requires Pro/Enterprise — Portfolio review is no longer free-forever, a free user with credits is still blocked', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+
+    const res = await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
+    const body = await res.json();
+
+    expect(res.status).toBe(402);
+    expect(body.error).toBe('requires_pro');
+    expect(mockReview).not.toHaveBeenCalled();
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it('logged in as Pro with credits: reviews, spends one portfolio credit, and saves the result with the correct type', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
     mockReview.mockResolvedValue({ score: 85, summary: 'Strong.', strengths: [], improvements: [] });
 
     const res = await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
@@ -62,32 +75,41 @@ describe('POST /api/portfolio-review', () => {
     expect(insertSpy.mock.calls[0][0]).toMatchObject({ user_id: 'user-1', type: 'portfolio', score: 85 });
   });
 
-  it('passes priority=true for Pro, false for free', async () => {
+  it('allows Enterprise too, not just Pro specifically', async () => {
+    mockSupabaseWithUser({ id: 'user-1' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 500, plan: 'enterprise', cost: 1, resetAt: '' });
+    mockReview.mockResolvedValue({ score: 85, summary: 'Strong.', strengths: [], improvements: [] });
+
+    const res = await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
+
+    expect(res.status).toBe(200);
+    expect(mockReview).toHaveBeenCalled();
+  });
+
+  it('passes priority=true for Pro/Enterprise — free is no longer reachable here at all', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
     mockReview.mockResolvedValue({ score: 85, summary: 'Strong.', strengths: [], improvements: [] });
 
     mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
     await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
     expect(mockReview).toHaveBeenLastCalledWith('a'.repeat(60), true);
-
-    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
-    await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
-    expect(mockReview).toHaveBeenLastCalledWith('a'.repeat(60), false);
   });
 
-  it('out of credits: blocks with 402 and never calls the AI', async () => {
+  it('out of credits: blocks with 402 and never calls the AI, even for a Pro user', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
-    mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 0, plan: 'free', cost: 1, resetAt: '' });
+    mockCheckCredits.mockResolvedValue({ allowed: false, remaining: 0, plan: 'pro', cost: 1, resetAt: '' });
 
     const res = await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));
+    const body = await res.json();
 
     expect(res.status).toBe(402);
+    expect(body.error).toBe('out_of_credits');
     expect(mockReview).not.toHaveBeenCalled();
   });
 
   it('never spends a credit or saves a review if the AI call fails', async () => {
     mockSupabaseWithUser({ id: 'user-1' });
-    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 5, plan: 'free', cost: 1, resetAt: '' });
+    mockCheckCredits.mockResolvedValue({ allowed: true, remaining: 50, plan: 'pro', cost: 1, resetAt: '' });
     mockReview.mockRejectedValue(new Error('AI failed'));
 
     const res = await POST(fakeRequest({ portfolioText: 'a'.repeat(60) }));

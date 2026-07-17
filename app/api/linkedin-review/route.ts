@@ -37,6 +37,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // LinkedIn review is Pro/Enterprise only, gated at generation - same pattern
+    // and same reasoning as interview prep.
+    if (credit.plan !== 'pro' && credit.plan !== 'enterprise') {
+      return NextResponse.json({ error: 'requires_pro' }, { status: 402, headers: cors });
+    }
+
     const result = await reviewLinkedInProfile(profileText, credit.plan === 'pro' || credit.plan === 'enterprise');
     await spendCredits(supabase, user.id, 'linkedin');
 
