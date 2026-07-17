@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { MessageCircle, X, Send, ArrowRight, Mail } from 'lucide-react';
 import { PRESET_QUESTIONS } from '@/lib/chatbotFacts';
+import { linkifyText } from '@/lib/linkify';
 
 const SUPPORT_EMAIL = 'support@cvly.in';
 const HUMAN_PRESET_QUESTION = 'How do I talk to a real person?';
@@ -139,7 +140,7 @@ export function ChatbotButton() {
                       : 'bg-[var(--surface)] text-[var(--ink)] rounded-bl-md shadow-sm'
                   }`}
                 >
-                  {m.text}
+                  {m.role === 'bot' ? linkifyText(m.text, `msg-${i}`) : m.text}
                 </div>
               </div>
             ))}

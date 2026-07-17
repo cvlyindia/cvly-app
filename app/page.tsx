@@ -25,6 +25,8 @@ import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
 import { trackPixelEvent } from '@/lib/metaPixelClient';
 import { stashPendingScan } from '@/lib/pendingScan';
+import { validateResumeFile } from '@/lib/fileValidation';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 import { SignInPromptModal } from '@/components/SignInPromptModal';
 import { UpgradePromptModal } from '@/components/UpgradePromptModal';
 
@@ -518,6 +520,11 @@ export default function Home() {
   }
 
   async function processResumeFile(file: File) {
+    const validation = validateResumeFile(file);
+    if (!validation.valid) {
+      setError(validation.error!);
+      return;
+    }
     setFileName(file.name);
     setError('');
     setFormatCheck(null);
@@ -525,12 +532,13 @@ export default function Home() {
     formData.append('file', file);
     try {
       const res = await fetch('/api/extract-text', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setResumeText(data.text);
-      if (data.formatCheck) setFormatCheck(data.formatCheck);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`upload failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
+      setResumeText(data.text as string);
+      if (data.formatCheck) setFormatCheck(data.formatCheck as typeof formatCheck);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not read that file');
+      setError(friendlyErrorMessage(err));
     }
   }
 
@@ -558,11 +566,12 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: jobUrl.trim() }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setJobDescription(data.description);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
+      setJobDescription(data.description as string);
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Could not import from that link');
+      setImportError(friendlyErrorMessage(err));
     } finally {
       setImportingJob(false);
     }
@@ -588,20 +597,21 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription, leadEventId }),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
       if (data.error === 'out_of_credits') {
-        setOutOfCredits({ plan: data.plan, resetAt: data.resetAt });
+        setOutOfCredits({ plan: data.plan as string, resetAt: data.resetAt as string });
         setToolOpen(true);
         return;
       }
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw new Error(data.error as string);
       if (data.invalid) {
-        setError(data.reason || "That doesn't look like a resume and job description — mind trying again with the real thing?");
+        setError((data.reason as string) || "That doesn't look like a resume and job description — mind trying again with the real thing?");
         setToolOpen(true);
         setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
         return;
       }
-      setResult(data);
+      setResult(data as unknown as ScoreResult);
       setActiveTab('score');
       setToolOpen(true);
       setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
@@ -616,7 +626,7 @@ export default function Home() {
         .then((d) => { if (d.id) setScanId(d.id); })
         .catch(() => {});
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+      setError(friendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -667,15 +677,16 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription }),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
       if (data.error === 'out_of_credits') {
-        setOutOfCredits({ plan: data.plan, resetAt: data.resetAt });
+        setOutOfCredits({ plan: data.plan as string, resetAt: data.resetAt as string });
         return;
       }
-      if (data.error) throw new Error(data.error);
-      if (tab === 'rewrite') setRewritten(data.rewritten);
-      if (tab === 'cover') setCoverLetter(data.letter);
-      if (tab === 'interview') setCategories(data.questions);
+      if (data.error) throw new Error(data.error as string);
+      if (tab === 'rewrite') setRewritten(data.rewritten as StructuredResume);
+      if (tab === 'cover') setCoverLetter(data.letter as string);
+      if (tab === 'interview') setCategories(data.questions as InterviewCategory[]);
       const cost = tab === 'interview' ? 3 : 1;
       setCredits((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - cost) } : c));
 
@@ -688,7 +699,7 @@ export default function Home() {
         }).catch(() => {});
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+      setError(friendlyErrorMessage(err));
     } finally {
       setTabLoading(false);
     }
@@ -1735,7 +1746,27 @@ export default function Home() {
                         );
                       })()}
                     </>
-                  ) : null}
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--grad-prism)' }}>
+                        <Lock size={20} className="text-white" />
+                      </div>
+                      <p className="text-base font-semibold mb-1.5">
+                        {credits?.plan === 'pro' || credits?.plan === 'enterprise' ? 'Ready when you are' : 'Interview Prep is a Pro feature'}
+                      </p>
+                      <p className="text-sm text-[var(--muted)] mb-6 max-w-xs mx-auto">
+                        {credits?.plan === 'pro' || credits?.plan === 'enterprise'
+                          ? '100 tailored questions, grounded in your actual resume.'
+                          : '100 tailored interview questions, grounded in your actual resume — upgrade to unlock.'}
+                      </p>
+                      <button
+                        onClick={() => (credits?.plan === 'pro' || credits?.plan === 'enterprise' ? handleTabAction('interview') : setShowUpgradePrompt(true))}
+                        className="btn-accent px-6 py-2.5 rounded-full text-sm font-semibold"
+                      >
+                        {credits?.plan === 'pro' || credits?.plan === 'enterprise' ? 'Generate questions' : 'Upgrade to Pro'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

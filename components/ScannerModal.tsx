@@ -12,6 +12,8 @@ import type { ExportBlock } from '@/lib/export';
 import type { ScoreResult, InterviewCategory, StructuredResume } from '@/lib/ai';
 import { PAYWALL_ENABLED } from '@/lib/featureFlags';
 import { UpgradePromptModal } from '@/components/UpgradePromptModal';
+import { validateResumeFile } from '@/lib/fileValidation';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
 import { ListenButton } from '@/components/ListenButton';
 import { ShareButton } from '@/components/ShareButton';
@@ -125,6 +127,11 @@ export function ScannerModal({
   }, [open, onClose]);
 
   async function processResumeFile(file: File) {
+    const validation = validateResumeFile(file);
+    if (!validation.valid) {
+      setError(validation.error!);
+      return;
+    }
     setFileName(file.name);
     setError('');
     setFormatCheck(null);
@@ -132,12 +139,13 @@ export function ScannerModal({
     formData.append('file', file);
     try {
       const res = await fetch('/api/extract-text', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setResumeText(data.text);
-      if (data.formatCheck) setFormatCheck(data.formatCheck);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`upload failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
+      setResumeText(data.text as string);
+      if (data.formatCheck) setFormatCheck(data.formatCheck as typeof formatCheck);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not read that file');
+      setError(friendlyErrorMessage(err));
     }
   }
 
@@ -165,11 +173,12 @@ export function ScannerModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: jobUrl.trim() }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setJobDescription(data.description);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
+      setJobDescription(data.description as string);
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Could not import from that link');
+      setImportError(friendlyErrorMessage(err));
     } finally {
       setImportingJob(false);
     }

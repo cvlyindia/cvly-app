@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { DashboardShell } from '@/components/DashboardShell';
 import { PLAN_LIMITS } from '@/lib/credits';
-import { Loader2, Zap, Mail, Trash2, ExternalLink } from 'lucide-react';
+import { Loader2, Zap, Mail, Trash2, ExternalLink, AlertTriangle } from 'lucide-react';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -18,6 +19,9 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordStatus, setPasswordStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [passwordError, setPasswordError] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'confirming' | 'deleting' | 'error'>('idle');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -65,6 +69,28 @@ export default function SettingsPage() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.replace('/');
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteStatus('deleting');
+    setDeleteError('');
+    try {
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmEmail: deleteConfirmText }),
+      });
+      const data = await safeParseJson(res);
+      if (!data || data.error) {
+        throw new Error((data?.error as string) || `request failed with status ${res.status}`);
+      }
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.replace('/');
+    } catch (err) {
+      setDeleteError(friendlyErrorMessage(err));
+      setDeleteStatus('error');
+    }
   }
 
   if (checkingAuth) {
@@ -172,10 +198,46 @@ export default function SettingsPage() {
         {/* Danger zone */}
         <div className="rounded-2xl p-6 border border-[var(--bad)]/20 bg-[var(--bad-bg)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--bad)] mb-2">Account deletion</p>
-          <p className="text-sm text-[var(--ink)]/75 mb-4 leading-relaxed">
-            We don&apos;t have self-serve account deletion built yet. Email <a href="mailto:support@cvly.in?subject=Delete my Cvly account" className="text-[var(--bad)] underline">support@cvly.in</a> and we&apos;ll remove your account and everything tied to it, by hand, within a few days.
-          </p>
-          <button onClick={handleSignOut} className="text-sm font-semibold text-[var(--bad)] hover:underline">
+
+          {deleteStatus === 'idle' ? (
+            <>
+              <p className="text-sm text-[var(--ink)]/75 mb-4 leading-relaxed">
+                Deletes your account and everything tied to it — scans, tracker, reviews, saved plan — right away. This can&apos;t be undone.
+              </p>
+              <button onClick={() => setDeleteStatus('confirming')} className="text-sm font-semibold text-[var(--bad)] hover:underline">
+                Delete my account
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-[var(--ink)]/75 mb-1 leading-relaxed flex items-start gap-2">
+                <AlertTriangle size={15} className="text-[var(--bad)] shrink-0 mt-0.5" />
+                This permanently deletes your account and everything tied to it. Type your email (<span className="font-mono">{email}</span>) to confirm.
+              </p>
+              <input
+                type="email"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={email}
+                className="w-full mt-3 px-3.5 py-2.5 rounded-lg border border-[var(--bad)]/30 bg-white text-sm outline-none focus:border-[var(--bad)]"
+              />
+              {deleteError && <p className="text-xs text-[var(--bad)] mt-2">{deleteError}</p>}
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText.trim().toLowerCase() !== email.toLowerCase() || deleteStatus === 'deleting'}
+                  className="text-sm font-semibold text-white bg-[var(--bad)] px-4 py-2 rounded-lg hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                >
+                  {deleteStatus === 'deleting' ? <><Loader2 size={14} className="animate-spin" /> Deleting…</> : 'Permanently delete'}
+                </button>
+                <button onClick={() => { setDeleteStatus('idle'); setDeleteConfirmText(''); setDeleteError(''); }} className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+
+          <button onClick={handleSignOut} className="text-sm font-semibold text-[var(--bad)] hover:underline mt-4 block">
             Sign out of this device
           </button>
         </div>

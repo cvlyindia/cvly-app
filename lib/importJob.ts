@@ -72,6 +72,15 @@ export async function importJobFromUrl(url: string): Promise<JobImportResult> {
     return { description: structured, source: 'structured' };
   }
 
+  // LinkedIn specifically serves a heavily gated, login-walled version of job
+  // pages to unauthenticated/bot requests — no structured data, and the visible
+  // body text is mostly navigation, "Similar jobs," and "People also viewed"
+  // noise rather than the actual posting. Rather than fall through to scraping
+  // that noise (which would badly pollute scoring accuracy), say so plainly.
+  if (parsed.hostname.includes('linkedin.com')) {
+    throw new Error('LinkedIn requires sign-in to show full job details to automated requests, so we can\'t reliably import from a LinkedIn link. Please copy the job description text directly and paste it in instead.');
+  }
+
   // Fall back to generic visible text — best-effort only. Many job boards render
   // content client-side with JavaScript, which a plain server-side fetch can't see,
   // so this will sometimes come back too short or empty. That's a real limitation,

@@ -108,6 +108,20 @@ whether they were already applied.
 
 ## Current focus
 
+**Real bug-fix batch from live testing** (post-launch): fixed raw technical errors leaking
+to users (a shared friendlyErrorMessage/safeParseJson layer now used everywhere - directly
+fixes the "Failed to parse AI response as JSON" and raw Google API 503 errors reaching the
+screen verbatim), client-side file validation before upload (type + a real 4MB limit, since
+Vercel's actual serverless body limit is a hard 4.5MB platform ceiling my own route's higher
+check could never see past), a blank Interview Prep tab after dismissing the upgrade modal
+(now a real persistent empty state), LinkedIn job-URL import returning navigation noise
+instead of a job description (LinkedIn serves a login-walled page to unauthenticated
+requests - now detected and refused with a clear message instead of silently returning
+garbage), self-serve account deletion (typed-email-confirmation flow, cascading deletes
+via the existing ON DELETE CASCADE foreign keys), and chatbot fixes (a real "Pro isn't
+purchasable yet" stale claim, now correct; real clickable links to actual pages via a new
+linkify layer). 196 tests now.
+
 **Phase 5 (Revenue) is fully live, not just built.** Real Razorpay Subscriptions (Pro/
 Enterprise via UPI Autopay), real credit top-ups (Razorpay Orders), Meta Pixel + CAPI
 tracking, and a genuine conversion funnel (Score free to try, the tools that fix what
