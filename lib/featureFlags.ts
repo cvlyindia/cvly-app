@@ -1,8 +1,6 @@
-// The Razorpay integration code is built (real subscriptions, webhook handling,
-// Meta CAPI Purchase tracking) — but this stays false until the Razorpay Dashboard
-// setup is actually complete: Plans created (RAZORPAY_PLAN_ID_PRO_MONTHLY/YEARLY),
-// webhook registered and RAZORPAY_WEBHOOK_SECRET set. Flipping this before that
-// setup is done would lock free users out of downloads with no working way to
-// actually pay — worse than the current state. Flip manually once a real test
-// purchase has gone through cleanly end to end.
-export const PAYWALL_ENABLED = false;
+// LIVE as of today — both purchase paths (Pro subscription and credit top-ups) have
+// been confirmed working end to end with real payments: real money in, real webhook
+// firing, real credits/plan landing on the account. Free-plan users can still
+// generate everything (score, rewrite, cover letter, interview prep all keep
+// working); downloading or copying the actual output now requires Pro.
+export const PAYWALL_ENABLED = true;
