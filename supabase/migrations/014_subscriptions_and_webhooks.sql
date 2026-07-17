@@ -34,3 +34,8 @@ create table if not exists webhook_events (
   event_type text not null,
   processed_at timestamptz default now()
 );
+-- Only ever touched by the service-role admin client in the webhook route, never
+-- by a regular user session — enabling RLS with zero policies correctly
+-- default-denies the anon/authenticated roles entirely, while the service role
+-- still bypasses RLS as it always does regardless.
+alter table webhook_events enable row level security;

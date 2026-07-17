@@ -267,6 +267,7 @@ create table if not exists webhook_events (
   event_type text not null,
   processed_at timestamptz default now()
 );
+alter table webhook_events enable row level security;
 
 -- ============================================================
 -- 10. Credit top-up packs: purchase tracking + atomic increment (Phase 5)
