@@ -103,9 +103,11 @@ Only after Phase 5 exists, so growth spending has revenue to justify it against.
 - ~~**Say the depth out loud**~~ DONE. The "Two things we refuse to fake" homepage
   section already covers this — the real structural DOCX inspection and the enforced
   no-fabrication discipline, both stated explicitly, not left implicit.
-- **SEO content**: guides targeting real job-search queries, tuned for the Indian market
-  specifically (India-specific ATS conventions, salary/notice-period norms) — most
-  competitors are US-centric and don't bother with this, which is a real opening
+- **SEO content**: STARTED. `/guides` now live with two real, substantive pieces — the
+  ATS resume format guide (pillar piece, directly tied to the product's core value) and
+  notice period on a resume (the genuinely India-specific angle most US-centric
+  competitors don't cover, exactly the opening this line originally called out). More to
+  come; deliberately started with quality over quantity rather than a dozen thin pages.
 - **A public changelog** — free marketing that visibly demonstrates a shipping pace
   competitors can't match, which has been true throughout this entire build
 - **Real testimonials from real early users** — nothing converts skeptics faster than

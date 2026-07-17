@@ -1840,6 +1840,7 @@ export default function Home() {
                 <a href="#compare" className="hover:text-[var(--ink)] transition">Compare</a>
                 <a href="#faq" className="hover:text-[var(--ink)] transition">FAQ</a>
                 <Link href="/pricing" className="hover:text-[var(--ink)] transition">Pricing</Link>
+                <Link href="/guides" className="hover:text-[var(--ink)] transition">Guides</Link>
                 <Link href="/changelog" className="hover:text-[var(--ink)] transition">Changelog</Link>
               </div>
             </div>
