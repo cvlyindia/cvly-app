@@ -9,6 +9,7 @@ import { DashboardShell } from '@/components/DashboardShell';
 import { createClient } from '@/lib/supabase/client';
 import { structuredResumeToPlainText } from '@/lib/resumeTemplate';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { safeParseJson } from '@/lib/friendlyError';
 
 type StructuredResume = {
   name: string;
@@ -85,8 +86,8 @@ export default function HistoryPage() {
     setDeletingId(id);
     try {
       const res = await fetch(`/api/scans/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.deleted) {
+      const data = await safeParseJson(res);
+      if (data?.deleted) {
         setScans((prev) => prev?.filter((s) => s.id !== id) ?? null);
       }
     } finally {

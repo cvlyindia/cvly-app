@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { DashboardShell } from '@/components/DashboardShell';
 import { Plus, Loader2, Trash2, ExternalLink, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 type Status = 'saved' | 'applied' | 'interview' | 'offer';
 
@@ -78,13 +79,14 @@ export default function TrackerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setJobs((prev) => [data.job, ...(prev ?? [])]);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
+      setJobs((prev) => [data.job as Job, ...(prev ?? [])]);
       setForm({ company: '', role: '', jobUrl: '', notes: '' });
       setShowAdd(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save this job');
+      setError(friendlyErrorMessage(err));
     } finally {
       setSaving(false);
     }

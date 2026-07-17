@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Loader2, Check, Sparkles } from 'lucide-react';
 import { UpgradePromptModal } from '@/components/UpgradePromptModal';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 type ReviewType = 'linkedin' | 'portfolio';
 
@@ -51,19 +52,20 @@ export function CareerReviewModal({ type, onClose, onSaved }: { type: ReviewType
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [copy.fieldName]: text }),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
       if (data.error === 'requires_pro') {
         setNeedsPro(true);
         return;
       }
       if (data.error === 'out_of_credits') {
-        throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.`);
+        throw new Error(`You're out of credits on the ${data.plan} plan. They reset ${new Date(data.resetAt as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.`);
       }
-      if (data.error) throw new Error(data.error);
-      setResult(data);
+      if (data.error) throw new Error(data.error as string);
+      setResult(data as unknown as ReviewResult);
       onSaved?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+      setError(friendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

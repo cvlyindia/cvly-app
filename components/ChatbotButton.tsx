@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { MessageCircle, X, Send, ArrowRight, Mail } from 'lucide-react';
 import { PRESET_QUESTIONS } from '@/lib/chatbotFacts';
 import { linkifyText } from '@/lib/linkify';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 const SUPPORT_EMAIL = 'support@cvly.in';
 const HUMAN_PRESET_QUESTION = 'How do I talk to a real person?';
@@ -80,19 +81,20 @@ export function ChatbotButton() {
         // ("and how much does that cost?") actually have something to follow up on.
         body: JSON.stringify({ message: text, history: nextMessages.slice(-7, -1) }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
       if (typeof data.answer === 'string' && data.answer.includes(SUPPORT_EMAIL)) {
         setShowHumanOption(true);
       }
-      setMessages((prev) => [...prev, { role: 'bot', text: data.answer }]);
+      setMessages((prev) => [...prev, { role: 'bot', text: data.answer as string }]);
     } catch (err) {
       // The AI genuinely couldn't help here — this is exactly the moment a human
       // option earns its place, not before.
       setShowHumanOption(true);
       setMessages((prev) => [
         ...prev,
-        { role: 'bot', text: err instanceof Error ? err.message : "Something went wrong on my end — you can reach a real person below." },
+        { role: 'bot', text: friendlyErrorMessage(err) },
       ]);
     } finally {
       setLoading(false);

@@ -7,6 +7,7 @@ import { Check, ArrowRight, Loader2, Sparkles, Building2, Zap } from 'lucide-rea
 import { UpgradeToProButton } from '@/components/UpgradeToProButton';
 import { TopUpButton } from '@/components/TopUpButton';
 import { TOPUP_PACKS } from '@/lib/topups';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 const FREE_FEATURES = [
   'ATS match score',
@@ -59,12 +60,13 @@ function WaitlistForm({ plan }: { plan: 'pro' | 'enterprise' }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, plan, company: plan === 'enterprise' ? company : undefined }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
       setStatus('joined');
     } catch (err) {
       setStatus('error');
-      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong');
+      setErrorMsg(friendlyErrorMessage(err));
     }
   }
 

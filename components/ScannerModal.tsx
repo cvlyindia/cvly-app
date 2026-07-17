@@ -203,18 +203,19 @@ export function ScannerModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription }),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
       if (data.error === 'out_of_credits') {
-        setOutOfCredits({ plan: data.plan, resetAt: data.resetAt });
+        setOutOfCredits({ plan: data.plan as string, resetAt: data.resetAt as string });
         return;
       }
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw new Error(data.error as string);
       if (data.invalid) {
-        setError(data.reason || "That doesn't look like a resume and job description — mind trying again with the real thing?");
+        setError((data.reason as string) || "That doesn't look like a resume and job description — mind trying again with the real thing?");
         onCreditsChange((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
         return;
       }
-      setResult(data);
+      setResult(data as unknown as ScoreResult);
       setActiveTab('score');
       onCreditsChange((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c));
 
@@ -230,7 +231,7 @@ export function ScannerModal({
         })
         .catch(() => {});
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+      setError(friendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -258,15 +259,16 @@ export function ScannerModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription }),
       });
-      const data = await res.json();
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
       if (data.error === 'out_of_credits') {
-        setOutOfCredits({ plan: data.plan, resetAt: data.resetAt });
+        setOutOfCredits({ plan: data.plan as string, resetAt: data.resetAt as string });
         return;
       }
-      if (data.error) throw new Error(data.error);
-      if (tab === 'rewrite') setRewritten(data.rewritten);
-      if (tab === 'cover') setCoverLetter(data.letter);
-      if (tab === 'interview') setCategories(data.questions);
+      if (data.error) throw new Error(data.error as string);
+      if (tab === 'rewrite') setRewritten(data.rewritten as StructuredResume);
+      if (tab === 'cover') setCoverLetter(data.letter as string);
+      if (tab === 'interview') setCategories(data.questions as InterviewCategory[]);
       const cost = tab === 'interview' ? 3 : 1;
       onCreditsChange((c) => (c ? { ...c, remaining: Math.max(0, c.remaining - cost) } : c));
 
@@ -279,7 +281,7 @@ export function ScannerModal({
         }).catch(() => {});
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+      setError(friendlyErrorMessage(err));
     } finally {
       setTabLoading(false);
     }

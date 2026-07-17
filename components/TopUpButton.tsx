@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { trackPixelEvent } from '@/lib/metaPixelClient';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 declare global {
   interface Window {
@@ -34,10 +35,11 @@ export function TopUpButton({ packId, credits, priceRupees }: { packId: string; 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packId }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
 
-      trackPixelEvent('InitiateCheckout', data.orderId);
+      trackPixelEvent('InitiateCheckout', data.orderId as string);
 
       const razorpay = new window.Razorpay({
         key: data.keyId,
@@ -47,14 +49,14 @@ export function TopUpButton({ packId, credits, priceRupees }: { packId: string; 
         prefill: { email: user.email ?? '' },
         theme: { color: '#FF6A1A' },
         handler: () => {
-          trackPixelEvent('Purchase', data.orderId, { currency: 'INR', value: priceRupees });
+          trackPixelEvent('Purchase', data.orderId as string, { currency: 'INR', value: priceRupees });
           router.push('/dashboard?topup=1');
         },
         modal: { ondismiss: () => setLoading(false) },
       });
       razorpay.open();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not start checkout — try again.');
+      setError(friendlyErrorMessage(err));
       setLoading(false);
     }
   }

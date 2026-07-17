@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { trackPixelEvent } from '@/lib/metaPixelClient';
+import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
 declare global {
   interface Window {
@@ -34,10 +35,11 @@ export function UpgradeToProButton({ cycle }: { cycle: 'monthly' | 'yearly' }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cycle }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const data = await safeParseJson(res);
+      if (!data) throw new Error(`request failed with status ${res.status}`);
+      if (data.error) throw new Error(data.error as string);
 
-      trackPixelEvent('InitiateCheckout', data.subscriptionId);
+      trackPixelEvent('InitiateCheckout', data.subscriptionId as string);
 
       const razorpay = new window.Razorpay({
         key: data.keyId,
@@ -52,7 +54,7 @@ export function UpgradeToProButton({ cycle }: { cycle: 'monthly' | 'yearly' }) {
           // this client-side event exists purely for the matching Meta Purchase
           // signal (same subscription_id as event_id, deduplicated against the
           // server-side CAPI Purchase the webhook fires once activation confirms).
-          trackPixelEvent('Purchase', data.subscriptionId, { currency: 'INR' });
+          trackPixelEvent('Purchase', data.subscriptionId as string, { currency: 'INR' });
           router.push('/dashboard?upgraded=1');
         },
         modal: {
@@ -61,7 +63,7 @@ export function UpgradeToProButton({ cycle }: { cycle: 'monthly' | 'yearly' }) {
       });
       razorpay.open();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not start checkout — try again.');
+      setError(friendlyErrorMessage(err));
       setLoading(false);
     }
   }
