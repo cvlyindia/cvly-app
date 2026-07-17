@@ -39,6 +39,24 @@ export function ChatbotButton() {
   const [showHumanOption, setShowHumanOption] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutsideClick(e: MouseEvent) {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target)) return;
+      if (launcherRef.current?.contains(target)) return; // the launcher button has its own toggle — avoid double-handling the same click
+      // Minimize only — messages/history live in component state untouched by
+      // `open`, exactly like the X button already works. Deliberately not
+      // preventDefault()'d, so this click still reaches whatever the user
+      // actually clicked on underneath (a link, a button, the page itself).
+      setOpen(false);
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [open]);
 
   useEffect(() => {
     setSoundMuted(localStorage.getItem('cvly_chat_muted') === '1');
@@ -124,6 +142,7 @@ export function ChatbotButton() {
   return (
     <>
       <button
+        ref={launcherRef}
         onClick={toggleOpen}
         aria-label={open ? 'Close chat' : 'Open chat with Cvly assistant'}
         className={`fixed right-5 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform text-white ${
@@ -138,7 +157,7 @@ export function ChatbotButton() {
       </button>
 
       {open && (
-        <div className="panel-pop fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] sm:w-96 h-[70dvh] sm:h-[520px] max-h-[calc(100dvh-9rem)] card rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white origin-bottom-right">
+        <div ref={panelRef} className="panel-pop fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] sm:w-96 h-[70dvh] sm:h-[520px] max-h-[calc(100dvh-9rem)] card rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white origin-bottom-right">
           <div className="px-5 py-4 border-b border-[var(--line)] flex items-center gap-3 relative overflow-hidden" style={{ background: 'var(--grad-prism-soft)' }}>
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full bg-white border border-[var(--line)] flex items-center justify-center overflow-hidden">
