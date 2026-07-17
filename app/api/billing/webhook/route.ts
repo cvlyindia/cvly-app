@@ -24,6 +24,13 @@ interface RazorpayPaymentEntity {
   notes?: { user_id?: string };
 }
 
+interface RazorpayOrderEntity {
+  id: string;
+  amount: number;
+  currency: string;
+  notes?: { user_id?: string; credits?: number | string };
+}
+
 export async function POST(req: NextRequest) {
   // CRITICAL: must be the raw, unparsed body. Razorpay's own docs explicitly warn
   // that re-serializing a parsed body (JSON.stringify(req.body)) produces a
@@ -83,6 +90,11 @@ export async function POST(req: NextRequest) {
       case 'subscription.completed': {
         const sub: RazorpaySubscriptionEntity = body.payload.subscription.entity;
         await handleSubscriptionEvent(supabase, event, sub, body.payload.payment?.entity as RazorpayPaymentEntity | undefined, req);
+        break;
+      }
+      case 'order.paid': {
+        const order: RazorpayOrderEntity = body.payload.order.entity;
+        await handleOrderPaidEvent(supabase, order, req);
         break;
       }
       default:
@@ -184,3 +196,59 @@ async function handleSubscriptionEvent(
     await supabase.from('subscriptions').update({ purchase_event_sent: true }).eq('razorpay_subscription_id', sub.id);
   }
 }
+
+async function handleOrderPaidEvent(
+  supabase: ReturnType<typeof createAdminClient>,
+  order: RazorpayOrderEntity,
+  req: NextRequest
+) {
+  const userId = order.notes?.user_id;
+  const credits = order.notes?.credits ? Number(order.notes.credits) : undefined;
+
+  if (!userId || !credits) {
+    Sentry.captureMessage('Razorpay webhook: order.paid missing user_id or credits in notes', {
+      level: 'error',
+      extra: { orderId: order.id },
+    });
+    return;
+  }
+
+  const { data: purchase } = await supabase
+    .from('credit_purchases')
+    .select('id, status')
+    .eq('razorpay_order_id', order.id)
+    .maybeSingle();
+
+  // Defensive: even though webhook_events already guards against reprocessing the
+  // same delivery, this is a second, independent layer against ever double-crediting
+  // the same order specifically — cheap insurance on the one operation here that
+  // actually adds real value to someone's account.
+  if (purchase?.status === 'paid') return;
+
+  await supabase
+    .from('credit_purchases')
+    .update({ status: 'paid' })
+    .eq('razorpay_order_id', order.id);
+
+  await supabase.rpc('increment_credits', { p_user_id: userId, p_amount: credits });
+
+  const { data: userRow } = await supabase.auth.admin.getUserById(userId);
+  const email = userRow?.user?.email;
+
+  // Every top-up is a genuine, distinct purchase — no "first time only" restriction
+  // here the way subscription renewals have. Each one is real revenue Meta should
+  // legitimately see as a Purchase event.
+  await sendCapiEvent({
+    eventName: 'Purchase',
+    eventId: order.id,
+    user: {
+      email: email ?? undefined,
+      userId,
+      ip: req.headers.get('x-forwarded-for')?.split(',')[0].trim(),
+      userAgent: req.headers.get('user-agent') ?? undefined,
+    },
+    value: order.amount / 100,
+    currency: order.currency,
+  });
+}
+

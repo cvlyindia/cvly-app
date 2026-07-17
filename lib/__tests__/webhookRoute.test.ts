@@ -54,12 +54,31 @@ function subscriptionEventBody(event: string, overrides: Record<string, unknown>
 
 // Purpose-built mock matching exactly what the webhook handler calls, including
 // .auth.admin.getUserById which the generic sequential-queue mock doesn't cover.
+function orderPaidEventBody(overrides: Record<string, unknown> = {}) {
+  return JSON.stringify({
+    event: 'order.paid',
+    payload: {
+      order: {
+        entity: {
+          id: 'order_test123',
+          amount: 4900,
+          currency: 'INR',
+          notes: { user_id: 'user-abc', credits: 20 },
+          ...overrides,
+        },
+      },
+    },
+  });
+}
+
 function mockAdminSupabase(opts: {
   existingWebhookEvent?: boolean;
   existingSubscription?: { purchase_event_sent: boolean } | null;
+  existingPurchase?: { status: string } | null;
 }) {
   const updateCalls: { table: string; payload: unknown }[] = [];
   const insertCalls: { table: string; payload: unknown }[] = [];
+  const rpcCalls: { fn: string; params: unknown }[] = [];
 
   const fakeClient = {
     from: (table: string) => ({
@@ -71,6 +90,9 @@ function mockAdminSupabase(opts: {
             }
             if (table === 'subscriptions') {
               return { data: opts.existingSubscription ?? null, error: null };
+            }
+            if (table === 'credit_purchases') {
+              return { data: opts.existingPurchase ?? null, error: null };
             }
             return { data: null, error: null };
           },
@@ -85,6 +107,10 @@ function mockAdminSupabase(opts: {
         return { data: null, error: null };
       },
     }),
+    rpc: (fn: string, params: unknown) => {
+      rpcCalls.push({ fn, params });
+      return Promise.resolve({ data: null, error: null });
+    },
     auth: {
       admin: {
         getUserById: async () => ({ data: { user: { email: 'test@example.com' } } }),
@@ -92,6 +118,7 @@ function mockAdminSupabase(opts: {
     },
     getUpdateCalls: () => updateCalls,
     getInsertCalls: () => insertCalls,
+    getRpcCalls: () => rpcCalls,
   };
 
   vi.mocked(createAdminClient).mockReturnValue(fakeClient as unknown as ReturnType<typeof createAdminClient>);
@@ -200,3 +227,56 @@ describe('POST /api/billing/webhook — missing user_id safety', () => {
     expect(sendCapiEvent).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/billing/webhook — order.paid (credit top-ups)', () => {
+  it('credits the purchased amount via the atomic increment_credits function, not a direct update', async () => {
+    const mock = mockAdminSupabase({ existingPurchase: null });
+    const body = orderPaidEventBody();
+    const res = await POST(fakeRequest(body, signBody(body), 'evt_topup_1'));
+
+    expect(res.status).toBe(200);
+    const rpcCall = mock.getRpcCalls().find((c) => c.fn === 'increment_credits');
+    expect(rpcCall).toBeDefined();
+    expect(rpcCall!.params).toEqual({ p_user_id: 'user-abc', p_amount: 20 });
+  });
+
+  it('marks the purchase as paid', async () => {
+    const mock = mockAdminSupabase({ existingPurchase: null });
+    const body = orderPaidEventBody();
+    await POST(fakeRequest(body, signBody(body), 'evt_topup_2'));
+
+    const purchaseUpdate = mock.getUpdateCalls().find((c) => c.table === 'credit_purchases');
+    expect(purchaseUpdate).toBeDefined();
+    expect(purchaseUpdate!.payload).toEqual({ status: 'paid' });
+  });
+
+  it('fires a genuine Purchase CAPI event for every top-up — unlike subscriptions, there is no "first time only" restriction here', async () => {
+    mockAdminSupabase({ existingPurchase: null });
+    const body = orderPaidEventBody();
+    await POST(fakeRequest(body, signBody(body), 'evt_topup_3'));
+
+    expect(sendCapiEvent).toHaveBeenCalledWith(expect.objectContaining({
+      eventName: 'Purchase',
+      eventId: 'order_test123',
+      value: 49, // 4900 paise -> 49 rupees
+    }));
+  });
+
+  it('never double-credits an order that is already marked paid — the defensive second layer beyond webhook_events idempotency', async () => {
+    const mock = mockAdminSupabase({ existingPurchase: { status: 'paid' } });
+    const body = orderPaidEventBody();
+    await POST(fakeRequest(body, signBody(body), 'evt_topup_4'));
+
+    expect(mock.getRpcCalls()).toHaveLength(0);
+    expect(sendCapiEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not crash when an order is missing user_id or credits in notes (defensive)', async () => {
+    mockAdminSupabase({});
+    const body = orderPaidEventBody({ notes: {} });
+    const res = await POST(fakeRequest(body, signBody(body), 'evt_topup_5'));
+    expect(res.status).toBe(200);
+    expect(sendCapiEvent).not.toHaveBeenCalled();
+  });
+});
+

@@ -42,7 +42,17 @@ with no offsetting income.
 - Real billing lifecycle beyond first-charge: renewal, cancellation, failed-payment retry
   are handled by the webhook; what's NOT built yet is active dunning/win-back messaging
   for a failed renewal specifically.
-- Credit top-up packs — already teased as "coming soon" on the pricing page, still not built.
+- ~~Credit top-up packs~~ DONE. The three packs already teased on the pricing page
+  (20/₹49, 60/₹129, 150/₹299) are now real, one-click purchases via Razorpay Orders
+  (not Subscriptions — a separate, one-time-payment product). Security-critical piece:
+  the server validates every request against a fixed whitelist (lib/topups.ts) rather
+  than trusting any price/credit amount the client sends — verified with a real test
+  that deliberately tries to smuggle a tampered price and confirms only the real,
+  server-side values are ever used. Credits are added atomically via a new
+  increment_credits Postgres function, the same pattern as the existing
+  decrement_credits used for spending. **Needs Anurag**: the existing webhook (already
+  registered per the earlier Razorpay setup) needs `order.paid` added to its selected
+  events — it wasn't part of the original 7 events since top-ups didn't exist yet.
 - **One real decision to revisit here**: Tracker/LinkedIn review/Portfolio review were
   deliberately kept free-forever earlier in this build, as a trust-building, competitive-
   advantage call made pre-revenue. Once there's real usage data, revisit whether that's

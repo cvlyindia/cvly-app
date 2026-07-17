@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Check, ArrowRight, Loader2, Sparkles, Building2, Zap } from 'lucide-react';
 import { UpgradeToProButton } from '@/components/UpgradeToProButton';
+import { TopUpButton } from '@/components/TopUpButton';
+import { TOPUP_PACKS } from '@/lib/topups';
 
 const FREE_FEATURES = [
   'ATS match score',
@@ -36,12 +38,6 @@ const PRICING = {
   pro: { monthly: 99, yearly: 999 },
   enterprise: { monthly: 999, yearly: 9999 },
 };
-
-const TOPUPS = [
-  { credits: 20, price: 49 },
-  { credits: 60, price: 129 },
-  { credits: 150, price: 299 },
-];
 
 function yearlySavings(monthly: number, yearly: number) {
   return Math.round((1 - yearly / (monthly * 12)) * 100);
@@ -231,14 +227,10 @@ export default function PricingPage() {
             <Zap size={16} className="text-[var(--accent-ink)]" />
             <p className="font-semibold text-sm">Need more credits without upgrading?</p>
           </div>
-          <p className="text-xs text-[var(--muted)] mb-5">Top-up packs, on any plan. Coming soon alongside Pro.</p>
+          <p className="text-xs text-[var(--muted)] mb-5">Top-up packs, on any plan.</p>
           <div className="grid sm:grid-cols-3 gap-3">
-            {TOPUPS.map((t) => (
-              <div key={t.credits} className="rounded-xl border border-[var(--line)] p-4 text-center opacity-60">
-                <p className="text-xl font-bold tracking-tight">{t.credits}</p>
-                <p className="text-xs text-[var(--muted)] mb-2">credits</p>
-                <p className="text-sm font-semibold">₹{t.price}</p>
-              </div>
+            {TOPUP_PACKS.map((pack) => (
+              <TopUpButton key={pack.id} packId={pack.id} credits={pack.credits} priceRupees={pack.priceRupees} />
             ))}
           </div>
           <p className="text-[11px] text-[var(--muted-soft)] mt-4">1 credit = a score, rewrite, or cover letter. Interview prep (100 questions) uses 3 credits — it&apos;s a bigger request.</p>
