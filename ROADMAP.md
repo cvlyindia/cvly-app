@@ -138,9 +138,15 @@ Only after Phase 5 exists, so growth spending has revenue to justify it against.
 This is where "best in market" stops being about feature parity and starts being about
 owning something nobody else does.
 
-- **Tie the tools together**: save a job directly from a scan into the Tracker — right now
-  they're three separate tools (scanner, tracker, interview prep) that happen to share a
-  login, not one continuous workflow
+- ~~**Tie the tools together**~~ DONE. Save a job directly from a scan result into the
+  Tracker — a small "Save to Tracker" button appears next to Download/Share once a scan
+  has saved, asking for company + role (deliberately not AI-guessed from the job
+  description — a wrong guessed company name would be exactly the kind of thing this
+  product's own no-fabrication standard argues against). From the Tracker side, any card
+  linked to a scan now shows "View scan" and "Prep for interview" links straight back to
+  it, reusing the existing `?resume=X&tab=Y` restore mechanism rather than building a
+  parallel one. The scan_id link is verified server-side against the requesting user
+  before being allowed — a client-supplied ID doesn't get trusted blindly.
 - **A unified readiness score** — one number combining resume match, LinkedIn strength,
   portfolio quality, and interview prep completion. Nobody in this market does this;
   everyone else sells the pieces separately

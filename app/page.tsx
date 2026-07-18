@@ -29,6 +29,7 @@ import { validateResumeFile } from '@/lib/fileValidation';
 import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 import { SignInPromptModal } from '@/components/SignInPromptModal';
 import { UpgradePromptModal } from '@/components/UpgradePromptModal';
+import { SaveToTrackerButton } from '@/components/SaveToTrackerButton';
 
 type ScoreResult = {
   score: number;
@@ -1409,6 +1410,7 @@ export default function Home() {
                     <div className="flex-1 min-w-0"><DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} /></div>
                     <ListenButton text={`Your score is ${result.score} out of 100. ${result.summary} What to fix: ${result.improvements.join('. ')}`} />
                     <ShareButton score={result.score} />
+                    {user && <SaveToTrackerButton scanId={scanId} />}
                   </div>
 
                   {formatCheck && formatCheck.checked && (

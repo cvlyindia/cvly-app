@@ -34,10 +34,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
     }
 
-    const { company, role, jobUrl, notes, status } = await req.json();
+    const { company, role, jobUrl, notes, status, scanId } = await req.json();
 
     if (!company || !role) {
       return NextResponse.json({ error: 'Company and role are both required' }, { status: 400 });
+    }
+
+    // A client-supplied scan ID needs real verification, not blind trust — without
+    // this check, someone could link a tracker card to a scan that isn't theirs.
+    let verifiedScanId: string | null = null;
+    if (scanId) {
+      const { data: scan } = await supabase
+        .from('scans')
+        .select('id')
+        .eq('id', scanId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      verifiedScanId = scan?.id ?? null;
     }
 
     const { data, error } = await supabase
@@ -49,6 +62,7 @@ export async function POST(req: NextRequest) {
         job_url: jobUrl ? String(jobUrl).slice(0, 500) : null,
         notes: notes ? String(notes).slice(0, 2000) : null,
         status: ['saved', 'applied', 'interview', 'offer'].includes(status) ? status : 'saved',
+        scan_id: verifiedScanId,
       })
       .select('*')
       .single();

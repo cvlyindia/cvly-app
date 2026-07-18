@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DashboardShell } from '@/components/DashboardShell';
-import { Plus, Loader2, Trash2, ExternalLink, X } from 'lucide-react';
+import { Plus, Loader2, Trash2, ExternalLink, X, FileScan, MessageSquare } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 
@@ -18,6 +18,7 @@ type Job = {
   status: Status;
   notes: string | null;
   created_at: string;
+  scan_id: string | null;
 };
 
 const COLUMNS: { key: Status; label: string }[] = [
@@ -218,6 +219,16 @@ export default function TrackerPage() {
                         <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-[var(--accent-ink)] hover:underline mb-2">
                           <ExternalLink size={10} /> View posting
                         </a>
+                      )}
+                      {job.scan_id && (
+                        <div className="flex items-center gap-3 mb-2">
+                          <a href={`/?resume=${job.scan_id}`} className="inline-flex items-center gap-1 text-[11px] text-[var(--accent-ink)] hover:underline">
+                            <FileScan size={10} /> View scan
+                          </a>
+                          <a href={`/?resume=${job.scan_id}&tab=interview`} className="inline-flex items-center gap-1 text-[11px] text-[var(--accent-ink)] hover:underline">
+                            <MessageSquare size={10} /> Prep for interview
+                          </a>
+                        </div>
                       )}
                       {job.notes && <p className="text-xs text-[var(--muted)] mb-3 leading-relaxed">{job.notes}</p>}
                       <select

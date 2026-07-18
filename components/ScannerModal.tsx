@@ -12,6 +12,7 @@ import type { ExportBlock } from '@/lib/export';
 import type { ScoreResult, InterviewCategory, StructuredResume } from '@/lib/ai';
 import { PAYWALL_ENABLED } from '@/lib/featureFlags';
 import { UpgradePromptModal } from '@/components/UpgradePromptModal';
+import { SaveToTrackerButton } from '@/components/SaveToTrackerButton';
 import { validateResumeFile } from '@/lib/fileValidation';
 import { friendlyErrorMessage, safeParseJson } from '@/lib/friendlyError';
 import { OutOfCreditsModal } from '@/components/OutOfCreditsModal';
@@ -516,6 +517,7 @@ export function ScannerModal({
                     <div className="flex-1 min-w-0"><DownloadBar blocks={scoreBlocks()} baseFilename="cvly-results" copyText={plainText(scoreBlocks())} copied={copied} onCopy={copyContent} /></div>
                     <ListenButton text={`Your score is ${result.score} out of 100. ${result.summary} What to fix: ${result.improvements.join('. ')}`} />
                     <ShareButton score={result.score} />
+                    <SaveToTrackerButton scanId={scanId} />
                   </div>
 
                   {formatCheck && formatCheck.checked && (
