@@ -92,21 +92,22 @@ would actually trust with more users."
 - ~~**Sentry** — error monitoring~~ DONE (Phase 4.2). Code-side wired into all four
   runtimes plus explicit capture in every route's catch block. Anurag confirmed the
   live pipeline works via the admin test-error button.
-- ~~**Automated tests**, starting with the credit system and rate-limiting~~ DONE
-  (Phase 4.1). 119 tests across 15 files — credits, rate-limiting, format-check,
-  all AI parsing, every API route's orchestration, and the real PDF/DOCX parsing
-  pipeline (added after a real production bug there).
+- ~~**Automated tests**, starting with the credit system and rate-limiting~~ DONE.
+  224 tests across 26 files — credits, rate-limiting, format-check, all AI parsing,
+  the priority-racing logic, every API route's orchestration, the real PDF/DOCX
+  parsing pipeline, webhook signature verification, and the reliability timeout
+  layer, among others.
 - ~~**Pin the Gemini model**~~ DONE (Phase 4.5). Pinned to `gemini-3.5-flash`,
   confirmed via Google's own changelog that the old alias had already silently
   repointed once during this build.
-- **CI/CD** — a GitHub Action running `tsc` + `eslint` + tests before anything merges,
-  so a bad deploy gets caught before it's live, not after. **Still open.**
+- ~~**CI/CD**~~ DONE. `.github/workflows/ci.yml` — type-check, lint, and the full test
+  suite run on every push/PR to main, so a bad deploy gets caught before it's live.
+- ~~**One-page incident response runbook**~~ DONE. `RUNBOOK.md`.
 - **Verify the database backup actually restores** — Supabase does automatic backups on
   paid tiers, but "a backup exists" and "a backup works" are different claims until
   tested. **Still open — needs Anurag, requires actual Supabase dashboard access.**
-- Basic uptime monitoring (UptimeRobot's free tier is enough to start) and a one-page
-  incident response runbook. **Runbook: buildable now. Monitoring: needs Anurag to
-  create the account.**
+- Basic uptime monitoring (UptimeRobot's free tier is enough to start). **Still open —
+  needs Anurag, requires creating an external account.**
 
 ## Phase 7 — Growth & Distribution (become known, not just good)
 
@@ -117,15 +118,20 @@ Only after Phase 5 exists, so growth spending has revenue to justify it against.
 - ~~**Say the depth out loud**~~ DONE. The "Two things we refuse to fake" homepage
   section already covers this — the real structural DOCX inspection and the enforced
   no-fabrication discipline, both stated explicitly, not left implicit.
-- **SEO content**: STARTED. `/guides` now live with two real, substantive pieces — the
-  ATS resume format guide (pillar piece, directly tied to the product's core value) and
-  notice period on a resume (the genuinely India-specific angle most US-centric
-  competitors don't cover, exactly the opening this line originally called out). More to
-  come; deliberately started with quality over quantity rather than a dozen thin pages.
-- **A public changelog** — free marketing that visibly demonstrates a shipping pace
-  competitors can't match, which has been true throughout this entire build
+- ~~**SEO content**~~ DONE, 16 real guides live at `/guides` — deliberately reached a
+  set target rather than an open-ended stream. Covers every major stage of a job
+  search (resume format, mistakes, quantifying achievements, freshers, career changers,
+  LinkedIn, cover letters, portfolios, three classic interview questions, employment
+  gaps, layoffs specifically, notice period, resume vs CV, resume length) and gives
+  every Pro feature (Interview Prep, LinkedIn review, Portfolio review) real coverage,
+  which was a genuine gap when this started. Quality held consistent throughout — real,
+  specific advice, not thin filler, same no-fabrication standard as the product itself.
+- ~~**A public changelog**~~ DONE. `/changelog`, linked from the homepage footer and the
+  dashboard sidebar — real, curated entries only, honest general timeframes rather than
+  invented precise dates.
 - **Real testimonials from real early users** — nothing converts skeptics faster than
-  someone who isn't the founder saying it worked
+  someone who isn't the founder saying it worked. Still open — needs actual users first,
+  not something to build ahead of having them.
 
 ## Phase 8 — Product Depth (widen the moat, don't just match competitors)
 
