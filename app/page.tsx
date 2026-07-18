@@ -316,6 +316,13 @@ export default function Home() {
   const [revealHint, setRevealHint] = useState(false);
   const [practicedIds, setPracticedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
+  // Holds the initial session-check promise, resolving with the actual user
+  // value (not void) — gate logic (handleTabAction) awaits this directly rather
+  // than relying on the `user` state variable immediately afterward, since a
+  // just-awaited promise resolving doesn't guarantee this render's closure has
+  // picked up the resulting state update yet. Getting the true value directly
+  // from the promise sidesteps that timing gap entirely.
+  const authCheckRef = useRef<Promise<User | null> | null>(null);
   const [signInPromptTab, setSignInPromptTab] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null);
@@ -344,14 +351,15 @@ export default function Home() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
+    authCheckRef.current = supabase.auth.getSession().then(({ data }) => {
       const sessionUser = data.session?.user ?? null;
       const bareVisit = window.location.hash === '' && window.location.search === '';
       if (sessionUser && bareVisit) {
         router.replace('/dashboard');
-        return;
+        return sessionUser;
       }
       setUser(sessionUser);
+      return sessionUser;
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -638,7 +646,15 @@ export default function Home() {
     if (tab === 'cover' && coverLetter) return;
     if (tab === 'interview' && categories.length) return;
 
-    if (!user) {
+    // Wait for the initial session check to genuinely finish before deciding
+    // someone's anonymous, and use its actual resolved value directly — user
+    // starts as null until that resolves, and a just-awaited promise doesn't
+    // guarantee this closure's own `user` variable has caught up yet. Without
+    // this, a real logged-in visitor acting fast enough after a page load
+    // could be incorrectly told to sign in to an account they're already in.
+    const currentUser = authCheckRef.current ? await authCheckRef.current : user;
+
+    if (!currentUser) {
       // Score stays free to try anonymously; the tools that actually fix what
       // it found require a free account. Stash what they were looking at so
       // signing in drops them right back into the tool they wanted, not just
@@ -1752,18 +1768,20 @@ export default function Home() {
                         <Lock size={20} className="text-white" />
                       </div>
                       <p className="text-base font-semibold mb-1.5">
-                        {credits?.plan === 'pro' || credits?.plan === 'enterprise' ? 'Ready when you are' : 'Interview Prep is a Pro feature'}
+                        {!user ? 'Sign in to unlock Interview Prep' : credits?.plan === 'pro' || credits?.plan === 'enterprise' ? 'Ready when you are' : 'Interview Prep is a Pro feature'}
                       </p>
                       <p className="text-sm text-[var(--muted)] mb-6 max-w-xs mx-auto">
-                        {credits?.plan === 'pro' || credits?.plan === 'enterprise'
+                        {!user
+                          ? '100 tailored interview questions, grounded in your actual resume — a free account unlocks Pro features like this.'
+                          : credits?.plan === 'pro' || credits?.plan === 'enterprise'
                           ? '100 tailored questions, grounded in your actual resume.'
                           : '100 tailored interview questions, grounded in your actual resume — upgrade to unlock.'}
                       </p>
                       <button
-                        onClick={() => (credits?.plan === 'pro' || credits?.plan === 'enterprise' ? handleTabAction('interview') : setShowUpgradePrompt(true))}
+                        onClick={() => handleTabAction('interview')}
                         className="btn-accent px-6 py-2.5 rounded-full text-sm font-semibold"
                       >
-                        {credits?.plan === 'pro' || credits?.plan === 'enterprise' ? 'Generate questions' : 'Upgrade to Pro'}
+                        {!user ? 'Sign in free' : credits?.plan === 'pro' || credits?.plan === 'enterprise' ? 'Generate questions' : 'Upgrade to Pro'}
                       </button>
                     </div>
                   )}

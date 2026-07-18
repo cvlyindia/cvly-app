@@ -98,6 +98,24 @@ describe('checkCredits', () => {
     const result = await checkCredits(mock as unknown as SupabaseClient, 'user-1', 'score');
     expect(result.allowed).toBe(true);
   });
+
+  it('fails open within a bounded time when the underlying Supabase call genuinely hangs, not just errors — this is the actual new protection, since a hang never throws and the existing error-based fail-open never used to see it', async () => {
+    const hangingSupabase = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: () => new Promise(() => {}), // never resolves
+          }),
+        }),
+      }),
+    };
+    const start = Date.now();
+    const result = await checkCredits(hangingSupabase as unknown as SupabaseClient, 'user-1', 'score');
+    const elapsed = Date.now() - start;
+
+    expect(result.allowed).toBe(true); // fails open, doesn't block a real user
+    expect(elapsed).toBeLessThan(8000); // bounded — genuinely doesn't hang forever
+  }, 10000);
 });
 
 describe('spendCredits', () => {

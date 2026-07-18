@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { sendCapiEvent } from './metaCapi';
+import { withTimeout } from './withTimeout';
 
 export const PLAN_LIMITS: Record<string, number> = {
   free: 5,
@@ -87,7 +88,7 @@ async function getOrCreateCredits(supabase: SupabaseClient, userId: string) {
  * Does NOT deduct — call spendCredits after a successful AI call.
  */
 export async function checkCredits(supabase: SupabaseClient, userId: string, action: CreditAction): Promise<CreditStatus> {
-  const row = await getOrCreateCredits(supabase, userId);
+  const row = await withTimeout(getOrCreateCredits(supabase, userId), 6000, undefined);
   const cost = ACTION_COSTS[action];
 
   if (!row) {
@@ -111,22 +112,31 @@ export async function checkCredits(supabase: SupabaseClient, userId: string, act
  */
 export async function spendCredits(supabase: SupabaseClient, userId: string, action: CreditAction) {
   const cost = ACTION_COSTS[action];
-  const { error } = await supabase.rpc('decrement_credits', { p_user_id: userId, p_cost: cost });
+  const runRpc = async () => {
+    const { error } = await supabase.rpc('decrement_credits', { p_user_id: userId, p_cost: cost });
+    return { failed: !!error };
+  };
+  const { failed } = await withTimeout(runRpc(), 5000, { failed: true });
 
-  if (error) {
+  if (failed) {
     // Fallback for the window before migration 013 has been run, or if the RPC
-    // is ever unavailable — same select-then-update as before, just not the default path.
-    const { data: row } = await supabase
-      .from('user_credits')
-      .select('credits_remaining')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // is ever unavailable (including timing out) — same select-then-update as
+    // before, just not the default path. Also timeout-protected, so a second
+    // hang here can't leave the response hanging either.
+    const runFallback = async () => {
+      const { data: row } = await supabase
+        .from('user_credits')
+        .select('credits_remaining')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (!row) return;
+      if (!row) return;
 
-    await supabase
-      .from('user_credits')
-      .update({ credits_remaining: Math.max(0, row.credits_remaining - cost) })
-      .eq('user_id', userId);
+      await supabase
+        .from('user_credits')
+        .update({ credits_remaining: Math.max(0, row.credits_remaining - cost) })
+        .eq('user_id', userId);
+    };
+    await withTimeout(runFallback(), 5000, undefined);
   }
 }

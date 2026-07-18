@@ -108,6 +108,33 @@ whether they were already applied.
 
 ## Current focus
 
+**Deep reliability investigation** (in response to "everything seems broken" — treated as
+a real signal, not dismissed). Found the actual root cause behind most of it: zero
+Supabase calls anywhere in the app had timeout protection. A hanging (not erroring)
+database call — a real possibility given Supabase is hosted in Seoul — would block a
+request indefinitely, and critically, the existing "fail open on error" pattern in
+checkCredits/checkAnonymousLimit never even saw it, since a hang never throws. This
+almost certainly explains "inconsistent scanning, works sometimes" and "different errors
+switching tabs" — checkCredits is shared across score, rewrite, cover letter, interview
+prep, and both reviews, so one fix protects all of them. New lib/withTimeout.ts, proven
+with a deliberately-hanging-promise test showing genuine fallback within a bounded time.
+
+Also found and fixed three more real, specific bugs from the same investigation: an
+anonymous user dismissing the sign-in prompt saw a misleading "Upgrade to Pro" message
+(should say "sign in free," a different and correct ask); a real race condition where a
+genuinely logged-in user acting fast enough right after a page load could be incorrectly
+shown the sign-in gate, since `user` starts null until an async session check resolves;
+and "purchase should unlock immediately" — the Dashboard never actually polled for the
+webhook's async activation after a payment redirect, so it could show stale free-tier
+status until a manual refresh.
+
+Investigated but genuinely limited, not a bug to "fix" further: job-URL import for
+most modern job boards (confirmed via direct testing) fails because they render content
+client-side with JavaScript, which a plain server-side fetch fundamentally cannot see —
+already gives a clear, honest error explaining this and recommending direct paste.
+Solving this properly would need a headless-browser rendering service, a real, separate
+infrastructure decision, not a quick fix.
+
 **Real bug-fix batch from live testing** (post-launch): fixed raw technical errors leaking
 to users (a shared friendlyErrorMessage/safeParseJson layer now used everywhere - directly
 fixes the "Failed to parse AI response as JSON" and raw Google API 503 errors reaching the

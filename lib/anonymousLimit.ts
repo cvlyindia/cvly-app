@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { NextRequest } from 'next/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, type CreditAction } from '@/lib/credits';
+import { withTimeout } from '@/lib/withTimeout';
 
 // A deliberately small taste, not the full product: Rewrite, Cover Letter, and
 // Interview Prep now require a free account (see those routes), so this budget only
@@ -43,17 +44,23 @@ export async function checkAnonymousLimit(
   const cost = ACTION_COSTS[action];
 
   const windowStart = new Date(Date.now() - WINDOW_MS).toISOString();
-  const { data, error } = await supabase
-    .from('anonymous_usage')
-    .select('cost')
-    .eq('ip_hash', ipHash)
-    .gte('created_at', windowStart);
+  const runQuery = async () => {
+    const { data, error } = await supabase
+      .from('anonymous_usage')
+      .select('cost')
+      .eq('ip_hash', ipHash)
+      .gte('created_at', windowStart);
+    return { data, failed: !!error };
+  };
+  const result = await withTimeout(runQuery(), 5000, { data: null, failed: true });
 
-  if (error) {
+  if (result.failed) {
     // Fail-open on our own infra hiccup, same philosophy as checkCredits — don't punish
-    // a real visitor because a query failed on our end.
+    // a real visitor because a query failed OR hung on our end. A 5s timeout above is
+    // what makes this branch actually reachable for a hang, not just a thrown error.
     return { allowed: true, ipHash, cost };
   }
+  const data = result.data;
 
   const spent = (data ?? []).reduce((sum, row) => sum + row.cost, 0);
   return { allowed: spent + cost <= ANONYMOUS_DAILY_BUDGET, ipHash, cost };

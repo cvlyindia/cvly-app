@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [goalInput, setGoalInput] = useState({ role: '', score: '90' });
   const [doneTasks, setDoneTasks] = useState<Set<string>>(new Set());
   const [credits, setCredits] = useState<{ remaining: number; plan: string; resetAt: string } | null>(null);
+  const [activatingPayment, setActivatingPayment] = useState<'upgraded' | 'topup' | null>(null);
   const [reviewModal, setReviewModal] = useState<'linkedin' | 'portfolio' | null>(null);
   const [linkedinReview, setLinkedinReview] = useState<{ score: number } | null>(null);
   const [portfolioReview, setPortfolioReview] = useState<{ score: number } | null>(null);
@@ -97,11 +98,44 @@ export default function DashboardPage() {
       fetch('/api/history')
         .then((res) => res.json())
         .then((d) => setScans(d.scans ?? []));
-      fetch('/api/credits')
-        .then((res) => res.json())
-        .then((d) => {
-          if (d.loggedIn) setCredits({ remaining: d.remaining, plan: d.plan, resetAt: d.resetAt });
-        });
+
+      const params = new URLSearchParams(window.location.search);
+      const justUpgraded = params.get('upgraded') === '1';
+      const justToppedUp = params.get('topup') === '1';
+      if (justUpgraded || justToppedUp) {
+        window.history.replaceState(null, '', window.location.pathname);
+        setActivatingPayment(justUpgraded ? 'upgraded' : 'topup');
+      }
+
+      // The webhook that actually activates a plan/credits is async — Razorpay
+      // calls it server-to-server after the client-side checkout already closed,
+      // so it can genuinely take a few seconds to land. A single immediate fetch
+      // right after redirecting back here can catch the account still showing
+      // its pre-payment state, which is exactly the "doesn't unlock immediately"
+      // complaint. Poll briefly instead of requiring a manual refresh.
+      let attempts = 0;
+      const maxAttempts = justUpgraded || justToppedUp ? 8 : 1;
+      const pollCredits = () => {
+        fetch('/api/credits')
+          .then((res) => res.json())
+          .then((d) => {
+            if (!d.loggedIn) return;
+            setCredits({ remaining: d.remaining, plan: d.plan, resetAt: d.resetAt });
+            attempts += 1;
+            // For an upgrade, stop as soon as the plan genuinely shows Pro/Enterprise.
+            // For a top-up, there's no reliable "before" baseline to compare against
+            // on a fresh page load, so this just gives the webhook several retries
+            // over a few seconds rather than a single immediate check, then stops.
+            const upgradeConfirmed = justUpgraded && (d.plan === 'pro' || d.plan === 'enterprise');
+            if (upgradeConfirmed || attempts >= maxAttempts) {
+              setActivatingPayment(null);
+            } else {
+              setTimeout(pollCredits, 1500);
+            }
+          })
+          .catch(() => setActivatingPayment(null));
+      };
+      pollCredits();
       fetch('/api/career-reviews')
         .then((res) => res.json())
         .then((d) => {
@@ -238,6 +272,13 @@ export default function DashboardPage() {
     <DashboardShell activePage="dashboard" pageTitle="Dashboard" userEmail={email} credits={credits} onCreditsChange={(updater) => setCredits((c) => (c ? { ...c, ...updater(c) } : c))} onScanSaved={refreshScans} onSignOut={handleSignOut}>
       <div className="relative">
       <AmbientBackground mode="absolute" />
+
+      {activatingPayment && (
+        <div className="relative mb-6 px-4 py-3 rounded-xl flex items-center gap-2.5 text-sm font-medium text-white" style={{ background: 'var(--grad-prism)' }}>
+          <Loader2 size={15} className="animate-spin shrink-0" />
+          {activatingPayment === 'upgraded' ? 'Payment received — activating your Pro plan…' : 'Payment received — adding your credits…'}
+        </div>
+      )}
 
       <div className="relative">
         {scans === null ? (
