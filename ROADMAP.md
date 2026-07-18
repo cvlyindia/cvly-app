@@ -147,9 +147,18 @@ owning something nobody else does.
   it, reusing the existing `?resume=X&tab=Y` restore mechanism rather than building a
   parallel one. The scan_id link is verified server-side against the requesting user
   before being allowed — a client-supplied ID doesn't get trusted blindly.
-- **A unified readiness score** — one number combining resume match, LinkedIn strength,
-  portfolio quality, and interview prep completion. Nobody in this market does this;
-  everyone else sells the pieces separately
+- ~~**A unified readiness score**~~ DONE. One number on the Dashboard combining resume
+  match, LinkedIn strength, portfolio quality, and interview prep completion — a real
+  differentiator, since competitors sell these as separate tools with no combined view.
+  Deliberately averages only the components a user actually has data for, rather than
+  penalizing someone who hasn't tried every tool yet — proved this specific design
+  decision with a deliberate-breakage test after finding a real bug in my own first
+  draft (an early version treated missing components as zero, which would have
+  misleadingly dragged a genuinely strong single score down toward zero). Interview prep
+  is tracked as a completion percentage, not a quality score, since there's no way to
+  AI-grade how well someone actually answers out loud — a meaningfully different kind
+  of metric from the other three, labeled that way in the UI rather than blended in
+  silently.
 - Resume version history — compare two rewrites side by side, see what actually changed
 - Once someone reaches "Offer" status in the Tracker, that's a natural, honest next step:
   offer/negotiation guidance grounded in what they actually have, not generic advice

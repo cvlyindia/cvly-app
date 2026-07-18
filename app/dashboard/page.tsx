@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { popPendingScan } from '@/lib/pendingScan';
 import { AmbientBackground } from '@/components/AmbientBackground';
+import { ReadinessScoreCard } from '@/components/ReadinessScoreCard';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { NewCheckButton } from '@/components/NewCheckButton';
@@ -279,6 +280,10 @@ export default function DashboardPage() {
           {activatingPayment === 'upgraded' ? 'Payment received — activating your Pro plan…' : 'Payment received — adding your credits…'}
         </div>
       )}
+
+      <div className="relative mb-6">
+        <ReadinessScoreCard />
+      </div>
 
       <div className="relative">
         {scans === null ? (
