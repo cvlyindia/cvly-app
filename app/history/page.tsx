@@ -46,6 +46,16 @@ export default function HistoryPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+
+  function toggleCompareSelection(id: string) {
+    setSelectedForCompare((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id]; // keep the most recent two picks
+      return [...prev, id];
+    });
+  }
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -153,6 +163,34 @@ export default function HistoryPage() {
         <p className="text-[var(--muted)] text-sm">Nothing here yet — check a resume to see it show up.</p>
       ) : (
         <>
+          {scans.some((s) => s.rewritten_resume) && (
+            <div className="flex items-center justify-between mb-5">
+              <button
+                onClick={() => { setCompareMode((m) => !m); setSelectedForCompare([]); }}
+                className={`text-xs font-medium px-3 py-1.5 rounded-full border transition ${
+                  compareMode ? 'bg-[var(--ink)] text-white border-[var(--ink)]' : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)]'
+                }`}
+              >
+                {compareMode ? 'Cancel comparing' : 'Compare versions'}
+              </button>
+              {compareMode && (
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-[var(--muted)]">
+                    {selectedForCompare.length === 0 ? 'Pick two rewrites to compare' : `${selectedForCompare.length} of 2 selected`}
+                  </p>
+                  {selectedForCompare.length === 2 && (
+                    <Link
+                      href={`/compare?a=${selectedForCompare[0]}&b=${selectedForCompare[1]}`}
+                      className="btn-accent px-4 py-1.5 rounded-full text-xs font-semibold"
+                    >
+                      Compare
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {scans.length > 3 && (
             <div className="relative mb-5">
               <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-soft)]" />
@@ -176,6 +214,18 @@ export default function HistoryPage() {
                 return (
                   <div key={s.id} className="card rounded-2xl overflow-hidden">
                     <div className="p-5 flex items-center gap-4">
+                      {compareMode && (
+                        s.rewritten_resume ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedForCompare.includes(s.id)}
+                            onChange={() => toggleCompareSelection(s.id)}
+                            className="w-4 h-4 shrink-0 accent-[var(--accent)]"
+                          />
+                        ) : (
+                          <div className="w-4 shrink-0" title="No rewrite generated for this scan yet" />
+                        )
+                      )}
                       <div
                         className="w-11 h-11 rounded-full flex items-center justify-center font-semibold text-white shrink-0 text-sm"
                         style={{ background: color }}

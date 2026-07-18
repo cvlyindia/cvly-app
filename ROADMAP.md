@@ -159,7 +159,15 @@ owning something nobody else does.
   AI-grade how well someone actually answers out loud — a meaningfully different kind
   of metric from the other three, labeled that way in the UI rather than blended in
   silently.
-- Resume version history — compare two rewrites side by side, see what actually changed
+- ~~**Resume version history**~~ DONE. From History, a "Compare versions" toggle lets
+  picking any two scans that have a rewrite, comparing them side by side at
+  `/compare`. Matches experience entries between the two versions by company name
+  (not by list position, which would misalign entries whenever the AI reordered or
+  added a role), then classifies each bullet as shared or unique to one version —
+  proved this matching logic directly with unit tests, including the subtle edge
+  case of two same-company entries in one version correctly matching against only
+  one entry in the other, not both. Reused the existing per-scan API and the
+  StructuredResume shape rather than building new plumbing for this.
 - Once someone reaches "Offer" status in the Tracker, that's a natural, honest next step:
   offer/negotiation guidance grounded in what they actually have, not generic advice
 
