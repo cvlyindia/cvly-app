@@ -17,9 +17,21 @@ const GUIDES = [
     readTime: '8 min read',
   },
   {
+    href: '/guides/quantify-resume-achievements',
+    title: 'How to quantify achievements on your resume',
+    description: 'A number doesn\'t just look impressive — it makes a claim believable in a way an adjective can\'t. Here\'s how to find yours.',
+    readTime: '7 min read',
+  },
+  {
     href: '/guides/resume-for-freshers-india',
     title: 'Resume format for freshers: your first job in India',
     description: 'No work experience isn\'t a gap to hide — it just means the resume needs to lead with different things. Here\'s what actually works.',
+    readTime: '7 min read',
+  },
+  {
+    href: '/guides/linkedin-profile-optimization',
+    title: 'How to optimize your LinkedIn profile for recruiters',
+    description: 'Recruiters skim dozens of profiles a day. Here\'s what actually makes one worth a second look.',
     readTime: '7 min read',
   },
   {
