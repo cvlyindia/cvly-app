@@ -4,16 +4,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown, KanbanSquare, BookOpen, Sparkles,
+  LayoutDashboard, History, Settings, Menu, X, LogOut, Zap, ChevronDown, KanbanSquare, BookOpen, Sparkles, TrendingUp,
 } from 'lucide-react';
 import { ScannerModal } from '@/components/ScannerModal';
 import { ScannerContext } from '@/components/ScannerContext';
 
-type ActivePage = 'dashboard' | 'history' | 'settings' | 'tracker';
+type ActivePage = 'dashboard' | 'history' | 'settings' | 'tracker' | 'analytics';
 
 const NAV_ITEMS: { key: ActivePage; label: string; href: string; icon: typeof LayoutDashboard }[] = [
   { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { key: 'tracker', label: 'Tracker', href: '/tracker', icon: KanbanSquare },
+  { key: 'analytics', label: 'Analytics', href: '/analytics', icon: TrendingUp },
   { key: 'history', label: 'History', href: '/history', icon: History },
   { key: 'settings', label: 'Settings', href: '/settings', icon: Settings },
 ];

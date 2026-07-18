@@ -170,6 +170,15 @@ owning something nobody else does.
   StructuredResume shape rather than building new plumbing for this.
 - Once someone reaches "Offer" status in the Tracker, that's a natural, honest next step:
   offer/negotiation guidance grounded in what they actually have, not generic advice
+- ~~**Resume Analytics**~~ DONE. New `/analytics` page, Pro-only — score history over time
+  and a real application funnel (saved → applied → interview → offer, with conversion
+  rates between stages). Deliberately chosen as the first thing to build after a much
+  larger feature-matrix wishlist was raised and mostly declined: this one is cheap (zero
+  new AI cost, built entirely from data already being collected) and a genuine paid
+  differentiator, unlike most of that list. The funnel counts cumulatively — a job
+  currently at "interview" implies it passed through "applied" too — which is what
+  actually makes the conversion percentages between stages meaningful; proved this
+  specific logic with a deliberate-breakage test.
 
 ## Phase 9 — Operational Maturity
 
