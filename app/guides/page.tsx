@@ -23,6 +23,18 @@ const GUIDES = [
     readTime: '7 min read',
   },
   {
+    href: '/guides/how-to-write-a-cover-letter',
+    title: 'How to write a cover letter that doesn\'t get ignored',
+    description: 'Most cover letters get skimmed in ten seconds or skipped entirely. Here\'s what actually earns the other kind of read.',
+    readTime: '6 min read',
+  },
+  {
+    href: '/guides/tell-me-about-yourself-interview',
+    title: 'How to answer "Tell me about yourself"',
+    description: 'It\'s usually the very first question, which means it sets the tone for everything after it. Here\'s a real structure, not just "be confident."',
+    readTime: '6 min read',
+  },
+  {
     href: '/guides/employment-gap-resume',
     title: 'How to explain an employment gap on your resume',
     description: 'A short, confident line does more work than a long, defensive one. Here\'s how to actually write it.',
