@@ -17,6 +17,12 @@ const GUIDES = [
     readTime: '8 min read',
   },
   {
+    href: '/guides/common-resume-mistakes',
+    title: 'Common resume mistakes that get you rejected',
+    description: 'Not typos — the structural and content problems that are genuinely easy to miss when it\'s your own resume.',
+    readTime: '7 min read',
+  },
+  {
     href: '/guides/quantify-resume-achievements',
     title: 'How to quantify achievements on your resume',
     description: 'A number doesn\'t just look impressive — it makes a claim believable in a way an adjective can\'t. Here\'s how to find yours.',
@@ -35,9 +41,21 @@ const GUIDES = [
     readTime: '7 min read',
   },
   {
+    href: '/guides/career-change-resume',
+    title: 'How to write a resume when switching industries',
+    description: 'Standard resume advice assumes a straight-line career. Here\'s how to structure one when yours genuinely isn\'t.',
+    readTime: '6 min read',
+  },
+  {
     href: '/guides/how-to-write-a-cover-letter',
     title: 'How to write a cover letter that doesn\'t get ignored',
     description: 'Most cover letters get skimmed in ten seconds or skipped entirely. Here\'s what actually earns the other kind of read.',
+    readTime: '6 min read',
+  },
+  {
+    href: '/guides/portfolio-structure-guide',
+    title: 'How to structure a portfolio that gets you hired',
+    description: 'A portfolio isn\'t a gallery — it\'s an argument for why you\'re worth hiring. Here\'s how to structure it like one.',
     readTime: '6 min read',
   },
   {
@@ -47,16 +65,46 @@ const GUIDES = [
     readTime: '6 min read',
   },
   {
+    href: '/guides/star-method-interview',
+    title: 'The STAR method for behavioral interview questions',
+    description: '"Tell me about a time when..." questions reward structure over memory. Here\'s how STAR actually works, with a real example.',
+    readTime: '6 min read',
+  },
+  {
+    href: '/guides/explaining-layoff-fired',
+    title: 'How to explain being laid off or let go',
+    description: 'A layoff and a performance-related exit call for genuinely different honest framings. Here\'s how to handle either.',
+    readTime: '6 min read',
+  },
+  {
     href: '/guides/employment-gap-resume',
     title: 'How to explain an employment gap on your resume',
     description: 'A short, confident line does more work than a long, defensive one. Here\'s how to actually write it.',
     readTime: '6 min read',
   },
   {
+    href: '/guides/greatest-weakness-interview',
+    title: 'How to answer "What is your greatest weakness?"',
+    description: 'The old trick — disguising a strength as a weakness — is well-known enough now that it usually backfires.',
+    readTime: '5 min read',
+  },
+  {
     href: '/guides/notice-period-on-resume',
     title: 'How to mention your notice period on a resume',
     description: 'Where it goes, how to phrase it for your actual situation, and why leaving it out usually costs you time, not saves it.',
     readTime: '5 min read',
+  },
+  {
+    href: '/guides/resume-vs-cv-difference',
+    title: 'Resume vs CV: what\'s the actual difference?',
+    description: 'They\'re not interchangeable everywhere, and using the wrong one for the wrong audience genuinely matters.',
+    readTime: '4 min read',
+  },
+  {
+    href: '/guides/how-long-should-a-resume-be',
+    title: 'How many pages should a resume be?',
+    description: 'The honest answer depends on your experience, not a universal rule. Here\'s how to actually decide.',
+    readTime: '4 min read',
   },
 ];
 

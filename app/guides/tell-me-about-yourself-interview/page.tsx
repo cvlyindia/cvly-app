@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function TellMeAboutYourselfGuidePage() {
   return (
     <GuideLayout
-      title="How to answer &quot;Tell me about yourself&quot;"
+      title='How to answer "Tell me about yourself"'
       subtitle="It's usually the very first question, which means it sets the tone for everything after it. Here's a real structure, not just 'be confident.'"
       readTime="6 min read"
     >
