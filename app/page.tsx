@@ -889,7 +889,7 @@ export default function Home() {
                   <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-3 py-3 rounded-lg text-sm font-medium text-left text-[#F58AA0] hover:bg-[var(--chrome-raised)] transition">Sign out</button>
                 </>
               ) : (
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-semibold text-[#B4A6F0] hover:bg-[var(--chrome-raised)] transition">Sign in</Link>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-semibold text-[var(--chrome-accent)] hover:bg-[var(--chrome-raised)] transition">Sign in</Link>
               )}
             </nav>
           </div>
@@ -942,7 +942,7 @@ export default function Home() {
           {/* Satellite panel — Parse Safety, floats top-right at depth */}
           <div className="glass-panel float-c hidden md:block absolute -top-10 -right-4 z-20 rounded-2xl px-4 py-3 w-[188px]">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #6C5FC7, #C24A9A)' }}>
+              <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF7A1E, #F43F7A)' }}>
                 <FileScan size={13} className="text-white" />
               </span>
               <span className="text-[11px] font-semibold">Parse Safety</span>

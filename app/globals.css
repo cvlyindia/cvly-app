@@ -1,43 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  /* Sentry-inspired system — rich violet chrome, cool lavender-tinted neutrals,
-     confident purple as the interactive voice. The brand orange (#FF741E, sampled
-     from the actual logo) stays alive as the warm endpoint of the prism gradient,
-     where it pops hardest against the violet field — orange on deep purple is a
-     strong complementary pairing, not a clash. Light content areas keep a barely-
-     there cool lavender cast so the whole surface reads intentional, not clinical. */
-  --bg: #FAF9FC;
-  --ink: #1D1727;
-  --muted: #6E6580;
-  --muted-soft: #9A91AB;
-  --line: #E9E5F1;
-  --line-strong: #D7D1E3;
-  --surface: #F3F0F9;
+  /* Sentry-grade structure, Cvly's own color voice. The lesson from the reference
+     is craft — type, density, dark chrome, consistency — NOT their purple. Every
+     accent here stays anchored on the TRUE logo orange (#FF741E, sampled from the
+     actual mark), flowing orange -> magenta -> violet as the brand's own prism. */
+  --bg: #FDFBFA;
+  --ink: #14121A;
+  --muted: #605C6B;
+  --muted-soft: #938E9E;
+  --line: #ECE8F0;
+  --line-strong: #DAD4E4;
+  --surface: #F8F5FB;
 
-  /* Interactive accent — Sentry-territory violet. Text-variant passes contrast
-     on white; soft variant is the lavender wash for active/selected states. */
-  --accent: #6C5FC7;
-  --accent-ink: #5346A8;
-  --accent-soft: #ECE8FA;
-  --accent-2: #C24A9A;      /* magenta midpoint of the prism */
-  --accent-3: #FF7A1E;      /* brand orange endpoint */
-  --cyan: #06B6D4;          /* electric counterpoint, unchanged */
+  --accent: #FF6A1A;
+  --accent-ink: #D4520C;
+  --accent-soft: #FFEDE0;
+  --accent-2: #F43F7A;      /* magenta midpoint */
+  --accent-3: #9B5DE5;      /* violet endpoint */
+  --cyan: #06B6D4;
   --cyan-soft: #E3F7FB;
 
-  /* The signature gradients — re-anchored violet-first, flowing violet -> magenta
-     -> brand orange. Leads with the new voice, ends on the logo's own color. */
-  --grad-prism: linear-gradient(100deg, #6C5FC7 0%, #C24A9A 52%, #FF7A1E 100%);
-  --grad-prism-soft: linear-gradient(100deg, #ECE8FA 0%, #F8E7F2 52%, #FFEDE0 100%);
-  --grad-glow: linear-gradient(135deg, rgba(108,95,199,0.4), rgba(255,122,30,0.3));
+  /* The signature gradients — orange-led, the logo's own color first */
+  --grad-prism: linear-gradient(100deg, #FF7A1E 0%, #F43F7A 52%, #9B5DE5 100%);
+  --grad-prism-soft: linear-gradient(100deg, #FFEDE0 0%, #FDE6EF 52%, #F3ECFC 100%);
+  --grad-glow: linear-gradient(135deg, rgba(255,122,30,0.4), rgba(155,93,229,0.35));
 
-  /* Dark chrome — the Sentry signature. Used for the app sidebar, mobile drawer,
-     and dark nav surfaces. Rich purple-black, never plain gray-black. */
-  --chrome: #221733;
-  --chrome-raised: #2F2147;
+  /* Dark chrome — the Sentry-style structural move, kept, but re-tinted to a rich
+     WARM near-black with a subtle ember undertone so it belongs to this brand.
+     Never plain gray-black, never someone else's purple. */
+  --chrome: #1C1512;
+  --chrome-raised: #2B211B;
   --chrome-line: rgba(255,255,255,0.09);
-  --chrome-text: #EDE9F5;
-  --chrome-muted: #A89DC0;
+  --chrome-text: #F3EEE9;
+  --chrome-muted: #B0A499;
+  --chrome-accent: #FFA05C;  /* soft ember for links/active tints on dark */
 
   --good: #0E8F5E;
   --good-bg: #E6F7EF;
@@ -68,6 +65,14 @@ body {
 }
 
 .font-mono { font-family: var(--font-mono), monospace; }
+
+/* Headline voice — Rubik (the Sentry craft move: a distinct, confident, slightly
+   rounded geometric face for headings, clearly different from body text). Slightly
+   tightened tracking; headings carry the personality, body stays neutral. */
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading), var(--font-body), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
 
 ::selection { background: var(--accent); color: white; }
 
@@ -134,8 +139,8 @@ a:focus-visible, button:focus-visible {
 .panel-pop { animation: panelPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 @keyframes launcherPulseRing {
-  0% { box-shadow: 0 0 0 0 rgba(108, 95, 199, 0.5); }
-  100% { box-shadow: 0 0 0 14px rgba(108, 95, 199, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(232, 93, 44, 0.45); }
+  100% { box-shadow: 0 0 0 14px rgba(232, 93, 44, 0); }
 }
 .launcher-pulse { animation: launcherPulseRing 1.8s ease-out 2; }
 
@@ -235,7 +240,7 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .card:hover {
   border-color: var(--line-strong);
-  box-shadow: 0 10px 30px rgba(108,95,199,0.09), 0 3px 10px rgba(194,74,154,0.05);
+  box-shadow: 0 10px 30px rgba(139,92,246,0.08), 0 3px 10px rgba(240,71,43,0.05);
 }
 .card-hover-lift {
   transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1);
@@ -243,7 +248,7 @@ details > summary::-webkit-details-marker { display: none; }
 .card-hover-lift:hover {
   transform: translateY(-4px);
   border-color: transparent;
-  box-shadow: 0 18px 40px rgba(108,95,199,0.16), 0 6px 16px rgba(255,122,30,0.07);
+  box-shadow: 0 18px 40px rgba(139,92,246,0.14), 0 6px 16px rgba(240,71,43,0.08);
 }
 
 .btn-primary {
@@ -261,12 +266,12 @@ details > summary::-webkit-details-marker { display: none; }
   background-size: 150% 150%;
   background-position: 0% 50%;
   color: white;
-  box-shadow: 0 6px 18px rgba(108,95,199,0.32), 0 2px 6px rgba(194,74,154,0.2);
+  box-shadow: 0 6px 18px rgba(229,64,126,0.28), 0 2px 6px rgba(240,71,43,0.2);
   transition: background-position 0.5s ease, box-shadow 0.25s ease, transform 0.1s ease;
 }
 .btn-accent:hover {
   background-position: 100% 50%;
-  box-shadow: 0 10px 28px rgba(108,95,199,0.42), 0 3px 10px rgba(255,122,30,0.22);
+  box-shadow: 0 10px 28px rgba(139,92,246,0.36), 0 3px 10px rgba(229,64,126,0.24);
 }
 .btn-accent:active { transform: scale(0.98); }
 

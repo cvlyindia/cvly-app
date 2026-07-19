@@ -47,7 +47,7 @@ export function TopUpButton({ packId, credits, priceRupees }: { packId: string; 
         name: 'Cvly',
         description: `${credits} credit top-up`,
         prefill: { email: user.email ?? '' },
-        theme: { color: '#6C5FC7' },
+        theme: { color: '#FF6A1A' },
         handler: () => {
           trackPixelEvent('Purchase', data.orderId as string, { currency: 'INR', value: priceRupees });
           router.push('/dashboard?topup=1');

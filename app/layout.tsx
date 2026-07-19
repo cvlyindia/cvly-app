@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Rubik } from "next/font/google";
 import "./globals.css";
 import { ChatbotButton } from "@/components/ChatbotButton";
 import { MetaPixel } from "@/components/MetaPixel";
@@ -14,6 +14,12 @@ const mono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
   weight: ["400", "500"],
+});
+
+const rubik = Rubik({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  weight: ["500", "600", "700", "800"],
 });
 
 const SITE_URL = "https://cvly.in";
@@ -62,7 +68,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${mono.variable}`}>
+      <body className={`${inter.variable} ${mono.variable} ${rubik.variable}`}>
         {children}
         <ChatbotButton />
         <MetaPixel />

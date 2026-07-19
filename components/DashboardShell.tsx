@@ -64,7 +64,7 @@ export function DashboardShell({
             {activePage === item.key && (
               <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: 'var(--grad-prism)' }} />
             )}
-            <item.icon size={17} className={activePage === item.key ? 'text-[#B4A6F0]' : ''} />
+            <item.icon size={17} className={activePage === item.key ? 'text-[var(--chrome-accent)]' : ''} />
             {item.label}
           </Link>
         ))}
@@ -85,7 +85,7 @@ export function DashboardShell({
           New check
         </button>
         {credits?.plan === 'free' && (
-          <Link href="/pricing" className="block text-center text-xs text-[#B4A6F0] hover:text-white hover:underline transition mt-3">
+          <Link href="/pricing" className="block text-center text-xs text-[var(--chrome-accent)] hover:text-white hover:underline transition mt-3">
             Upgrade for more credits
           </Link>
         )}

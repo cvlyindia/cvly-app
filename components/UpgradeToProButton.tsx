@@ -47,7 +47,7 @@ export function UpgradeToProButton({ cycle }: { cycle: 'monthly' | 'yearly' }) {
         name: 'Cvly',
         description: cycle === 'monthly' ? 'Pro — monthly' : 'Pro — yearly',
         prefill: { email: user.email ?? '' },
-        theme: { color: '#6C5FC7' },
+        theme: { color: '#FF6A1A' },
         handler: () => {
           // Fired only on a genuinely successful payment. The webhook is the
           // authoritative source of truth for actually activating the plan —
