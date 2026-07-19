@@ -816,24 +816,24 @@ export default function Home() {
       />
       <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Header */}
-      <header className="border-b border-[var(--line)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur-md z-20">
+      <header className="sticky top-0 bg-[var(--chrome)]/95 backdrop-blur-md z-20 border-b border-[var(--chrome-line)]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="Cvly" width={36} height={33} className="rounded-md" />
-            <span className="text-[20px] font-bold tracking-[-0.02em]">Cvly</span>
+            <span className="text-[20px] font-bold tracking-[-0.02em] text-[var(--chrome-text)]">Cvly</span>
           </div>
           <div className="flex items-center gap-7">
-            <a href="#how" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">How it works</a>
-            <a href="#compare" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Compare</a>
-            <a href="#faq" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">FAQ</a>
-            <Link href="/pricing" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Pricing</Link>
+            <a href="#how" className="hidden md:block text-sm text-[var(--chrome-muted)] hover:text-white transition">How it works</a>
+            <a href="#compare" className="hidden md:block text-sm text-[var(--chrome-muted)] hover:text-white transition">Compare</a>
+            <a href="#faq" className="hidden md:block text-sm text-[var(--chrome-muted)] hover:text-white transition">FAQ</a>
+            <Link href="/pricing" className="hidden md:block text-sm text-[var(--chrome-muted)] hover:text-white transition">Pricing</Link>
             {user ? (
               <>
-                <Link href="/dashboard" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Dashboard</Link>
-                <Link href="/history" className="hidden md:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">History</Link>
-                <button onClick={handleLogout} className="hidden sm:block text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Sign out</button>
+                <Link href="/dashboard" className="hidden md:block text-sm text-[var(--chrome-muted)] hover:text-white transition">Dashboard</Link>
+                <Link href="/history" className="hidden md:block text-sm text-[var(--chrome-muted)] hover:text-white transition">History</Link>
+                <button onClick={handleLogout} className="hidden sm:block text-sm text-[var(--chrome-muted)] hover:text-white transition">Sign out</button>
                 {credits && (
-                  <Link href="/pricing" className="hidden sm:flex items-center gap-1 text-xs font-mono text-[var(--muted)] hover:text-[var(--ink)] transition">
+                  <Link href="/pricing" className="hidden sm:flex items-center gap-1 text-xs font-mono text-[var(--chrome-muted)] hover:text-white transition">
                     {credits.remaining} credits
                   </Link>
                 )}
@@ -843,7 +843,7 @@ export default function Home() {
               </>
             ) : (
               <>
-                <Link href="/login" className="hidden sm:block text-sm font-medium text-[var(--ink)] hover:text-[var(--muted)] transition">
+                <Link href="/login" className="hidden sm:block text-sm font-medium text-[var(--chrome-text)] hover:text-white transition">
                   Sign in
                 </Link>
                 <button onClick={() => setToolOpen(true)} className="btn-accent px-4 py-2 rounded-full text-sm font-semibold">
@@ -854,7 +854,7 @@ export default function Home() {
             <button
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[var(--surface)] transition -mr-1"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition -mr-1"
             >
               <Menu size={20} />
             </button>
@@ -865,31 +865,31 @@ export default function Home() {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-[var(--ink)]/40" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute right-0 top-0 bottom-0 w-72 bg-white flex flex-col p-6">
+          <div className="absolute right-0 top-0 bottom-0 w-72 bg-[var(--chrome)] flex flex-col p-6">
             <button
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Close menu"
-              className="self-end w-9 h-9 rounded-full hover:bg-[var(--surface)] flex items-center justify-center mb-4"
+              className="self-end w-9 h-9 rounded-full text-[var(--chrome-muted)] hover:bg-[var(--chrome-raised)] hover:text-white flex items-center justify-center mb-4 transition"
             >
               <X size={18} />
             </button>
             <nav className="flex flex-col gap-1">
-              <a href="#how" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">How it works</a>
-              <a href="#compare" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">Compare</a>
-              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">FAQ</a>
-              <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">Pricing</Link>
-              <div className="h-px bg-[var(--line)] my-3" />
+              <a href="#how" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition">How it works</a>
+              <a href="#compare" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition">Compare</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition">FAQ</a>
+              <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition">Pricing</Link>
+              <div className="h-px bg-[var(--chrome-line)] my-3" />
               {user ? (
                 <>
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">Dashboard</Link>
-                  <Link href="/history" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium hover:bg-[var(--surface)] transition">History</Link>
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition">Dashboard</Link>
+                  <Link href="/history" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-medium text-[var(--chrome-text)] hover:bg-[var(--chrome-raised)] transition">History</Link>
                   {credits && (
-                    <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-mono text-[var(--muted)]">{credits.remaining} credits</Link>
+                    <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-mono text-[var(--chrome-muted)]">{credits.remaining} credits</Link>
                   )}
-                  <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-3 py-3 rounded-lg text-sm font-medium text-left text-[var(--bad)] hover:bg-[var(--bad-bg)] transition">Sign out</button>
+                  <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-3 py-3 rounded-lg text-sm font-medium text-left text-[#F58AA0] hover:bg-[var(--chrome-raised)] transition">Sign out</button>
                 </>
               ) : (
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-semibold text-[var(--accent-ink)] hover:bg-[var(--accent-soft)]/30 transition">Sign in</Link>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded-lg text-sm font-semibold text-[#B4A6F0] hover:bg-[var(--chrome-raised)] transition">Sign in</Link>
               )}
             </nav>
           </div>
@@ -942,7 +942,7 @@ export default function Home() {
           {/* Satellite panel — Parse Safety, floats top-right at depth */}
           <div className="glass-panel float-c hidden md:block absolute -top-10 -right-4 z-20 rounded-2xl px-4 py-3 w-[188px]">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF7A1E, #F43F7A)' }}>
+              <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #6C5FC7, #C24A9A)' }}>
                 <FileScan size={13} className="text-white" />
               </span>
               <span className="text-[11px] font-semibold">Parse Safety</span>

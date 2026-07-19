@@ -47,28 +47,33 @@ export function DashboardShell({
     <>
       <Link href="/" className="flex items-center gap-2 px-5 py-5">
         <Image src="/logo.png" alt="Cvly" width={28} height={26} className="rounded-md" />
-        <span className="text-[17px] font-bold tracking-[-0.02em]">Cvly</span>
+        <span className="text-[17px] font-bold tracking-[-0.02em] text-[var(--chrome-text)]">Cvly</span>
       </Link>
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-0.5">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.key}
             href={item.href}
             onClick={() => setMobileNavOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-              activePage === item.key ? 'bg-[var(--accent-soft)] text-[var(--accent-ink)]' : 'text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)]'
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition relative ${
+              activePage === item.key
+                ? 'bg-[var(--chrome-raised)] text-white'
+                : 'text-[var(--chrome-muted)] hover:bg-[var(--chrome-raised)]/60 hover:text-[var(--chrome-text)]'
             }`}
           >
-            <item.icon size={17} />
+            {activePage === item.key && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: 'var(--grad-prism)' }} />
+            )}
+            <item.icon size={17} className={activePage === item.key ? 'text-[#B4A6F0]' : ''} />
             {item.label}
           </Link>
         ))}
       </nav>
       <div className="px-3 pb-3 space-y-0.5">
-        <Link href="/guides" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)] transition">
+        <Link href="/guides" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--chrome-muted)] hover:bg-[var(--chrome-raised)]/60 hover:text-[var(--chrome-text)] transition">
           <BookOpen size={15} /> Guides
         </Link>
-        <Link href="/changelog" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)] transition">
+        <Link href="/changelog" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[var(--chrome-muted)] hover:bg-[var(--chrome-raised)]/60 hover:text-[var(--chrome-text)] transition">
           <Sparkles size={15} /> Changelog
         </Link>
       </div>
@@ -80,7 +85,7 @@ export function DashboardShell({
           New check
         </button>
         {credits?.plan === 'free' && (
-          <Link href="/pricing" className="block text-center text-xs text-[var(--accent-ink)] hover:underline mt-3">
+          <Link href="/pricing" className="block text-center text-xs text-[#B4A6F0] hover:text-white hover:underline transition mt-3">
             Upgrade for more credits
           </Link>
         )}
@@ -91,8 +96,8 @@ export function DashboardShell({
   return (
     <ScannerContext.Provider value={{ openScanner: () => setScannerOpen(true) }}>
     <div className="min-h-screen flex bg-[var(--bg)]">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-56 border-r border-[var(--line)] shrink-0">
+      {/* Desktop sidebar — dark chrome, the app's anchor */}
+      <aside className="hidden md:flex flex-col w-56 shrink-0 bg-[var(--chrome)]">
         {SidebarContent}
       </aside>
 
@@ -100,8 +105,8 @@ export function DashboardShell({
       {mobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-[var(--ink)]/40" onClick={() => setMobileNavOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white flex flex-col">
-            <button onClick={() => setMobileNavOpen(false)} aria-label="Close menu" className="self-end mr-4 mt-4 w-8 h-8 rounded-full hover:bg-[var(--surface)] flex items-center justify-center">
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-[var(--chrome)] flex flex-col">
+            <button onClick={() => setMobileNavOpen(false)} aria-label="Close menu" className="self-end mr-4 mt-4 w-8 h-8 rounded-full text-[var(--chrome-muted)] hover:bg-[var(--chrome-raised)] hover:text-white flex items-center justify-center transition">
               <X size={16} />
             </button>
             {SidebarContent}
