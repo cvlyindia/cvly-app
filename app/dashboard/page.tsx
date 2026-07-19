@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { popPendingScan } from '@/lib/pendingScan';
 import { AmbientBackground } from '@/components/AmbientBackground';
 import { ReadinessScoreCard } from '@/components/ReadinessScoreCard';
+import { DailyPracticeCard } from '@/components/DailyPracticeCard';
 import { ScoreRing } from '@/components/ScoreRing';
 import { DashboardShell } from '@/components/DashboardShell';
 import { NewCheckButton } from '@/components/NewCheckButton';
@@ -22,6 +23,8 @@ type Scan = {
   created_at: string;
   missing_keywords: string[] | null;
   matched_keywords: string[] | null;
+  interview_questions: { category: string; questions: { question: string; starHint: string; suggestedAnswer: string }[] }[] | null;
+  practiced_questions: string[] | null;
 };
 
 function greeting(): string {
@@ -284,6 +287,12 @@ export default function DashboardPage() {
       <div className="relative mb-6">
         <ReadinessScoreCard />
       </div>
+
+      {scans && scans.length > 0 && (
+        <div className="relative mb-6">
+          <DailyPracticeCard scans={scans} />
+        </div>
+      )}
 
       <div className="relative">
         {scans === null ? (

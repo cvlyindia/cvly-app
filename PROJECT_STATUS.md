@@ -106,6 +106,24 @@ All 10 files in supabase/migrations/ need to have been run in Supabase's SQL edi
 order, 001 through 010. Migrations 008 and 009 are guarded to be safe to re-run if unsure
 whether they were already applied.
 
+## Email automation — manual setup needed (Anurag)
+
+Built and shipped, but inert until three things are done:
+1. **Run migration `supabase/migrations/016_email_automation.sql`** in the Supabase SQL
+   editor — adds `user_credits.welcomed_at` and `saved_jobs.follow_up_emailed_at`
+   (idempotency columns; until this runs, emails simply don't send, nothing breaks).
+2. **Add `RESEND_API_KEY` to Vercel env vars** — from the Resend dashboard. Emails send
+   from `hello@cvly.in`, so the cvly.in domain must be verified in Resend first (the
+   same DNS setup already pending for magic-link emails).
+3. **Add `CRON_SECRET` to Vercel env vars** — any long random string. Vercel Cron
+   automatically sends it as the bearer token to the daily follow-up-reminders job
+   (10:00 AM IST). Without it the cron endpoint rejects everything, including Vercel.
+
+What then works automatically: welcome email on first sign-in, Pro-activated email on
+first subscription activation (never on renewals), top-up confirmation with the exact
+credit amount (only after credits genuinely landed), and a one-time professional
+follow-up nudge for any tracker job sitting at "Applied" for 7+ days.
+
 ## Current focus
 
 **Deep reliability investigation** (in response to "everything seems broken" — treated as

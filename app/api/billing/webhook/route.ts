@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendEmail, proActivatedEmail, topUpConfirmedEmail } from '@/lib/email';
 import { sendCapiEvent } from '@/lib/metaCapi';
 import { PLAN_LIMITS } from '@/lib/credits';
 
@@ -194,6 +195,12 @@ async function handleSubscriptionEvent(
     });
 
     await supabase.from('subscriptions').update({ purchase_event_sent: true }).eq('razorpay_subscription_id', sub.id);
+
+    // Same first-activation-only gate as the Purchase event above — a renewal
+    // charge should never re-send "your Pro is now active".
+    if (email) {
+      await sendEmail(proActivatedEmail(email));
+    }
   }
 }
 
@@ -249,6 +256,14 @@ async function handleOrderPaidEvent(
 
   const { data: userRow } = await supabase.auth.admin.getUserById(userId);
   const email = userRow?.user?.email;
+
+  // Confirmation email — only after the credits genuinely landed (we return early
+  // above on increment failure, so this can never claim credits that didn't arrive).
+  // Duplicate webhook deliveries are already deduped by the webhook_events check,
+  // so this can't double-send either.
+  if (email) {
+    await sendEmail(topUpConfirmedEmail(email, credits));
+  }
 
   // Every top-up is a genuine, distinct purchase — no "first time only" restriction
   // here the way subscription renewals have. Each one is real revenue Meta should

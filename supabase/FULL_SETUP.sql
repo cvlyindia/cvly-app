@@ -75,7 +75,8 @@ create table if not exists user_credits (
   plan text not null default 'free' check (plan in ('free', 'pro', 'enterprise')),
   credits_remaining int not null default 5,
   credits_reset_at timestamptz not null default (now() + interval '1 day'),
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  welcomed_at timestamptz
 );
 
 alter table user_credits enable row level security;
@@ -109,7 +110,8 @@ create table if not exists saved_jobs (
   notes text,
   scan_id uuid references scans(id) on delete set null,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  follow_up_emailed_at timestamptz
 );
 
 alter table saved_jobs enable row level security;

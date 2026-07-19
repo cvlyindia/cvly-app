@@ -1029,6 +1029,26 @@ export default function Home() {
 
       <StatsStrip />
 
+      {/* Trust strip — every claim here is verifiably true of how the product
+          actually works today. No invented badges, no vague "bank-grade" fluff. */}
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { t: 'Payments by Razorpay', d: 'Card details never touch our servers — checkout runs entirely on Razorpay\u2019s secured infrastructure.' },
+            { t: 'Your data, your call', d: 'Delete your account and every scan yourself from Settings, any time. No email to support, no waiting.' },
+            { t: 'Nothing invented', d: 'Rewrites never fabricate achievements or numbers. Your real experience, presented properly — that\u2019s the whole point.' },
+            { t: 'Enforced server-side', d: 'Plans and limits are enforced where you can\u2019t see them — on our servers — not with tricks in your browser.' },
+          ].map((item) => (
+            <div key={item.t} className="rounded-xl border border-[var(--line)] px-4 py-4 bg-white/60">
+              <p className="text-[13px] font-semibold mb-1 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-[var(--good)] shrink-0" /> {item.t}
+              </p>
+              <p className="text-xs text-[var(--muted)] leading-relaxed">{item.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Story */}
       <section id="how" className="max-w-6xl mx-auto px-6 py-20 relative scroll-mt-16">
         <div className="float-slower absolute top-10 right-[6%] w-40 h-40 rounded-full bg-[var(--accent-soft)] blur-3xl opacity-30 pointer-events-none" />
